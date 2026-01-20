@@ -17,12 +17,82 @@ output:
 
 <!---
 
-cd /Users/gabrielhoffman/workspace/repos/lucida/inst
+cd /hpc/users/hoffmg01/work/lucida_analysis
+module load pandoc
 
 # rm -rf 1k1k_analysis_cache/
 
-
 rmarkdown::render("1k1k_analysis.Rmd")
 
+SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
+FILE=/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/08984b3c-3189-4732-be22-62f1fe8f15a4.h5ad
+
+$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $(dirname $FILE)/1k1k_sort_CSC_lzf.h5ad
+
+
 --->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  lazy.cache = FALSE
+)
+```
+
+```{r packages, cache=FALSE}
+library(lucida)
+library(SingleCellExperiment)
+library(tidyverse)
+library(ggplot2)
+library(nebula)
+```
+
+# Lucida analysis
+```{r lucida}
+file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/1k1k_sort_CSC_lzf.h5ad"
+sce = readH5AD(file)
+sce$libSize = sce$nCount_RNA
+
+idx = sce$cell_type %in% levels(sce$cell_type)[1:2]
+sceSub = sce[,idx]
+
+fit = lucida(sceSub, ~ age + sex + (1|donor_id), 
+  cluster_id = "cell_type")
+```
+
+## Plots
+```{r plotDispEsts}
+plotDispEsts(fit)
+```
+
+```{r plotMA}
+plotMA(fit, coef='age')
+```
+
+```{r plotVolcano}
+plotVolcano(fit, coef='age')
+```
+
+```{r lucida.null}
+fit.null <- lucida(sceSub, ~ (1|donor_id), 
+  cluster_id = "cell_type")
+```
+
+```{r vp}
+vp <- fitVarPart(fit, fit.null)
+
+plotVarPart(sortCols(vp))
+```
+
+
+
+
+
 
