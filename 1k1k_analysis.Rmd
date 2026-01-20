@@ -1,0 +1,28 @@
+---
+title: "Analysis of 1K1K single cell dataset with lucida"
+subtitle: '[Yazar, et al. (2022)](https://doi.org/10.1126/science.abf3041)'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r format(Sys.time())`"
+documentclass: article
+vignette: >
+  %\VignetteIndexEntry{Analysis of 1K1K single cell dataset with lucida}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+---
+
+<!---
+
+cd /Users/gabrielhoffman/workspace/repos/lucida/inst
+
+# rm -rf 1k1k_analysis_cache/
+
+
+rmarkdown::render("1k1k_analysis.Rmd")
+
+--->
+
