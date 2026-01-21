@@ -43,8 +43,6 @@ knitr::opts_chunk$set(
   message = FALSE,
   error = FALSE,
   tidy = FALSE,
-  fig.height = 9,
-  fig.width = 9,
   dev = c("png", "pdf"),
   cache = TRUE,
   lazy.cache = FALSE
@@ -82,16 +80,16 @@ fit = lucida(sce, ~ age + sex + (1|donor_id),
 ```
 
 ## Plots
-```{r plotDispEsts}
+```{r plotDispEsts, fig.height = 9, fig.width = 9}
 plotDispEsts(fit, ncol=5)
 ```
 
-```{r plotMA}
+```{r plotMA, fig.height = 9, fig.width = 9}
 plotMA(fit, coef='age', ncol=5)
 plotMA(fit, coef='sexmale', ncol=5)
 ```
 
-```{r plotVolcano}
+```{r plotVolcano, fig.height = 9, fig.width = 9}
 plotVolcano(fit, coef='age', ncol=5)
 plotVolcano(fit, coef='sexmale', ncol=5)
 ```
@@ -101,7 +99,7 @@ fit.null <- lucida(sce, ~ (1|donor_id),
   cluster_id = "cell_type")
 ```
 
-```{r vp}
+```{r vp, fig.height = 9, fig.width = 9}
 vp <- fitVarPart(fit, fit.null)
 
 plotVarPart(sortCols(vp), ncol=5)
