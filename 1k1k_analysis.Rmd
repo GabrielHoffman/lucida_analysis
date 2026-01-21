@@ -60,7 +60,7 @@ thm = theme_classic(15) +
 ```
 
 # Lucida analysis
-```{r lucida}
+```{r lucida, cache=FALSE}
 file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/1k1k_sort_CSC_lzf.h5ad"
 sce = readH5AD(file)
 sce$libSize = sce$nCount_RNA
@@ -70,7 +70,9 @@ tab = table(sce$cell_type)
 sce = sce[,sce$cell_type %in% names(tab[tab>1000])]
 sce = sce[,sce$libSize > 1000]
 sce$cell_type = droplevels(sce$cell_type)
+```
 
+```{r lucida}
 fit = lucida(sce, ~ age + sex + (1|donor_id), 
   cluster_id = "cell_type")
 ```
