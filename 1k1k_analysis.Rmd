@@ -31,7 +31,7 @@ rmarkdown::render("1k1k_analysis.Rmd")
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 FILE=/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/08984b3c-3189-4732-be22-62f1fe8f15a4.h5ad
 
-$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $(dirname $FILE)/1k1k_sort_CSC_lzf.h5ad
+$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $(dirname $FILE)/1k1k_sort_CSC_lzf.h5ad_v2
 
 --->
 
@@ -80,16 +80,16 @@ fit = lucida(sce, ~ age + sex + (1|donor_id),
 ```
 
 ## Plots
-```{r plotDispEsts, fig.height = 9, fig.width = 9}
+```{r plotDispEsts, fig.height = 12, fig.width = 12}
 plotDispEsts(fit, ncol=5)
 ```
 
-```{r plotMA, fig.height = 9, fig.width = 9}
+```{r plotMA, fig.height = 12, fig.width = 12}
 plotMA(fit, coef='age', ncol=5)
 plotMA(fit, coef='sexmale', ncol=5)
 ```
 
-```{r plotVolcano, fig.height = 9, fig.width = 9}
+```{r plotVolcano, fig.height = 12, fig.width = 12}
 plotVolcano(fit, coef='age', ncol=5)
 plotVolcano(fit, coef='sexmale', ncol=5)
 ```
@@ -99,7 +99,7 @@ fit.null <- lucida(sce, ~ (1|donor_id),
   cluster_id = "cell_type")
 ```
 
-```{r vp, fig.height = 9, fig.width = 9}
+```{r vp, fig.height = 15, fig.width =15}
 vp <- fitVarPart(fit, fit.null)
 
 plotVarPart(sortCols(vp), ncol=5)
@@ -113,7 +113,7 @@ results(fit, "age") %>%
   ggplot(aes(n, cluster_id, fill=cluster_id)) +
     geom_bar(stat="identity") +
     thm +
-    theme(aspect.ratio = 2) +
+    theme(aspect.ratio = 2, legend.position="none") +
     scale_x_continuous(limits=c(0,NA), expand=c(0,0)) +
     xlab("# genes")
 
@@ -123,7 +123,7 @@ results(fit, "age") %>%
   ggplot(aes(nSignif, cluster_id, fill=cluster_id)) +
     geom_bar(stat="identity") +
     thm +
-    theme(aspect.ratio = 2) +
+    theme(aspect.ratio = 2, legend.position="none") +
     scale_x_continuous(limits=c(0,NA), expand=c(0,0)) +
     xlab("# significant genes") +
     ggtitle("Age")
@@ -134,7 +134,7 @@ results(fit, "sexmale") %>%
   ggplot(aes(nSignif, cluster_id, fill=cluster_id)) +
     geom_bar(stat="identity") +
     thm +
-    theme(aspect.ratio = 2) +
+    theme(aspect.ratio = 2, legend.position="none") +
     scale_x_continuous(limits=c(0,NA), expand=c(0,0)) +
     xlab("# significant genes") +
     ggtitle("Sex")
