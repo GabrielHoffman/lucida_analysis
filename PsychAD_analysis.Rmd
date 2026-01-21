@@ -1,0 +1,91 @@
+---
+title: "Analysis of PsychAD single cell dataset with lucida"
+subtitle: '[Lee, et al. (2025)](https://psych-ad.org)'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r format(Sys.time())`"
+documentclass: article
+vignette: >
+  %\VignetteIndexEntry{Analysis of PsychAD single cell dataset with lucida}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+---
+
+<!---
+
+cd /hpc/users/hoffmg01/work/lucida_analysis
+module load pandoc
+
+# rm -rf 1k1k_analysis_cache/
+
+rmarkdown::render("1k1k_analysis.Rmd")
+
+# Reduce H5AD file size by removing obsm, trimming obs
+python
+import anndata as ad
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/FULL_2024-02-01_18_49.h5ad"
+adata = ad.read_h5ad(file, backed=True) 
+adata.obsm = None
+keep = ['Channel', 'SubID', 'rep', 'poolID',  'class', 'subclass', 'subtype', 'n_genes', 'n_counts', 'percent_mito',  'mito_genes', 'mito_ribo', 'ribo_genes', 'apoptosis',  'Brain_bank', 'Age', 'Sex', 'PMI', 'pH']
+adata.obs = adata.obs[keep] 
+adata.write_h5ad("/sc/arion/scratch/hoffmg01/PsychAd.h5ad")
+
+
+
+# Recode
+SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
+FILE=/sc/arion/scratch/hoffmg01/PsychAd.h5ad
+
+$SRC --input $FILE --sortBy class,subclass,subtype,Channel,SubID --format CSC --compression lzf --out /sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/PsychAD_sort_CSC_lzf.h5ad
+
+
+--->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  lazy.cache = FALSE
+)
+```
+
+```{r packages, cache=FALSE}
+library(lucida)
+library(SingleCellExperiment)
+library(tidyverse)
+library(ggplot2)
+library(nebula)
+
+thm = theme_classic(15) +
+    theme(aspect.ratio = 1, 
+      plot.title = element_text(hjust = 0.5)) 
+```
+
+# Lucida analysis
+```{r load, cache=FALSE}
+file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/PsychAD_sort_CSC_lzf.h5ad"
+sce = readH5AD(file)
+sce$libSize = sce$n_counts
+```
+
+```{r lucida}
+fit = lucida(sce, ~ Sex + PMI + (1|SubID), 
+  cluster_id = "class")
+```
+
+
+
+
+
+
+
