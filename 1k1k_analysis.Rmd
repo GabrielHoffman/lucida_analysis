@@ -82,12 +82,12 @@ plotDispEsts(fit, ncol=5)
 
 ```{r plotMA}
 plotMA(fit, coef='age', ncol=5)
-plotMA(fit, coef='sex', ncol=5)
+plotMA(fit, coef='sexmale', ncol=5)
 ```
 
 ```{r plotVolcano}
 plotVolcano(fit, coef='age', ncol=5)
-plotVolcano(fit, coef='sex', ncol=5)
+plotVolcano(fit, coef='sexmale', ncol=5)
 ```
 
 ```{r lucida.null}
