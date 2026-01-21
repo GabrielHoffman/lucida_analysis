@@ -13,9 +13,11 @@ spec <- matrix(c(
 opt <- getopt(spec)
 
 # load analysis code
-source("de_methods.R")
+message("Loading packages...")
+source("/hpc/users/hoffmg01/work/lucida_analysis/simulations/de_methods.R")
 
 # read data
+message("Read H5AD...")
 sce.sim <- readH5AD( opt$h5ad )
 
 # select methods to run
@@ -33,6 +35,7 @@ methods <- c(
     "MAST")
 
 # Run analysis
+message("Run analysis...")
 df <- run_analysis(sce.sim, 
       formula = as.formula(opt$formula), 
       cluster_id = opt$cluster_id, 

@@ -1,4 +1,4 @@
-
+suppressPackageStartupMessages({
 library(lucida)
 library(SingleCellExperiment)
 library(GenomicDataStream)
@@ -8,6 +8,7 @@ library(dreamlet)
 library(reformulas)
 library(muscat)
 library(glmGamPoi)
+})
 
 run_nebula = function(sce, formula, cluster_id, method="LN"){
 
