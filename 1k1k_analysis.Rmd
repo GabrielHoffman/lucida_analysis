@@ -60,7 +60,7 @@ thm = theme_classic(15) +
 ```
 
 # Lucida analysis
-```{r lucida, cache=FALSE}
+```{r load, cache=FALSE}
 file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/1k1k_sort_CSC_lzf.h5ad"
 sce = readH5AD(file)
 sce$libSize = sce$nCount_RNA
