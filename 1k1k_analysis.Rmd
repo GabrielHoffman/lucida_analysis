@@ -20,6 +20,8 @@ output:
 cd /hpc/users/hoffmg01/work/lucida_analysis
 module load pandoc
 
+# scp minerva:/hpc/users/hoffmg01/work/lucida_analysis/1k1k_analysis.html .
+
 # rm -rf 1k1k_analysis_cache/
 
 rmarkdown::render("1k1k_analysis.Rmd")
@@ -41,6 +43,8 @@ knitr::opts_chunk$set(
   message = FALSE,
   error = FALSE,
   tidy = FALSE,
+  fig.height = 9,
+  fig.width = 9,
   dev = c("png", "pdf"),
   cache = TRUE,
   lazy.cache = FALSE
