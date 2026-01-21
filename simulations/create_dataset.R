@@ -16,9 +16,11 @@ spec <- matrix(c(
 # Parse command line arguments
 opt <- getopt(spec)
 
+suppressPackageStartupMessages({
 library(lucida)
 library(SingleCellExperiment)
 library(tidyverse)
+})
 
 # load lucida model
 fit <- readRDS( opt$fit )
