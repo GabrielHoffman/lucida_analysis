@@ -228,10 +228,9 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
     df <- bind_rows(df, res.gp)
   }
 
-  browser()
-  
   df <- df %>% 
-    inner_join(metadata(sce.sim), by=c(cluster_id, "ID")) %>%
+    inner_join(metadata(sce.sim) %>%
+      as_tibble, by=c('cluster_id', "ID")) %>%
     mutate(Method = factor(Method, validMethods)) %>%
     droplevels
 
