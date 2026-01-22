@@ -26,8 +26,8 @@ methods <- c(
     "lucida [1 step]",
     "lucida [Bayesian]",
     "lucida [pb]",
-    "nebula",
-    "nebula (HL)" ,
+    # "nebula",
+    # "nebula (HL)" ,
     "dreamlet" ,
     "DESeq2" ,
     "edgeR",
@@ -39,8 +39,12 @@ message("Run analysis...")
 df <- run_analysis(sce.sim, 
       formula = as.formula(opt$formula), 
       cluster_id = opt$cluster_id, 
-      methods = methods[-c(5,6)])
+      methods = methods)
 
 # write results to parquet
 library(arrow)
-write_parquet( df, sink = opt$out)
+
+df %>%
+  mutate(cluster_id = factor(cluster_id),
+    ID = factor(ID)) %>%
+  write_parquet( sink = opt$out)
