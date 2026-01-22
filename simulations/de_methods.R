@@ -113,7 +113,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
     pb2$libSize = colSums(counts(pb2))
     pb2 = pb2[,pb2$libSize > 1000]
 
-    fit.pb = lucida(pb2, ~ Dx, cluster_id = cluster_id)
+    fit.pb = lucida(pb2, ~ Dx, cluster_id = 'cluster_id')
 
     df <- bind_rows(df,
             results(fit.pb, "DxDisease", expand=TRUE) %>%
