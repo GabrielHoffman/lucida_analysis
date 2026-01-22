@@ -86,7 +86,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
             mutate(Method = "lucida [1 step]"))
   }
 
-  if( any(c("dreamlet", "lucida [pb]") %in% methods) ){
+  if( any(c("dreamlet", "lucida [pb]", "DESeq2") %in% methods) ){
     sce.tmp = SingleCellExperiment(list(counts = counts(sce.sim)), 
                 colData = colData(sce.sim))
    
