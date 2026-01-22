@@ -229,7 +229,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
   }
 
   df <- df %>% 
-    inner_join(metadata(sce.sim), by=c("cluster_id", "ID")) %>%
+    inner_join(metadata(sce.sim), by=c(cluster_id, "ID")) %>%
     mutate(Method = factor(Method, validMethods)) %>%
     droplevels
 
