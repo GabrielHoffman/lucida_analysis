@@ -148,6 +148,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
   # dreamlet
   if( "dreamlet" %in% methods ){
     res.proc <- processAssays(pb, ~ Dx)
+    res.dl <- dreamlet(res.proc, ~ Dx)
 
     df <- bind_rows(df,
             topTable(res.dl, "DxDisease", number=Inf) %>%
