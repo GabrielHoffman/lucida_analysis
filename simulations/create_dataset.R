@@ -48,4 +48,4 @@ sce.sim <- simulateCountData(
 
 library(anndataR)
 
-write_h5ad(sce.sim, opt$output)
+write_h5ad(sce.sim, opt$output, mode="w", compression="none")
