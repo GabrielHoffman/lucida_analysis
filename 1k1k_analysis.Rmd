@@ -80,7 +80,7 @@ fit = lucida(sce, ~ age + sex + (1|donor_id),
 ```
 
 ## Plots
-```{r plotDispEsts, fig.height = 12, fig.width = 12}
+```{r plotDispEsts, fig.height = 10, fig.width = 12}
 plotDispEsts(fit, ncol=5)
 ```
 
@@ -89,7 +89,7 @@ plotMA(fit, coef='age', ncol=5)
 plotMA(fit, coef='sexmale', ncol=5)
 ```
 
-```{r plotVolcano, fig.height = 12, fig.width = 12}
+```{r plotVolcano, fig.height = 15, fig.width = 12}
 plotVolcano(fit, coef='age', ncol=5)
 plotVolcano(fit, coef='sexmale', ncol=5)
 ```
@@ -99,7 +99,7 @@ fit.null <- lucida(sce, ~ (1|donor_id),
   cluster_id = "cell_type")
 ```
 
-```{r vp, fig.height = 15, fig.width =15}
+```{r vp, fig.height = 20, fig.width =15}
 vp <- fitVarPart(fit, fit.null)
 
 plotVarPart(sortCols(vp), ncol=5)
