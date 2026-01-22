@@ -113,7 +113,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
     pb2$libSize = colSums(counts(pb2))
     pb2 = pb2[,pb2$libSize > 1000]
 
-    fit.pb = lucida(pb2, ~ Dx, cluster_id = "CellType")
+    fit.pb = lucida(pb2, ~ Dx, cluster_id = cluster_id)
 
     df <- bind_rows(df,
             results(fit.pb, "DxDisease", expand=TRUE) %>%
@@ -162,7 +162,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
   if( "DESeq2" %in% methods ){
 
     sce.tmp2 <- prepSCE(sce.tmp, 
-      kid = "CellType", 
+      kid = cluster_id, 
       sid = "id", 
       gid = all.vars(nobars(formula))[1])
 
