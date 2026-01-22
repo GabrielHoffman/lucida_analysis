@@ -106,12 +106,13 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
   if( "lucida [pb]" %in% methods ){
     pb2 <- lapply(assayNames(pb), function(x){
       SingleCellExperiment(list(counts = assay(pb, x)), 
-                colData = data.frame(colData(pb), CellType = x))
+                colData = data.frame(colData(pb), 
+                  cluster_id = x))
       })
     pb2 <- do.call(cbind, pb2)
 
     pb2$libSize = colSums(counts(pb2))
-    pb2 = pb2[,pb2$libSize > 1000]
+    pb2 = pb2[,pb2$libSize > 0]
 
     fit.pb = lucida(pb2, ~ Dx, cluster_id = 'cluster_id')
 
