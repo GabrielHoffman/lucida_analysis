@@ -1,0 +1,319 @@
+---
+title: "Simulation analysis"
+subtitle: '1k1k'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r format(Sys.time())`"
+documentclass: article
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = TRUE
+)
+```
+
+
+```{r packages, cache=FALSE}
+library(arrow)
+library(ggplot2)
+library(tidyverse)
+library(PRROC)
+
+thm = theme_classic(15) +
+    theme(aspect.ratio = 1, 
+      plot.title = element_text(hjust = 0.5)) 
+
+colorMethods = c(
+  "lucida" = "#1F77B4FF",
+  "lucida [1 step]" = "#BECFE6FF",
+  "lucida [Bayesian]" = "#204e74",
+  "lucida [pb]"       = "navy",
+  "nebula" = "#FF7F0EFF",
+  "nebula (HL)" = "#c15a00",
+  "dreamlet" = "#2CA02CFF",
+  "DESeq2" = "#D62728FF",
+  "edgeR" = "#9467BDFF",
+  "glmGamPoi"  = "#8C564BFF"
+  )
+```
+
+
+```{r read, cache=FALSE}
+files = list.files("/sc/arion/scratch/hoffmg01/sims/", "res_sim_.*.parquet", full.names=TRUE)
+df = open_dataset(files) %>%
+  collect
+
+# count genes retained by each method
+df %>%
+  group_by(Method) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(Method, n, fill=Method)) +
+    geom_bar(stat="identity") +
+    thm +
+    theme(legend.position="none") + 
+    scale_fill_manual(values = colorMethods) + 
+    scale_y_continuous(expand=c(0,0)) +
+    ylab("Number of genes retained")
+
+# keep only genes included in each result
+keep <- df %>%
+  group_by(cluster_id, ID, simID) %>%
+  summarize(n = n()) %>%
+  mutate(ID2 = paste(cluster_id, ID, simID)) %>%
+  filter( n == length(unique(df$Method)) ) %>%
+  pull(ID2)
+
+df <- df %>%
+      filter(paste(cluster_id, ID, simID) %in% keep) 
+```
+
+
+
+
+# Results
+## Coefficients
+```{r Coefficients, cache=FALSE, fig.width=7, fig.height=7}
+# Beta 
+df_line = df %>%
+            select(cluster_id, b.true) %>%
+            distinct 
+
+df %>%
+  ggplot(aes(b.true==0, logFC, fill=Method)) +
+    geom_boxplot() +
+    thm +
+    facet_wrap(~cluster_id) +
+    scale_fill_manual(values = colorMethods) + 
+    coord_cartesian(ylim=c(-.2, .2)) +
+    geom_hline(aes(yintercept=b.true), df_line, linetype="dashed") 
+
+rMSE = function(x,y){
+  sqrt(mean((x-y)^2))
+}
+
+df %>% 
+  group_by(Method, cluster_id) %>%
+  summarize(rMSE = rMSE( logFC, b.true)) %>%
+  ggplot(aes(cluster_id, rMSE, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    scale_y_continuous(expand=c(0,0)) +
+    ylab("Root mean squared error") +
+    ggtitle("Estimating logFC") +
+    scale_fill_manual(values = colorMethods)
+
+df %>%
+  ggplot(aes(mu, (b.true - logFC)^2, color=Method)) +
+    # geom_point() +
+    geom_smooth(se=FALSE) +
+    thm +  
+    scale_color_manual(values = colorMethods) +
+    facet_wrap(~cluster_id, scales="free_y") +
+    ggtitle("Squared deviation of estimate logFC vs expression magnitude") +
+    scale_x_log10() +
+    xlab("Mean normalized counts") +
+    ylab("Squared deviation")
+```
+
+
+## Theta
+```{r theta, cache=FALSE, fig.width=12, fig.height=9}
+df %>%
+  filter(!is.na(theta.x)) %>%
+  filter(Method != "lucida [Bayesian]") %>%
+  ggplot(aes(theta.y, pmin(1e4, theta.x), color=Method)) +
+    geom_point() +
+    thm +
+    theme(legend.position="none") +
+    facet_grid(Method ~ cluster_id) +
+    xlab(bquote(Simulated~theta)) +
+    ylab(bquote(Estimated~theta)) +
+    scale_x_log10() +
+    scale_y_log10() +
+    geom_abline( slope=1, color="black") +
+    scale_color_manual(values = colorMethods)
+
+df %>%
+  filter(!is.na(theta.x)) %>%
+  filter(Method != "lucida [Bayesian]") %>%
+  ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method)) +
+    # geom_point() +
+    geom_smooth(se=FALSE) +
+    thm +    
+    scale_color_manual(values = colorMethods) +
+    facet_wrap(~cluster_id) +
+    xlab("Mean normalized counts") +
+    ylab("Squared deviation of log theta") +
+    scale_x_log10() 
+```
+
+
+```{r other plots, cache=FALSE, fig.width=12, fig.height=9}
+df %>% 
+  group_by(Method, cluster_id) %>%
+  summarize(rMSE = rMSE(  pmin(1e4, theta.x), theta.y)) %>%
+  filter(!is.na(rMSE)) %>%
+  filter(Method != "lucida [Bayesian]") %>%
+  ggplot(aes(cluster_id, rMSE, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE, ylim=c(0, NA)) +
+    ylab("Root mean squared error") +
+    ggtitle(bquote(Estimating~theta)) +
+    scale_fill_manual(values = colorMethods)
+
+# sigSq_g
+df %>%
+  filter(!is.na(sigSq_g.x)) %>%
+  filter(Method != "lucida [Bayesian]") %>%
+  ggplot(aes(sigSq_g.y, sigSq_g.x, color=Method)) +
+    geom_point() +
+    thm +
+    theme(legend.position="none") +
+    facet_grid(Method ~ cluster_id) +
+    xlab(bquote(Simulated~sigma[g]^2)) +
+    ylab(bquote(Estimated~sigma[g]^2)) +
+    scale_x_log10() +
+    scale_y_log10() +
+    geom_abline( slope=1, color="black")  +
+    scale_color_manual(values = colorMethods) 
+
+df %>% 
+  group_by(Method, cluster_id) %>%
+  summarize(rMSE = rMSE( sigSq_g.y, sigSq_g.x)) %>%
+  filter(!is.na(rMSE)) %>%
+  filter(Method != "lucida [Bayesian]") %>%
+  ggplot(aes(cluster_id, rMSE, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE)+
+    ylab("Root mean squared error") +
+    ggtitle(bquote(Estimating~sigma[g]^2)) +
+    scale_fill_manual(values = colorMethods)
+
+df %>%
+  filter(!is.na(theta.x)) %>%
+  filter(Method != "lucida [Bayesian]") %>%
+  ggplot(aes(mu, abs((sigSq_g.x) - (sigSq_g.y)), color=Method)) +
+    # geom_point() +
+    geom_smooth(se=FALSE) +
+    thm +    
+    scale_color_manual(values = colorMethods) +
+    facet_wrap(~cluster_id) +
+    xlab("Mean normalized counts") +
+    scale_x_log10() 
+```
+
+## AUPR
+```{r AUPR, cache=FALSE, fig.height=8, fig.width=8}
+# AUPR
+aupr = function(status, score){
+
+  pr <- pr.curve(
+    scores.class0 = score[status != 0], 
+    scores.class1 = score[status == 0], 
+    rand.compute = TRUE, 
+    curve = TRUE)
+
+  # 5. Calculate F1 scores for all points
+  recall <- pr$curve[, 1]
+  precision <- pr$curve[, 2]
+  f1_scores <- 2 * (precision * recall) / (precision + recall)
+
+  data.frame(AUPR = pr$auc.integral, 
+    AUPR.rand = pr$rand$auc.integral,
+    F1.max = max(f1_scores, na.rm = TRUE))
+}
+
+df_perf = df %>% 
+  group_by(Method, cluster_id) %>%
+  filter(!is.na(FDR)) %>%
+  summarize(aupr(b.true, -log10(FDR)))
+
+df_perf %>%
+  ggplot(aes(cluster_id, AUPR, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+    geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
+    ggtitle("Differential expression performance") +
+    scale_fill_manual(values = colorMethods)
+
+df_perf %>%
+  ggplot(aes(cluster_id, F1.max, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+    ggtitle("Differential expression performance") +
+    scale_fill_manual(values = colorMethods)
+
+df %>% 
+  filter(!is.na(mu)) %>%
+  mutate(bin = cut(log10(mu), 3)) %>%
+  group_by(Method, cluster_id, bin) %>%
+  filter(!is.na(FDR)) %>%
+  summarize(aupr(b.true, -log10(FDR)), n = n()) %>%
+  ggplot(aes(bin , AUPR, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+    geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
+    ggtitle("Differential expression performance vs expr magnitude") +
+    scale_fill_manual(values = colorMethods) +
+    facet_wrap(~cluster_id)
+```
+
+
+
+## False positive rate
+```{r FPR}
+df %>% 
+  group_by(Method, cluster_id)  %>%
+  filter(!is.na(P.Value), b.true == 0) %>% 
+  summarize( FPR = sum(P.Value < 0.05) / length(P.Value), N = length(P.Value)) %>%
+  ggplot(aes(cluster_id, FPR, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE) +
+    geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
+    ylab("False positive rate") +
+    ggtitle("Differential expression performance") +
+    scale_fill_manual(values = colorMethods)
+
+df %>% 
+  group_by(Method, cluster_id)  %>%
+  filter(!is.na(P.Value), b.true == 0) %>% 
+  ggplot(aes(P.Value, color=Method)) +
+    geom_density() +
+    thm +
+    scale_x_continuous(limits=c(0, 1), expand=c(0, 0)) +
+    facet_wrap(~cluster_id) +
+    scale_color_manual(values = colorMethods)
+
+df %>% 
+  mutate(bin = cut(log10(mu), 3)) %>%
+  group_by(Method, cluster_id, bin)  %>%
+  filter(!is.na(P.Value)) %>% 
+  summarize( FPR = sum(P.Value < 0.05) / length(P.Value), N = length(P.Value)) %>%
+  ggplot(aes(bin, FPR, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE) +
+    geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
+    ylab("False positive rate") +
+    ggtitle("Differential expression performance") +
+    scale_fill_manual(values = colorMethods) +
+    facet_wrap(~cluster_id)
+```
