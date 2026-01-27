@@ -51,5 +51,13 @@ sce.sim <- simulateCountData(
 metadata(sce.sim)$params$seed <- opt$seed
 metadata(sce.sim)$params$nDonor <- nlevels(sce.sim$donor_id)
 
+# write params to separate file
+params <- metadata(sce.sim)$params
+file = gsub("h5ad$", "info.RDS", opt$output)
+saveRDS(params, file = file)
+
+# only data.frame is readable to python
+metadata(sce.sim) <- metadata(sce.sim)$info
+
 # write to file
 write_h5ad(sce.sim, opt$output, mode="w", compression="none")
