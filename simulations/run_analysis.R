@@ -31,15 +31,15 @@ methods <- c(
     "dreamlet" ,
     "DESeq2" ,
     "edgeR",
-    "glmGamPoi",
-    "MAST")
+    "glmGamPoi")
 
 # Run analysis
 message("Run analysis...")
 df <- run_analysis(sce.sim, 
       formula = as.formula(opt$formula), 
       cluster_id = opt$cluster_id, 
-      methods = methods)
+      methods = methods,
+      nthreads = 1)
 
 # Get sim params
 file <- gsub("_recode.h5ad$", ".info.RDS", opt$h5ad)

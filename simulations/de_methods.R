@@ -49,9 +49,9 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
     "lucida [Bayesian]",
     "lucida [pb]",
     "nebula",
-    "nebula (HL)" ,
-    "dreamlet" ,
-    "DESeq2" ,
+    "nebula (HL)",
+    "dreamlet",
+    "DESeq2",
     "edgeR",
     "glmGamPoi",
     "MAST")
