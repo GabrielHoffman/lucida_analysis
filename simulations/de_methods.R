@@ -10,7 +10,7 @@ library(muscat)
 library(glmGamPoi)
 })
 
-run_nebula = function(sce, formula, cluster_id, method="LN"){
+run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 
   lapply( unique(sce[[cluster_id]]), function(CT){
     
@@ -28,7 +28,7 @@ run_nebula = function(sce, formula, cluster_id, method="LN"){
 
     design = model.matrix(nobars(formula), data)
 
-    fit = nebula( counts(sceSub[,idx]), data[[ran_var]], design, offset = sceSub$libSize[idx], method=method)
+    fit = nebula( counts(sceSub[,idx]), data[[ran_var]], design, offset = sceSub$libSize[idx], method = method, ncore = nthreads)
     
     tibble(cluster_id = CT, 
             ID = fit$summary$gene,
@@ -41,7 +41,7 @@ run_nebula = function(sce, formula, cluster_id, method="LN"){
     bind_rows
 }
 
-run_analysis <- function( sce.sim, formula, cluster_id, methods){
+run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
 
   validMethods <- c(  
     "lucida",
@@ -62,7 +62,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
 
   # lucida 
   if( "lucida" %in% methods ){
-    fit.lucida <- lucida(sce.sim, formula, cluster_id)
+    fit.lucida <- lucida(sce.sim, formula, cluster_id, nthreads = nthreads)
 
     # merge with expression magnitude information
     df_mu <- lapply( names(fit.lucida), function(x){
@@ -79,7 +79,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
 
   # lucida one step
   if( "lucida [1 step]" %in% methods ){
-    fit.lucida1 <- lucida(sce.sim, formula, cluster_id, shrinkDispersion=FALSE)
+    fit.lucida1 <- lucida(sce.sim, formula, cluster_id, shrinkDispersion=FALSE, nthreads = nthreads)
 
     df <- bind_rows(df,
             results(fit.lucida1, "DxDisease", expand=TRUE) %>%
@@ -114,7 +114,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
     pb2$libSize = colSums(counts(pb2))
     pb2 = pb2[,pb2$libSize > 0]
 
-    fit.pb = lucida(pb2, ~ Dx, cluster_id = 'cluster_id')
+    fit.pb = lucida(pb2, ~ Dx, cluster_id = 'cluster_id', nthreads = nthreads)
 
     df <- bind_rows(df,
             results(fit.pb, "DxDisease", expand=TRUE) %>%
@@ -123,7 +123,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
 
   # nebula
   if( "nebula" %in% methods ){
-    res.neb <- run_nebula(sce.sim, formula, cluster_id)
+    res.neb <- run_nebula(sce.sim, formula, cluster_id, nthreads = nthreads)
 
     df <- bind_rows(df,
             res.neb %>%
@@ -135,7 +135,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods){
   }
 
   if( "nebula (HL)" %in% methods ){
-    res.neb.HL <- run_nebula(sce.sim, formula, cluster_id, method="HL")
+    res.neb.HL <- run_nebula(sce.sim, formula, cluster_id, method="HL", nthreads = nthreads)
 
     df <- bind_rows(df,
             res.neb.HL %>%
