@@ -105,6 +105,30 @@ vp <- fitVarPart(fit, fit.null)
 plotVarPart(sortCols(vp), ncol=5)
 ```
 
+```{r vp2, fig.height = 20, fig.width =15}
+# merge with expression magnitude information
+df_mu <- lapply( names(fit), function(x){
+  tibble(cluster_id = x,
+    ID = rownames(fit[[x]]$fit),
+    mu = fit[[x]]$fit$mu_mean)
+}) %>%
+  bind_rows
+
+vp %>%
+  as_tibble %>%
+  rename(cluster_id = CellType, ID = Gene) %>%
+  left_join(df_mu, by=c("cluster_id", "ID")) %>%
+  ggplot(aes((mu), 100*CountNoise)) +
+    geom_point() +
+    thm +
+    geom_smooth(method="loess", se=FALSE, span=.25) +
+    facet_wrap(~cluster_id) +
+    scale_y_continuous(limits=c(0,100), expand=c(0, .01)) +
+    scale_x_log10() +
+    ylab("Percentage of variance due to count noise") +
+    xlab("Mean normalized counts")
+```
+
 # Results
 ```{r results}
 results(fit, "age") %>%

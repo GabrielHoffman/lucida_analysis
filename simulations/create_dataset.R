@@ -20,6 +20,7 @@ suppressPackageStartupMessages({
 library(lucida)
 library(SingleCellExperiment)
 library(tidyverse)
+library(anndataR)
 })
 
 # load lucida model
@@ -46,6 +47,9 @@ sce.sim <- simulateCountData(
   pDE = opt$pDE, 
   libScaleFactor = opt$libScaleFactor)
 
-library(anndataR)
+# save simulation parameters
+metadata(sce.sim)$params$seed <- opt$seed
+metadata(sce.sim)$params$nDonor <- nlevels(sce.sim$donor_id)
 
+# write to file
 write_h5ad(sce.sim, opt$output, mode="w", compression="none")
