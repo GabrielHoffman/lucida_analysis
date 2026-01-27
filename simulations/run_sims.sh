@@ -28,7 +28,7 @@ saveRDS(fit, file="test_lucida_fit.RDS")
 saveRDS(colData(sce2), file="test_lucida_fit_data.RDS")
 
 
-
+# at the model fit
 
 
 # Simulate data
@@ -38,40 +38,57 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 # DATA=$DIR/lucida_fit_data.RDS
 FIT=$DIR/test_lucida_fit.RDS
 DATA=$DIR/test_lucida_fit_data.RDS
- 
-for i in $(seq 1 1 10)
+
+echo "" > script_sim.sh
+for libScaleFactor in $(echo 0.5 1 5 10 25)
 do
-  $DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC 0.07 --pDE 0.1 --libScaleFactor 1 --output /sc/arion/scratch/hoffmg01/sims/sim_${i}.h5ad &
+for i in $(seq 1 1 25)
+do
+  ID=${libScaleFactor}_${i}
+  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC 0.07 --pDE 0.05 --libScaleFactor ${libScaleFactor} --output /sc/arion/scratch/hoffmg01/sims/sim_${ID}.h5ad" >> script_sim.sh
 done
+done
+
+cat script_sim.sh | parallel -P 40
+
 
 # Recode for efficient access
 #----------------------------
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 
-for i in $(seq 1 1 10)
+echo "" > script.sh
+for libScaleFactor in $(echo 0.5 1 5 10 25)
 do
-  FILE=/sc/arion/scratch/hoffmg01/sims/sim_${i}.h5ad
-  OUT=/sc/arion/scratch/hoffmg01/sims/sim_${i}_recode.h5ad
-  $SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT
+for i in $(seq 1 1 25)
+do
+  ID=${libScaleFactor}_${i}
+  FILE=/sc/arion/scratch/hoffmg01/sims/sim_${ID}.h5ad
+  OUT=/sc/arion/scratch/hoffmg01/sims/sim_${ID}_recode.h5ad
+  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT " >> script.sh
 done
+done
+
+cat script.sh | parallel -P 40
 
 # Run DE analysis
 #----------------
-for i in $(seq 1 1 10)
+
+for libScaleFactor in $(echo 0.5 1 5 10 25)
 do
-  FILE=/sc/arion/scratch/hoffmg01/sims/sim_${i}_recode.h5ad
-  OUT=/sc/arion/scratch/hoffmg01/sims/res_sim_${i}.parquet
-  $DIR/run_analysis.R --h5ad $FILE --formula "~ Dx + (1|donor_id)" --cluster_id cell_type --output $OUT
+for i in $(seq 1 1 25)
+do
+  ID=${libScaleFactor}_${i}
+  FILE=/sc/arion/scratch/hoffmg01/sims/sim_${ID}_recode.h5ad
+  OUT=/sc/arion/scratch/hoffmg01/sims/res_sim_${ID}.parquet
+  $DIR/run_analysis.R --h5ad $FILE --formula "~ Dx + (1|donor_id)" --cluster_id cell_type --output $OUT &
+done
 done
 
 # Performance plots
 ###################
 
-library(arrow)
-library(tidyverse)
+rmarkdown::render("plot_results.Rmd")
 
-file = "/sc/arion/scratch/hoffmg01/sims/res_sim_1.parquet"
-df = read_parquet(file)
 
 
 

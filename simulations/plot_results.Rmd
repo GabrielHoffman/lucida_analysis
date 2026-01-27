@@ -51,9 +51,17 @@ colorMethods = c(
 
 
 ```{r read, cache=FALSE}
+
+get_idx = Vectorize(function(x, i){
+  strsplit(x, "_")[[1]][i]
+})
+
 files = list.files("/sc/arion/scratch/hoffmg01/sims/", "res_sim_.*.parquet", full.names=TRUE)
 df = open_dataset(files) %>%
-  collect
+  collect %>%
+  mutate(libScaleFactor = get_idx(simID, 3))
+
+table(df$libScaleFactor)
 
 # count genes retained by each method
 df %>%
@@ -65,18 +73,21 @@ df %>%
     theme(legend.position="none") + 
     scale_fill_manual(values = colorMethods) + 
     scale_y_continuous(expand=c(0,0)) +
-    ylab("Number of genes retained")
+    ylab("Number of genes retained") +
+    facet_wrap(~libScaleFactor)
 
 # keep only genes included in each result
+target = length(unique(df$Method))
 keep <- df %>%
-  group_by(cluster_id, ID, simID) %>%
+  group_by(cluster_id, ID, simID, libScaleFactor) %>%
   summarize(n = n()) %>%
-  mutate(ID2 = paste(cluster_id, ID, simID)) %>%
-  filter( n == length(unique(df$Method)) ) %>%
+  mutate(ID2 = paste(cluster_id, ID, simID, libScaleFactor)) %>%
+  filter( n == target ) %>%
   pull(ID2)
 
 df <- df %>%
-      filter(paste(cluster_id, ID, simID) %in% keep) 
+      filter(paste(cluster_id, ID, simID, libScaleFactor) %in% keep) %>%
+      mutate(libScaleFactor =factor(as.integer(libScaleFactor)))
 ```
 
 
@@ -104,7 +115,7 @@ rMSE = function(x,y){
 }
 
 df %>% 
-  group_by(Method, cluster_id) %>%
+  group_by(Method, cluster_id, libScaleFactor) %>%
   summarize(rMSE = rMSE( logFC, b.true)) %>%
   ggplot(aes(cluster_id, rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
@@ -112,7 +123,8 @@ df %>%
     scale_y_continuous(expand=c(0,0)) +
     ylab("Root mean squared error") +
     ggtitle("Estimating logFC") +
-    scale_fill_manual(values = colorMethods)
+    scale_fill_manual(values = colorMethods) +
+    facet_wrap(~libScaleFactor)
 
 df %>%
   ggplot(aes(mu, (b.true - logFC)^2, color=Method)) +
@@ -124,7 +136,8 @@ df %>%
     ggtitle("Squared deviation of estimate logFC vs expression magnitude") +
     scale_x_log10() +
     xlab("Mean normalized counts") +
-    ylab("Squared deviation")
+    ylab("Squared deviation")+
+    facet_wrap(~libScaleFactor)
 ```
 
 
@@ -143,7 +156,8 @@ df %>%
     scale_x_log10() +
     scale_y_log10() +
     geom_abline( slope=1, color="black") +
-    scale_color_manual(values = colorMethods)
+    scale_color_manual(values = colorMethods)+
+    facet_wrap(~libScaleFactor)
 
 df %>%
   filter(!is.na(theta.x)) %>%
@@ -156,7 +170,8 @@ df %>%
     facet_wrap(~cluster_id) +
     xlab("Mean normalized counts") +
     ylab("Squared deviation of log theta") +
-    scale_x_log10() 
+    scale_x_log10() +
+    facet_wrap(~libScaleFactor)
 ```
 
 
@@ -172,7 +187,8 @@ df %>%
     coord_cartesian(expand=FALSE, ylim=c(0, NA)) +
     ylab("Root mean squared error") +
     ggtitle(bquote(Estimating~theta)) +
-    scale_fill_manual(values = colorMethods)
+    scale_fill_manual(values = colorMethods)+
+    facet_wrap(~libScaleFactor)
 
 # sigSq_g
 df %>%
@@ -188,7 +204,8 @@ df %>%
     scale_x_log10() +
     scale_y_log10() +
     geom_abline( slope=1, color="black")  +
-    scale_color_manual(values = colorMethods) 
+    scale_color_manual(values = colorMethods) +
+    facet_wrap(~libScaleFactor)
 
 df %>% 
   group_by(Method, cluster_id) %>%
@@ -201,7 +218,8 @@ df %>%
     coord_cartesian(expand=FALSE)+
     ylab("Root mean squared error") +
     ggtitle(bquote(Estimating~sigma[g]^2)) +
-    scale_fill_manual(values = colorMethods)
+    scale_fill_manual(values = colorMethods)+
+    facet_wrap(~libScaleFactor)
 
 df %>%
   filter(!is.na(theta.x)) %>%
@@ -213,7 +231,8 @@ df %>%
     scale_color_manual(values = colorMethods) +
     facet_wrap(~cluster_id) +
     xlab("Mean normalized counts") +
-    scale_x_log10() 
+    scale_x_log10() +
+    facet_wrap(~libScaleFactor)
 ```
 
 ## AUPR
@@ -238,41 +257,50 @@ aupr = function(status, score){
 }
 
 df_perf = df %>% 
-  group_by(Method, cluster_id) %>%
+  group_by(Method, cluster_id, libScaleFactor) %>%
   filter(!is.na(FDR)) %>%
   summarize(aupr(b.true, -log10(FDR)))
 
 df_perf %>%
-  ggplot(aes(cluster_id, AUPR, fill=Method)) +
+  ggplot(aes(libScaleFactor, AUPR, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     ggtitle("Differential expression performance") +
-    scale_fill_manual(values = colorMethods)
+    scale_fill_manual(values = colorMethods) +
+    facet_wrap(~cluster_id)
 
 df_perf %>%
-  ggplot(aes(cluster_id, F1.max, fill=Method)) +
+  ggplot(aes(libScaleFactor, F1.max, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
     ggtitle("Differential expression performance") +
-    scale_fill_manual(values = colorMethods)
+    scale_fill_manual(values = colorMethods)+
+    facet_wrap(~cluster_id)
+
+breaks <- df %>%
+          filter(!is.na(mu)) %>%
+          pull(mu) %>%
+          log10 %>%
+          quantile(probs = seq(0, 1, by = 1/3), na.rm = TRUE)
 
 df %>% 
   filter(!is.na(mu)) %>%
-  mutate(bin = cut(log10(mu), 3)) %>%
-  group_by(Method, cluster_id, bin) %>%
+  mutate(bin = cut(log10(mu), breaks=breaks)) %>%
+  filter(!is.na(bin)) %>%
+  group_by(Method, cluster_id, bin, libScaleFactor) %>%
   filter(!is.na(FDR)) %>%
   summarize(aupr(b.true, -log10(FDR)), n = n()) %>%
-  ggplot(aes(bin , AUPR, fill=Method)) +
+  ggplot(aes(bin, AUPR, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     ggtitle("Differential expression performance vs expr magnitude") +
     scale_fill_manual(values = colorMethods) +
-    facet_wrap(~cluster_id)
+    facet_grid( libScaleFactor ~ cluster_id )
 ```
 
 
@@ -280,32 +308,42 @@ df %>%
 ## False positive rate
 ```{r FPR}
 df %>% 
-  group_by(Method, cluster_id)  %>%
+  group_by(Method, cluster_id, libScaleFactor)  %>%
   filter(!is.na(P.Value), b.true == 0) %>% 
   summarize( FPR = sum(P.Value < 0.05) / length(P.Value), N = length(P.Value)) %>%
-  ggplot(aes(cluster_id, FPR, fill=Method)) +
+  ggplot(aes(libScaleFactor, FPR, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE) +
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
     ylab("False positive rate") +
-    ggtitle("Differential expression performance") +
-    scale_fill_manual(values = colorMethods)
+    scale_fill_manual(values = colorMethods) +
+    facet_wrap(~cluster_id)
 
 df %>% 
-  group_by(Method, cluster_id)  %>%
+  group_by(Method, cluster_id, libScaleFactor)  %>%
   filter(!is.na(P.Value), b.true == 0) %>% 
   ggplot(aes(P.Value, color=Method)) +
     geom_density() +
     thm +
     scale_x_continuous(limits=c(0, 1), expand=c(0, 0)) +
     facet_wrap(~cluster_id) +
-    scale_color_manual(values = colorMethods)
+    scale_color_manual(values = colorMethods) +
+    facet_grid( libScaleFactor ~ cluster_id )
+
+
+breaks <- df %>%
+          filter(!is.na(mu)) %>%
+          pull(mu) %>%
+          log10 %>%
+          quantile(probs = seq(0, 1, by = 1/3), na.rm = TRUE)
 
 df %>% 
-  mutate(bin = cut(log10(mu), 3)) %>%
-  group_by(Method, cluster_id, bin)  %>%
-  filter(!is.na(P.Value)) %>% 
+  filter(!is.na(mu)) %>%
+  mutate(bin = cut(log10(mu), breaks=breaks)) %>%
+  filter(!is.na(bin)) %>%
+  group_by(Method, cluster_id, bin, libScaleFactor)  %>%
+  filter(!is.na(P.Value), b.true == 0) %>% 
   summarize( FPR = sum(P.Value < 0.05) / length(P.Value), N = length(P.Value)) %>%
   ggplot(aes(bin, FPR, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
@@ -313,7 +351,8 @@ df %>%
     coord_cartesian(expand=FALSE) +
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
     ylab("False positive rate") +
-    ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) +
-    facet_wrap(~cluster_id)
+    facet_grid( libScaleFactor ~ cluster_id )
 ```
+
+
