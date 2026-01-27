@@ -41,10 +41,18 @@ df <- run_analysis(sce.sim,
       cluster_id = opt$cluster_id, 
       methods = methods)
 
+# Get sim params
+file <- gsub("_recode.h5ad$", ".info.RDS", opt$h5ad)
+params <- readRDS(file)
+
+# identifier for this simulation
+simID <- paste(params, collapse="_")
+
 # write results to parquet
 library(arrow)
 
 df %>%
-  mutate(cluster_id = factor(cluster_id),
+  mutate(simID = simID,
+    cluster_id = factor(cluster_id),
     ID = factor(ID)) %>%
   write_parquet( sink = opt$out)

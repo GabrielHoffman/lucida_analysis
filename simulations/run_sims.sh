@@ -2,6 +2,8 @@
 # Lucida fit
 #-----------
 
+cd /hpc/users/hoffmg01/work/lucida_analysis/simulations
+
 library(lucida)
 library(SingleCellExperiment)
 
@@ -15,7 +17,7 @@ sce = sce[,sce$cell_type %in% names(tab[tab>1000])]
 sce = sce[,sce$libSize > 1000]
 sce$cell_type = droplevels(sce$cell_type)
 
-CT = levels(sce$cell_type)[1:2]
+CTs = c("gamma-delta T cell", "mucosal invariant T cell")
 sce2 = sce[,sce$cell_type %in% CTs]
 sce2 = sce2[,sce2$donor_id %in% levels(sce2$donor_id)[1:300]]
 
@@ -27,8 +29,6 @@ saveRDS(colData(sce2), file="test_lucida_fit_data.RDS")
 
 
 
-# fit2 = lucida(sce.sim, ~ Dx + (1|donor_id), cluster_id = "cell_type")
-
 
 
 # Simulate data
@@ -38,23 +38,42 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 # DATA=$DIR/lucida_fit_data.RDS
 FIT=$DIR/test_lucida_fit.RDS
 DATA=$DIR/test_lucida_fit_data.RDS
-
-$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed 1 --logFC 0.07 --pDE 0.3 --libScaleFactor 1 --output /sc/arion/scratch/hoffmg01/sims/sim_1.h5ad
-
+ 
+for i in $(seq 1 1 10)
+do
+  $DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC 0.07 --pDE 0.1 --libScaleFactor 1 --output /sc/arion/scratch/hoffmg01/sims/sim_${i}.h5ad &
+done
 
 # Recode for efficient access
 #----------------------------
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
-FILE=/sc/arion/scratch/hoffmg01/sims/sim_1.h5ad
 
-$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out /sc/arion/scratch/hoffmg01/sims/sim_1_recode.h5ad
-
+for i in $(seq 1 1 10)
+do
+  FILE=/sc/arion/scratch/hoffmg01/sims/sim_${i}.h5ad
+  OUT=/sc/arion/scratch/hoffmg01/sims/sim_${i}_recode.h5ad
+  $SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT
+done
 
 # Run DE analysis
 #----------------
-run_analysis.R --h5ad /sc/arion/scratch/hoffmg01/sims/sim_1_recode.h5ad --formula "~ Dx + (1|donor_id)" --cluster_id cell_type --output /sc/arion/scratch/hoffmg01/sims/res_sim_1.parquet
+for i in $(seq 1 1 10)
+do
+  FILE=/sc/arion/scratch/hoffmg01/sims/sim_${i}_recode.h5ad
+  OUT=/sc/arion/scratch/hoffmg01/sims/res_sim_${i}.parquet
+  $DIR/run_analysis.R --h5ad $FILE --formula "~ Dx + (1|donor_id)" --cluster_id cell_type --output $OUT
+done
+
+# Performance plots
+###################
+
+library(arrow)
+library(tidyverse)
+
+file = "/sc/arion/scratch/hoffmg01/sims/res_sim_1.parquet"
+df = read_parquet(file)
 
 
-1) DE for somatic rate
-2) check anndataR written h5ad, can be read in python?
-  uns versus obs
+
+
+
