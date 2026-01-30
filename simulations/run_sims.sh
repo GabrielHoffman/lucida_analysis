@@ -56,7 +56,7 @@ cat script_sim.sh | parallel -P 40
 #----------------------------
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 
-echo "" > script.sh
+echo "" > script_recode.sh
 for libScaleFactor in $(echo 0.5 1 5 10 25)
 do
 for i in $(seq 1 1 25)
@@ -64,15 +64,16 @@ do
   ID=${libScaleFactor}_${i}
   FILE=/sc/arion/scratch/hoffmg01/sims/sim_${ID}.h5ad
   OUT=/sc/arion/scratch/hoffmg01/sims/sim_${ID}_recode.h5ad
-  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT " >> script.sh
+  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT " >> script_recode.sh
 done
 done
 
-cat script.sh | parallel -P 40
+cat script_recode.sh | parallel -P 40
 
 # Run DE analysis
 #----------------
 
+echo "" > script_de.sh
 for libScaleFactor in $(echo 0.5 1 5 10 25)
 do
 for i in $(seq 1 1 25)
@@ -80,9 +81,11 @@ do
   ID=${libScaleFactor}_${i}
   FILE=/sc/arion/scratch/hoffmg01/sims/sim_${ID}_recode.h5ad
   OUT=/sc/arion/scratch/hoffmg01/sims/res_sim_${ID}.parquet
-  $DIR/run_analysis.R --h5ad $FILE --formula "~ Dx + (1|donor_id)" --cluster_id cell_type --output $OUT &
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\" --cluster_id cell_type --output $OUT" >>  script_de.sh
 done
 done
+
+cat script_de.sh | parallel -P 40
 
 # Performance plots
 ###################
@@ -90,7 +93,9 @@ done
 rmarkdown::render("plot_results.Rmd")
 
 
-
-
-
+methods <- c(  
+    "lucida",
+    "lucida [1 step]",
+    "lucida [pb]",
+    "glmGamPoi")
 

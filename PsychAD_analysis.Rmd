@@ -20,9 +20,9 @@ output:
 cd /hpc/users/hoffmg01/work/lucida_analysis
 module load pandoc
 
-# rm -rf 1k1k_analysis_cache/
+# rm -rf PsychAD_analysis_cache/
 
-rmarkdown::render("1k1k_analysis.Rmd")
+rmarkdown::render("PsychAD_analysis.Rmd")
 
 # Reduce H5AD file size by removing obsm, trimming obs
 python
@@ -55,7 +55,7 @@ knitr::opts_chunk$set(
   tidy = FALSE,
   dev = c("png", "pdf"),
   cache = TRUE,
-  lazy.cache = TRUE
+  lazy.cache = FALSE
 )
 ```
 
@@ -83,6 +83,31 @@ fit = lucida(sce, ~ Sex + PMI + (1|SubID),
   cluster_id = "class")
 ```
 
+## Plots
+```{r plotDispEsts, fig.height = 10, fig.width = 12}
+plotDispEsts(fit, ncol=5)
+```
+
+```{r plotMA, fig.height = 12, fig.width = 12}
+plotMA(fit, coef='age', ncol=5)
+plotMA(fit, coef='sexmale', ncol=5)
+```
+
+```{r plotVolcano, fig.height = 15, fig.width = 12}
+plotVolcano(fit, coef='age', ncol=5)
+plotVolcano(fit, coef='sexmale', ncol=5)
+```
+
+```{r lucida.null}
+fit.null <- lucida(sce, ~ (1|donor_id), 
+  cluster_id = "cell_type")
+```
+
+```{r vp, fig.height = 20, fig.width =15}
+vp <- fitVarPart(fit, fit.null)
+
+plotVarPart(sortCols(vp), ncol=5)
+```
 
 
 
