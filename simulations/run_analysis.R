@@ -43,7 +43,6 @@ if( n_samples < 10 ){
   methods <- setdiff(methods, c("nebula","nebula (HL)"))
 }
 
-
 # Run analysis
 message("Run analysis...")
 df <- run_analysis(sce.sim, 
