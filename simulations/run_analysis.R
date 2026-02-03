@@ -27,16 +27,27 @@ methods <- c(
     "lucida [Bayesian]",
     "lucida [pb]",
     "nebula",
-    "nebula (HL)" ,
+    "nebula (HL)",
     "dreamlet" ,
     "DESeq2" ,
     "edgeR",
     "glmGamPoi")
 
+formula <- as.formula(opt$formula)
+
+# if sample size < 10, drop nebula
+ran_var <- all.vars(findbars(formula)[[1]])
+n_samples <- nlevels(colData(sce.sim)[,ran_var])
+
+if( n_samples < 10 ){
+  methods <- setdiff(methods, c("nebula","nebula (HL)"))
+}
+
+
 # Run analysis
 message("Run analysis...")
 df <- run_analysis(sce.sim, 
-      formula = as.formula(opt$formula), 
+      formula = formula, 
       cluster_id = opt$cluster_id, 
       methods = methods,
       nthreads = 1)

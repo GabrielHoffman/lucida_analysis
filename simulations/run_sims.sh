@@ -21,7 +21,7 @@ CTs = c("gamma-delta T cell", "mucosal invariant T cell", "naive B cell", "naive
 
 n_donors_array = c(4, 10, 25, 50, 100, 250, 400, 500, 700, 981)
 
-for(n_donors in n_donors_array[c(1:5)]){
+for(n_donors in n_donors_array[9:10]){
 
   message(n_donors)
   sce2 = sce[,sce$cell_type %in% CTs]
@@ -50,8 +50,10 @@ ml parallel
 DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 
 NREPS=5
+NSAMPLES="4 10 25 50 100 250 400 500 700 981"
+
 echo "" > script_sim.sh
-for N in $(echo "4 10 25 50 100 250 400 500 700 981")
+for N in $(echo $NSAMPLES)
 do
 for libScaleFactor in $(echo 0.5 1 5 10 25)
 do
@@ -65,7 +67,11 @@ done
 done
 done
 
-cat script_sim.sh | parallel -P 20
+# run sims
+cat script_sim.sh | parallel -P 40
+
+# check that files were written
+cat script_sim.sh | awk '{print $NF}' | xargs ls > /dev/null
 
 
 # Recode for efficient access
@@ -73,7 +79,7 @@ cat script_sim.sh | parallel -P 20
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 
 echo "" > script_recode.sh
-for N in $(echo "4 10 25 50 100 250 400 500 700 981")
+for N in $(echo $NSAMPLES)
 do
 for libScaleFactor in $(echo 0.5 1 5 10 25)
 do
@@ -87,13 +93,13 @@ done
 done
 done
 
-cat script_recode.sh | parallel -P 40
+cat script_recode.sh | parallel -P 5
 
 # Run DE analysis
 #----------------
 
 echo "" > script_de.sh
-for N in $(echo "4 10 25 50 100 250 400 500 700 981")
+for N in $(echo $NSAMPLES)
 do
 for libScaleFactor in $(echo 0.5 1 5 10 25)
 do
@@ -107,7 +113,7 @@ done
 done
 done
 
-cat script_de.sh | parallel -P 40
+cat script_de.sh | parallel -P 10
 
 # Performance plots
 ###################

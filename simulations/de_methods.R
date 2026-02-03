@@ -13,7 +13,7 @@ library(glmGamPoi)
 run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 
   lapply( unique(sce[[cluster_id]]), function(CT){
-    
+    message(CT)
     # cells of given type
     idx = (sce[[cluster_id]] == CT)
 
@@ -25,6 +25,10 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 
     data = colData(sceSub[,idx])
     data = droplevels(data)
+
+    if( nlevels(data[[ran_var]]) < 3 ){
+      return( NULL)
+    }
 
     design = model.matrix(nobars(formula), data)
 
