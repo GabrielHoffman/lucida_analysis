@@ -21,7 +21,10 @@ library(lucida)
 library(SingleCellExperiment)
 library(tidyverse)
 library(anndataR)
+library(RhpcBLASctl)
 })
+
+omp_set_num_threads(1)
 
 # load lucida model
 fit <- readRDS( opt$fit )
