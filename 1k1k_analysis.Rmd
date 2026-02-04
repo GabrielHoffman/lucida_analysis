@@ -31,7 +31,7 @@ rmarkdown::render("1k1k_analysis.Rmd")
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 FILE=/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/08984b3c-3189-4732-be22-62f1fe8f15a4.h5ad
 
-$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $(dirname $FILE)/1k1k_sort_CSC_lzf.h5ad_v2
+$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $(dirname $FILE)/1k1k_sort_CSC_lzf.h5ad
 
 --->
 

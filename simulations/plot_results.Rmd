@@ -18,16 +18,6 @@ rmarkdown::render("plot_results.Rmd")
 
 
 
-df %>%
-  filter(ID == 'ENSG00000142676', 
-    cluster_id == "mucosal invariant T cell",
-    Method == 'lucida') %>%
-  head %>%
-  data.frame
-
-
-
-
 thm = theme_classic(30) +
     theme(aspect.ratio = 1, 
       plot.title = element_text(hjust = 0.5)) 
@@ -45,11 +35,11 @@ knitr::opts_chunk$set(
   message = FALSE,
   error = FALSE,
   tidy = FALSE,
-  fig.height = 12,
-  fig.width = 10,
+  fig.height = 20,
+  fig.width = 12,
   dev = c("png", "pdf"),
   cache = TRUE,
-  cache.lazy = TRUE
+  cache.lazy = FALSE
 )
 ```
 
@@ -61,7 +51,7 @@ library(tidyverse)
 library(scattermore)
 library(PRROC)
 
-thm = theme_classic(18) +
+thm = theme_classic(15) +
     theme(aspect.ratio = 1, 
       plot.title = element_text(hjust = 0.5)) 
 
@@ -74,9 +64,11 @@ colorMethods = c(
   "nebula (HL)" = "#c15a00",
   "dreamlet" = "#2CA02CFF",
   "DESeq2" = "#D62728FF",
-  "edgeR" = "#9467BDFF",
-  "glmGamPoi"  = "#8C564BFF"
+  "edgeR" = "#A020F0",
+  "glmGamPoi"  = "#FF69B4"
   )
+
+# pie(rep(1, length(colorMethods)), col=colorMethods)
 ```
 
 
@@ -85,16 +77,24 @@ get_idx = Vectorize(function(x, i){
   strsplit(x, "_")[[1]][i]
 })
 
-# files = list.files("/sc/arion/scratch/hoffmg01/sims/", "res_sim_.*.parquet", full.names=TRUE)
+CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
+
+files = list.files("/sc/arion/scratch/hoffmg01/sims/", "res_sim_.*.parquet", full.names=TRUE)
 df = open_dataset(files) %>%
   collect %>%
-  mutate(libScaleFactor = get_idx(simID, 3))
+  mutate(libScaleFactor = get_idx(simID, 3),
+        N = get_idx(simID, 6))
+
+df = df %>%
+  mutate(libScaleFactor = factor(as.numeric(libScaleFactor))) %>%
+  mutate(N = factor(as.numeric(N))) %>%
+  mutate(cluster_id = factor(cluster_id, CTs))
 
 table(df$libScaleFactor)
 
 # count genes retained by each method
 df %>%
-  group_by(Method) %>%
+  group_by(Method, libScaleFactor, N) %>%
   summarize(n = n()) %>%
   ggplot(aes(Method, n, fill=Method)) +
     geom_bar(stat="identity") +
@@ -103,71 +103,87 @@ df %>%
     scale_fill_manual(values = colorMethods) + 
     scale_y_continuous(expand=c(0,0)) +
     ylab("Number of genes retained") +
-    facet_wrap(~libScaleFactor)
+    facet_wrap(N~libScaleFactor)
 
 # keep only genes included in each result
 target = length(unique(df$Method))
 keep <- df %>%
-  group_by(cluster_id, ID, simID, libScaleFactor) %>%
+  group_by(cluster_id, ID, simID, libScaleFactor, N) %>%
   summarize(n = n()) %>%
-  mutate(ID2 = paste(cluster_id, ID, simID, libScaleFactor)) %>%
+  mutate(ID2 = paste(cluster_id, ID, simID, libScaleFactor, N)) %>%
   filter( n == target ) %>%
   pull(ID2)
 
 df <- df %>%
-      filter(paste(cluster_id, ID, simID, libScaleFactor) %in% keep) %>%
-      mutate(libScaleFactor = factor(as.numeric(libScaleFactor)))
+      filter(paste(cluster_id, ID, simID, libScaleFactor, N) %in% keep)
 ```
 
 
-```{r read2}
-df = read_parquet("~/Downloads/df.paruqet")
+```{r read2, eval=TRUE, cache=FALSE}
+# write_parquet(df, "df.paruqet")
+
+# scp minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet .
+
+CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
+
+df = read_parquet("~/Downloads/df.paruqet") %>%
+  mutate(cluster_id = factor(cluster_id, CTs))
 ```
 
 
 # Results
 ## Coefficients
-```{r Coefficients, cache=TRUE}
+```{r Coefficients, fig.height=18}
 # Beta 
 target = df %>%
         filter(b.true != 0) %>%
         pull(b.true) %>%
         head(1)
 
-ylim = .3
-fig = df %>%
-  # filter(libScaleFactor == "1", cluster_id == "mucosal invariant T cell") %>%
+ylim = .2
+df %>%
+  filter(libScaleFactor == "1") %>%
   droplevels %>%
   mutate(x = c("Zero", target)[(b.true!=0)+1]) %>%
   mutate(x = factor(x, c("Zero", target))) %>%
   ggplot(aes(x, logFC, fill=Method)) +
-    geom_boxplot() +
+    geom_boxplot(outlier.shape = NA) +
     thm +
+    theme(legend.position = "none") +
     facet_wrap(~cluster_id) +
     scale_fill_manual(values = colorMethods) + 
     xlab("True beta value") +
-  geom_segment(aes(x = .6, y = 0, xend = 1.5, yend = 0), color = "grey60", size = 5) +
-  geom_segment(aes(x = 1.6, y = target, xend = 2.4, yend = target), color = "grey60", size = 5) +
-  coord_cartesian(ylim=c(-ylim, ylim)) +
-  facet_grid(cluster_id ~ libScaleFactor ) 
+    ylab("Estimated logFC") +
+    geom_segment(aes(x = .7, y = 0, xend = 1.5, yend = 0), color = "grey60", linewidth = 1, linetype="dashed") +
+    geom_segment(aes(x = 1.6, y = target, xend = 2.3, yend = target), color = "grey60", linewidth = 1, linetype="dashed") +
+    coord_cartesian(ylim=c(-ylim, ylim)) +
+    facet_grid(N ~ cluster_id) 
+```
 
+```{r coef2}
 rMSE = function(x,y){
   sqrt(mean((x-y)^2))
 }
 
 df %>% 
-  group_by(Method, cluster_id, libScaleFactor) %>%
+  filter(libScaleFactor == "1") %>%
+  group_by(Method, cluster_id, libScaleFactor, N) %>%
   summarize(rMSE = rMSE( logFC, b.true)) %>%
   ggplot(aes(libScaleFactor, rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
-    scale_y_continuous(expand=c(0,0)) +
-    ylab("Root mean squared error") +
+    # scale_y_sqrt(expand=c(0,0)) +
+    ylab("Root mean squared error of estimated logFC") +
     ggtitle("Estimating logFC") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(~cluster_id  )
+    facet_grid(N ~ cluster_id, scale="free_y") 
+```
 
-df %>%
+```{r ceof3, fig.height=12, fig.width=12}
+df %>% 
+  filter(libScaleFactor == "1") %>%
+  # filter(N == "250") %>%
+  mutate(Method = factor(Method, rev(levels(Method)))) %>%
   ggplot(aes(mu, (b.true - logFC)^2, color=Method)) +
     geom_smooth(se=FALSE) +
     thm +  
@@ -175,18 +191,21 @@ df %>%
     ggtitle("Squared deviation of estimate logFC vs expression magnitude") +
     scale_x_log10() +
     xlab("Mean normalized counts") +
-    ylab("Squared deviation") +
-    facet_grid(libScaleFactor~cluster_id, scales="free_y")
+    ylab("Squared deviation of estimated logFC (log10 scale)") +
+    facet_grid(N ~ cluster_id, scales="free_y") + 
+    scale_y_log10() 
 ```
 
 
 ## Theta
-```{r theta, cache=TRUE}
+```{r theta}
 df %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
+  filter(libScaleFactor == "1") %>%
+  filter(N == "250") %>%
   ggplot(aes(theta.y, pmin(1e4, theta.x), color=Method)) +
-    geom_scattermore(pointsize=2) +
+    geom_scattermore(pointsize=5) +
     thm +
     theme(legend.position="none") +
     facet_grid(Method ~ cluster_id) +
@@ -196,9 +215,11 @@ df %>%
     scale_y_log10() +
     geom_abline( slope=1, color="black") +
     scale_color_manual(values = colorMethods) +
-    facet_grid(libScaleFactor ~ cluster_id + Method)
+    facet_grid(Method ~ cluster_id )
 
 df %>%
+  filter(libScaleFactor == "1") %>%
+  filter(N == "250") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method)) +
@@ -208,11 +229,12 @@ df %>%
     xlab("Mean normalized counts") +
     ylab("Squared deviation of log theta") +
     scale_x_log10() +
-    facet_grid(cluster_id ~ libScaleFactor) +
+    facet_grid( ~ cluster_id) +
     scale_y_continuous() +
     coord_cartesian(expand=FALSE, ylim=c(-2, 5)) 
 
 df %>% 
+  filter(N == "250") %>%
   group_by(Method, cluster_id, libScaleFactor) %>%
   summarize(rMSE = rMSE( pmin(1e4, theta.x), theta.y)) %>%
   filter(!is.na(rMSE)) %>%
@@ -230,8 +252,10 @@ df %>%
 ## Theta (normalized)
 The variance of the negative binomial distribution is $\mu + \mu^2/theta$.  So once $\theta$ reaches a sufficient value, the log-likelihood becomes very flat because for moderately sized $\mu$, $\mu + \mu^2/1e4 \approx \mu + \mu^2/1e5$.  Therefore, show the estimate of $\mu^2/theta$ instead.
 
-```{r theta.normalized, cache=TRUE, fig.width=18, fig.height=12}
+```{r theta.normalized, fig.width=18, fig.height=12}
 df %>%
+  filter(libScaleFactor == "1") %>%
+  filter(N == "250") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(mu^2/theta.y, mu^2/theta.x, color=Method)) +
@@ -245,26 +269,31 @@ df %>%
     scale_x_log10() +
     scale_y_log10() +
     scale_color_manual(values = colorMethods) +
-    facet_grid(libScaleFactor ~ cluster_id + Method)
+    facet_grid(Method ~ cluster_id)
 ```
 
-```{r theta.normalized2, cache=TRUE, fig.width=13, fig.height=12}
+```{r theta.normalized2, fig.width=13, fig.height=12}
+
 df %>%
+  filter(libScaleFactor == "1") %>%
+  # filter(N == "250") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
-  ggplot(aes(mu, (log(mu^2/theta.y) - log(mu^2/theta.x))^2, color=Method)) +
-    geom_smooth(se=FALSE) +
+  mutate(dev = (log(mu^2/theta.y) - log(mu^2/theta.x))^2) %>%
+  mutate(Method = factor(Method, rev(levels(Method)))) %>%
+  ggplot(aes(mu, dev, color=Method)) +
+    geom_smooth(se=TRUE, alpha = .15, aes(fill=Method)) +
     thm +    
     scale_color_manual(values = colorMethods) +
+    scale_fill_manual(values = colorMethods) +
     xlab("Mean normalized counts") +
     ylab("Squared deviation of log(mu^2/theta)") +
     scale_x_log10() +
-    facet_grid(cluster_id ~ libScaleFactor) +
-    scale_y_continuous() +
-    coord_cartesian(expand=FALSE, ylim=c(-2, 5)) 
+    facet_grid(N ~ cluster_id) +
+    coord_cartesian(expand=FALSE, ylim=c(-0.5, 5)) 
 
 df %>% 
-  group_by(Method, cluster_id, libScaleFactor) %>%
+  group_by(Method, cluster_id, libScaleFactor, N) %>%
   summarize(rMSE = rMSE( log(mu^2/theta.x), log(mu^2/theta.y))) %>%
   filter(!is.na(rMSE)) %>%
   filter(Method != "lucida [Bayesian]") %>%
@@ -275,17 +304,18 @@ df %>%
     ylab(bquote(rMSE~log(mu^2/theta))) +
     ggtitle(bquote(Estimating~overdispersion~component~mu^2/theta)) +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(~cluster_id)
+    facet_grid(N ~ cluster_id)
 ```
 
 
-```{r other plots, cache=TRUE}
+```{r other plots}
 # sigSq_g
 df %>%
+  filter(libScaleFactor == "1") %>%
+  filter(N == "250") %>%
   filter(!is.na(sigSq_g.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(sigSq_g.y, sigSq_g.x, color=Method)) +
-    # geom_point() +    
     geom_scattermore(pointsize=2) +
     thm +
     theme(legend.position="none") +
@@ -296,10 +326,12 @@ df %>%
     scale_y_log10() +
     geom_abline( slope=1, color="black")  +
     scale_color_manual(values = colorMethods) + 
-    facet_grid(libScaleFactor ~ cluster_id + Method)
+    facet_grid(Method ~ cluster_id)
 
 df %>% 
-  group_by(Method, cluster_id, libScaleFactor) %>%
+  # filter(libScaleFactor == "1") %>%
+  # filter(N == "250") %>%
+  group_by(Method, cluster_id, libScaleFactor, N) %>%
   summarize(rMSE = rMSE( sigSq_g.y, sigSq_g.x)) %>%
   filter(!is.na(rMSE)) %>%
   filter(Method != "lucida [Bayesian]") %>%
@@ -307,13 +339,16 @@ df %>%
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE)+
-    ylab("Root mean squared error") +
+    ylab("Root mean squared error (sqrt scale)") +
     ggtitle(bquote(Estimating~sigma[g]^2)) +
     scale_fill_manual(values = colorMethods)+
-    facet_wrap(~cluster_id)
+    facet_grid(N ~ cluster_id) +
+    scale_y_sqrt()
 
 df %>%
-  filter(!is.na(sigSq_g.x)) %>%
+  filter(libScaleFactor == "1") %>%
+  # filter(N == "250") %>%
+  # filter(!is.na(sigSq_g.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(mu, abs((sigSq_g.x) - (sigSq_g.y)), color=Method)) +
     # geom_point() +
@@ -324,12 +359,12 @@ df %>%
     xlab("Mean normalized counts") +    
     ylab("Squared deviation of sigSq_g") +
     scale_x_log10() +
-    facet_grid(cluster_id ~ libScaleFactor) 
+    facet_grid(libScaleFactor ~ cluster_id) 
 ```
 
 ## AUPR
-```{r AUPR, cache=TRUE, fig.height=8, fig.width=8}
-# AUPR
+```{r AUPR, fig.height=15, fig.width=12}
+# AUPR 
 aupr = function(status, score){
 
   pr <- pr.curve(
@@ -349,7 +384,7 @@ aupr = function(status, score){
 }
 
 df_perf = df %>% 
-  group_by(Method, cluster_id, libScaleFactor) %>%
+  group_by(Method, cluster_id, libScaleFactor, N) %>%
   filter(!is.na(FDR)) %>%
   summarize(aupr(b.true, -log10(FDR)))
 
@@ -361,7 +396,17 @@ df_perf %>%
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) +
-    facet_wrap(~cluster_id)
+    facet_grid(N ~ cluster_id)
+
+df_perf %>%
+  ggplot(aes(N, AUPR, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+    geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
+    ggtitle("Differential expression performance") +
+    scale_fill_manual(values = colorMethods) +
+    facet_grid(libScaleFactor ~ cluster_id)
 
 df_perf %>%
   ggplot(aes(libScaleFactor, F1.max, fill=Method)) +
@@ -369,8 +414,19 @@ df_perf %>%
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
     ggtitle("Differential expression performance") +
-    scale_fill_manual(values = colorMethods)+
-    facet_wrap(~cluster_id)
+    scale_fill_manual(values = colorMethods) +
+    facet_grid(N ~ cluster_id)
+
+df_perf %>%
+  ggplot(aes(N, F1.max, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+    geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
+    ggtitle("Differential expression performance") +
+    scale_fill_manual(values = colorMethods) +
+    facet_grid(libScaleFactor ~ cluster_id)
+
 
 breaks <- df %>%
           filter(!is.na(mu)) %>%
@@ -379,6 +435,7 @@ breaks <- df %>%
           quantile(probs = seq(0, 1, by = 1/3), na.rm = TRUE)
 
 df %>% 
+  filter(N == "250") %>%
   filter(!is.na(mu)) %>%
   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
   filter(!is.na(bin)) %>%
@@ -393,18 +450,41 @@ df %>%
     ggtitle("Differential expression performance vs expr magnitude") +
     scale_fill_manual(values = colorMethods) +
     facet_grid( libScaleFactor ~ cluster_id )
+
+df %>% 
+  filter(libScaleFactor == "1") %>%
+  filter(!is.na(mu)) %>%
+  mutate(bin = cut(log10(mu), breaks=breaks)) %>%
+  filter(!is.na(bin)) %>%
+  group_by(Method, cluster_id, bin, libScaleFactor, N) %>%
+  filter(!is.na(FDR)) %>%
+  summarize(aupr(b.true, -log10(FDR)), n = n()) %>%
+  ggplot(aes(bin, AUPR, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+    geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
+    ggtitle("Differential expression performance vs expr magnitude") +
+    scale_fill_manual(values = colorMethods) +
+    facet_grid( N ~ cluster_id )
+
+
+
 ```
 
 
 
 ## False positive rate
 ```{r FPR}
+
 df %>% 
-  group_by(Method, cluster_id, libScaleFactor)  %>%
+  # filter(libScaleFactor == "1") %>%
+  # filter(N == "250") %>%
+  group_by(Method, cluster_id, libScaleFactor, N)  %>%
   filter(!is.na(P.Value), b.true == 0) %>% 
   summarize( FPR = sum(P.Value < 0.05) / length(P.Value), 
-              N = length(P.Value),
-              se = sqrt(FPR*(1-FPR)/N)) %>%
+              np = length(P.Value),
+              se = sqrt(FPR*(1-FPR)/np)) %>%
   ggplot(aes(libScaleFactor, FPR, fill=Method)) +
     geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
     geom_errorbar(aes(ymin = FPR - 1.96*se, 
@@ -414,10 +494,11 @@ df %>%
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
     ylab("False positive rate") +
     scale_fill_manual(values = colorMethods) +
-    facet_wrap(~cluster_id)
+    facet_grid(N ~ cluster_id)
 
 df %>% 
-  group_by(Method, cluster_id, libScaleFactor)  %>%
+  filter(libScaleFactor == "1") %>%
+  group_by(Method, cluster_id, libScaleFactor, N)  %>%
   filter(!is.na(P.Value), b.true == 0) %>% 
   ggplot(aes(P.Value, color=Method)) +
     geom_density() +
@@ -425,9 +506,10 @@ df %>%
     coord_cartesian(xlim = c(0, 1), expand=FALSE) +
     facet_wrap(~cluster_id) +
     scale_color_manual(values = colorMethods) +
-    facet_grid( libScaleFactor ~ cluster_id )
+    facet_grid( libScaleFactor + N ~ cluster_id )
 
 
+```{r breaks, fig.height=10}
 breaks <- df %>%
           filter(!is.na(mu)) %>%
           pull(mu) %>%
@@ -435,6 +517,9 @@ breaks <- df %>%
           quantile(probs = seq(0, 1, by = 1/3), na.rm = TRUE)
 
 df %>% 
+  # filter(libScaleFactor == "1") %>%
+  filter(libScaleFactor != "25") %>%
+  filter(N == "250") %>%
   filter(!is.na(mu)) %>%
   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
   filter(!is.na(bin)) %>%

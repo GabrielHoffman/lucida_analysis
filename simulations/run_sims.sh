@@ -17,7 +17,7 @@ sce = sce[,sce$cell_type %in% names(tab[tab>1000])]
 sce = sce[,sce$libSize > 1000]
 sce$cell_type = droplevels(sce$cell_type)
 
-CTs = c("gamma-delta T cell", "mucosal invariant T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
+CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
 n_donors_array = c(4, 10, 25, 50, 100, 250, 400, 500, 700, 981)
 
@@ -95,6 +95,15 @@ done
 
 cat script_recode.sh | parallel -P 5
 
+# check that files were written
+cat script_recode.sh | awk '{print $NF}' | xargs ls > /dev/null
+
+# remove tmp h5ad's
+comm -3 <(ls /sc/arion/scratch/hoffmg01/sims/*recode.h5ad | sort) <(ls /sc/arion/scratch/hoffmg01/sims/*.h5ad | sort) | xargs -n1 rm -f
+
+
+
+
 # Run DE analysis
 #----------------
 
@@ -113,7 +122,15 @@ done
 done
 done
 
-cat script_de.sh | parallel -P 10
+cat script_de.sh | parallel -P 60
+
+# check that files were written
+cat script_de.sh | awk '{print $NF}' | xargs ls > /dev/null 2> err.log
+
+cat err.log | tr "'" " " | awk '{print $4}' | parallel basename {} .parquet > jobs.prefix
+
+grep -f jobs.prefix script_de.sh | parallel -P60
+
 
 # Performance plots
 ###################

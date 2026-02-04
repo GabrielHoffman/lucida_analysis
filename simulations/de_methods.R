@@ -45,6 +45,53 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
     bind_rows
 }
 
+# modify to extract theta
+.DESeq2_new <- function(x, k, design, contrast, ct, cs) {
+  library(DESeq2)
+  cd <- colData(x)
+  y <- assay(x, k)
+  mode(y) <- "integer"
+  y <- DESeqDataSetFromMatrix(y, cd, design)
+  y <- suppressMessages(DESeq(y))
+  tbl <- lapply(cs, function(c) {
+      tbl <- results(y, contrast[, c])
+      tbl <- muscat:::.res_df(tbl, k, ct, c)
+      tbl$theta <- 1 / DESeq2::dispersions(y)
+      rename(tbl, logFC = "log2FoldChange", 
+          p_val = "pvalue", p_adj.loc = "padj")
+  })
+  list(table = tbl, data = y)
+}
+assignInNamespace(".DESeq2", .DESeq2_new, "muscat")
+
+
+# modify to extract theta
+.edgeR_new <- function(x, k, design, coef, contrast, ct, cs, treat) {
+    library(edgeR)
+    y <- assay(x, k)
+    y <- suppressMessages(DGEList(y, 
+        group = x$group_id[colnames(y)], 
+        remove.zeros = TRUE))
+    y <- calcNormFactors(y)
+    y <- estimateDisp(y, design)
+    fit <- glmQLFit(y, design)
+    # treat: test for DE relative to logFC threshold
+    # else:  genewise NB GLM with quasi-likelihood test
+    .fun <- ifelse(treat, glmTreat, glmQLFTest)
+    tbl <- lapply(cs, function(c) {
+        fit <- .fun(fit, coef[[c]], contrast[, c])
+        tbl <- topTags(fit, n = Inf, sort.by = "none")
+        # combine tables & reformat
+        tbl <- rename(tbl$table, p_val = "PValue", p_adj.loc = "FDR")
+        tbl <- muscat:::.res_df(tbl, k, ct, c)
+        tbl$theta <- 1 / y$tagwise.dispersion
+        tbl
+    })
+    list(table = tbl, data = y, fit = fit)
+}
+assignInNamespace(".edgeR", .edgeR_new, "muscat")
+
+
 run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
 
   validMethods <- c(  
@@ -223,7 +270,10 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
         rename(ID = name, P.Value = pval, logFC = lfc, se = lfc_se) %>%
         mutate(cluster_id = CT) %>%
         select(cluster_id, ID, logFC, se, P.Value) %>%
-        filter(!is.na(se))
+        filter(!is.na(se)) %>%
+        inner_join(data.frame(
+          ID = names(fit.gp$overdispersions),
+          theta = 1/fit.gp$overdispersions))
     }) %>%
       bind_rows %>%
       mutate( FDR = p.adjust(P.Value, "BH")) %>%
