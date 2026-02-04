@@ -33,18 +33,6 @@ methods <- c(
     "edgeR",
     "glmGamPoi")
 
-methods <- c(  
-    "lucida",
-    # "lucida [1 step]",
-    "lucida [Bayesian]",
-    "lucida [pb]",
-    # "nebula",
-    # "nebula (HL)",
-    "dreamlet" ,
-    "DESeq2" ,
-    "edgeR",
-    "glmGamPoi")
-
 formula <- as.formula(opt$formula)
 
 # if sample size < 10, drop nebula
