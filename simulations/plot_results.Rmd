@@ -83,9 +83,7 @@ files = list.files("/sc/arion/scratch/hoffmg01/sims/", "res_sim_.*.parquet", ful
 df = open_dataset(files) %>%
   collect %>%
   mutate(libScaleFactor = get_idx(simID, 3),
-        N = get_idx(simID, 6))
-
-df = df %>%
+        N = get_idx(simID, 6)) %>%
   mutate(libScaleFactor = factor(as.numeric(libScaleFactor))) %>%
   mutate(N = factor(as.numeric(N))) %>%
   mutate(cluster_id = factor(cluster_id, CTs))
@@ -122,7 +120,7 @@ df <- df %>%
 ```{r read2, eval=TRUE, cache=FALSE}
 # write_parquet(df, "df.paruqet")
 
-# scp minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet .
+# scp minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet ~/Downloads/
 
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
