@@ -132,6 +132,13 @@ cat err.log | tr "'" " " | awk '{print $4}' | parallel basename {} .parquet > jo
 grep -f jobs.prefix script_de.sh | parallel -P60
 
 
+cat script_de.sh | grep -v "sim_25_\|sim_50_\|sim_100_\|sim_250_" | parallel -P60
+
+
+
+
+
+
 # Performance plots
 ###################
 

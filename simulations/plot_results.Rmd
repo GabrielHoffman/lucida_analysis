@@ -92,29 +92,49 @@ table(df$libScaleFactor)
 
 # count genes retained by each method
 df %>%
-  group_by(Method, libScaleFactor, N) %>%
+  filter(N == "8", libScaleFactor == "25", cluster_id == "naive B cell") %>%
+  group_by(Method, libScaleFactor, N, cluster_id) %>%
   summarize(n = n()) %>%
   ggplot(aes(Method, n, fill=Method)) +
     geom_bar(stat="identity") +
     thm +
     theme(legend.position="none") + 
     scale_fill_manual(values = colorMethods) + 
-    scale_y_continuous(expand=c(0,0)) +
     ylab("Number of genes retained") +
-    facet_wrap(N~libScaleFactor)
+    # facet_grid(N~libScaleFactor) +
+    facet_grid(N ~ cluster_id)
 
 # keep only genes included in each result
 target = length(unique(df$Method))
-keep <- df %>%
+keep1 <- df %>%
   group_by(cluster_id, ID, simID, libScaleFactor, N) %>%
   summarize(n = n()) %>%
   mutate(ID2 = paste(cluster_id, ID, simID, libScaleFactor, N)) %>%
   filter( n == target ) %>%
   pull(ID2)
 
+# For small samples, nebula is omitted
+target = df %>%
+          filter(N %in% c("4", "8")) %>%
+          pull(Method) %>%
+          unique %>%
+          length
+
+keep2 <- df %>%
+  filter(N %in% c("4", "8")) %>%
+  group_by(cluster_id, ID, simID, libScaleFactor, N) %>%
+  summarize(n = n()) %>%
+  mutate(ID2 = paste(cluster_id, ID, simID, libScaleFactor, N)) %>%
+  filter( n == target ) %>%
+  pull(ID2)
+
+keep = unique(c(keep, keep2))
+
 df <- df %>%
       filter(paste(cluster_id, ID, simID, libScaleFactor, N) %in% keep)
 ```
+
+
 
 
 ```{r read2, eval=TRUE, cache=FALSE}
@@ -125,7 +145,8 @@ df <- df %>%
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
 df = read_parquet("~/Downloads/df.paruqet") %>%
-  mutate(cluster_id = factor(cluster_id, CTs))
+  mutate(cluster_id = factor(cluster_id, CTs)) #%>%
+  # filter(as.numeric(as.character(N)) >= 25) 
 ```
 
 
@@ -221,7 +242,7 @@ df %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method)) +
-    geom_smooth(se=FALSE) +
+    geom_smooth(se=FALSE, method = "loess") +
     thm +    
     scale_color_manual(values = colorMethods) +
     xlab("Mean normalized counts") +
@@ -229,7 +250,7 @@ df %>%
     scale_x_log10() +
     facet_grid( ~ cluster_id) +
     scale_y_continuous() +
-    coord_cartesian(expand=FALSE, ylim=c(-2, 5)) 
+    coord_cartesian(expand=FALSE, ylim=c(-.1, 5)) 
 
 df %>% 
   filter(N == "250") %>%
@@ -258,7 +279,7 @@ df %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(mu^2/theta.y, mu^2/theta.x, color=Method)) +
     geom_abline( slope=1, color="black") +
-    geom_scattermore(pointsize=3) +
+    geom_scattermore(pointsize=4) +
     thm +
     theme(legend.position="none") +
     facet_grid(Method ~ cluster_id) +
@@ -271,7 +292,6 @@ df %>%
 ```
 
 ```{r theta.normalized2, fig.width=13, fig.height=12}
-
 df %>%
   filter(libScaleFactor == "1") %>%
   # filter(N == "250") %>%
@@ -280,7 +300,7 @@ df %>%
   mutate(dev = (log(mu^2/theta.y) - log(mu^2/theta.x))^2) %>%
   mutate(Method = factor(Method, rev(levels(Method)))) %>%
   ggplot(aes(mu, dev, color=Method)) +
-    geom_smooth(se=TRUE, alpha = .15, aes(fill=Method)) +
+    geom_smooth(se=FALSE, alpha = .15, aes(fill=Method)) +
     thm +    
     scale_color_manual(values = colorMethods) +
     scale_fill_manual(values = colorMethods) +
@@ -288,7 +308,7 @@ df %>%
     ylab("Squared deviation of log(mu^2/theta)") +
     scale_x_log10() +
     facet_grid(N ~ cluster_id) +
-    coord_cartesian(expand=FALSE, ylim=c(-0.5, 5)) 
+    coord_cartesian(expand=FALSE, ylim=c(-0.1, 10)) 
 
 df %>% 
   group_by(Method, cluster_id, libScaleFactor, N) %>%
@@ -337,11 +357,11 @@ df %>%
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE)+
-    ylab("Root mean squared error (sqrt scale)") +
+    ylab("Root mean squared error") +
     ggtitle(bquote(Estimating~sigma[g]^2)) +
-    scale_fill_manual(values = colorMethods)+
-    facet_grid(N ~ cluster_id) +
-    scale_y_sqrt()
+    scale_fill_manual(values = colorMethods) +
+    # scale_y_sqrt() +
+    facet_grid(N ~ cluster_id) 
 
 df %>%
   filter(libScaleFactor == "1") %>%

@@ -39,6 +39,9 @@ done
 
 
 
+saveRDS(fit, file="/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/fit.RDS")
+saveRDS(fit.null, file="/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/fit.null.RDS")
+
 
 --->
 
@@ -98,13 +101,36 @@ plotDispEsts(fit, ncol=5)
 ```
 
 ```{r plotMA, fig.height = 12, fig.width = 12}
-plotMA(fit, coef='age', ncol=5)
-plotMA(fit, coef='sexmale', ncol=5)
+plotMA(fit, coef='c02xControl', ncol=5)
 ```
 
 ```{r plotVolcano, fig.height = 15, fig.width = 12}
-plotVolcano(fit, coef='age', ncol=5)
-plotVolcano(fit, coef='sexmale', ncol=5)
+plotVolcano(fit, coef='c02xControl', ncol=5)
 ```
 
+
+
+# Results
+```{r results}
+results(fit, "c02xControl") %>%
+  group_by(cluster_id) %>%
+  summarize( n = n()) %>%
+  ggplot(aes(n, cluster_id, fill=cluster_id)) +
+    geom_bar(stat="identity") +
+    thm +
+    theme(aspect.ratio = 2, legend.position="none") +
+    scale_x_continuous(limits=c(0,NA), expand=c(0,0)) +
+    xlab("# genes expressed")
+
+results(fit, "c02xControl") %>%
+  group_by(cluster_id) %>%
+  summarize( nSignif = sum(FDR < 0.05)) %>%
+  ggplot(aes(nSignif, cluster_id, fill=cluster_id)) +
+    geom_bar(stat="identity") +
+    thm +
+    theme(aspect.ratio = 2, legend.position="none") +
+    scale_x_continuous(limits=c(0,NA), expand=c(0,0)) +
+    xlab("# significant genes") +
+    ggtitle("Age")
+```
 
