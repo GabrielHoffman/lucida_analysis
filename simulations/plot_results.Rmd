@@ -13,6 +13,8 @@ output:
 
 <!---
 
+# cd /sc/arion/work/hoffmg01/lucida_analysis
+ml pandoc
 
 rmarkdown::render("plot_results.Rmd")
 
@@ -73,7 +75,7 @@ colorMethods = c(
 ```
 
 
-```{r read, cache=FALSE, eval=FALSE}
+```{r read, cache=FALSE, eval=TRUE}
 get_idx = Vectorize(function(x, i){
   strsplit(x, "_")[[1]][i]
 })
