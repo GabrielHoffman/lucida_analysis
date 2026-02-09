@@ -50,6 +50,7 @@ library(ggplot2)
 library(tidyverse)
 library(scattermore)
 library(PRROC)
+library(parallel)
 
 thm = theme_classic(15) +
     theme(aspect.ratio = 1, 
@@ -79,11 +80,14 @@ get_idx = Vectorize(function(x, i){
 
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
-files = list.files("/sc/arion/scratch/hoffmg01/sims/", "res_sim_.*.parquet", full.names=TRUE)
-df = open_dataset(files) %>%
+files = list.files("/sc/arion/scratch/hoffmg01/sims/1k1k_v1/", "res_sim_.*.parquet", full.names=TRUE)
+df = mclapply(files, function(file){
+  open_dataset(file) %>%
   collect %>%
   mutate(libScaleFactor = get_idx(simID, 3),
-        N = get_idx(simID, 6)) %>%
+        N = get_idx(simID, 6)) 
+}, mc.cores=60) %>%
+  bind_rows %>%
   mutate(libScaleFactor = factor(as.numeric(libScaleFactor))) %>%
   mutate(N = factor(as.numeric(N))) %>%
   mutate(cluster_id = factor(cluster_id, CTs))
@@ -114,21 +118,22 @@ keep1 <- df %>%
   pull(ID2)
 
 # For small samples, nebula is omitted
-target = df %>%
-          filter(N %in% c("4", "8")) %>%
-          pull(Method) %>%
-          unique %>%
-          length
+# target = df %>%
+#           filter(N %in% c("4", "8")) %>%
+#           pull(Method) %>%
+#           unique %>%
+#           length
 
-keep2 <- df %>%
-  filter(N %in% c("4", "8")) %>%
-  group_by(cluster_id, ID, simID, libScaleFactor, N) %>%
-  summarize(n = n()) %>%
-  mutate(ID2 = paste(cluster_id, ID, simID, libScaleFactor, N)) %>%
-  filter( n == target ) %>%
-  pull(ID2)
+# keep2 <- df %>%
+#   filter(N %in% c("4", "8")) %>%
+#   group_by(cluster_id, ID, simID, libScaleFactor, N) %>%
+#   summarize(n = n()) %>%
+#   mutate(ID2 = paste(cluster_id, ID, simID, libScaleFactor, N)) %>%
+#   filter( n == target ) %>%
+#   pull(ID2)
 
-keep = unique(c(keep, keep2))
+# keep = unique(c(keep1, keep2))
+keep = keep1
 
 df <- df %>%
       filter(paste(cluster_id, ID, simID, libScaleFactor, N) %in% keep)
@@ -140,13 +145,14 @@ df <- df %>%
 ```{r read2, eval=TRUE, cache=FALSE}
 # write_parquet(df, "df.paruqet")
 
-# scp minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet ~/Downloads/
+# rsync -avPz minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet ~/workspace/repos/lucida_analysis/simulations/1k1k_v1/
 
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
-df = read_parquet("~/Downloads/df.paruqet") %>%
-  mutate(cluster_id = factor(cluster_id, CTs)) #%>%
-  # filter(as.numeric(as.character(N)) >= 25) 
+# file = "/Users/gabrielhoffman/workspace/repos/lucida_analysis/simulations/1k1k_v1/df.paruqet"
+file = "/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet"
+df = read_parquet(file) %>%
+  mutate(cluster_id = factor(cluster_id, CTs))
 ```
 
 
