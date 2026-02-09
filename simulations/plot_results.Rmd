@@ -13,7 +13,7 @@ output:
 
 <!---
 
-# cd /sc/arion/work/hoffmg01/lucida_analysis
+# cd /sc/arion/work/hoffmg01/lucida_analysis/simulations
 ml pandoc
 
 rmarkdown::render("plot_results.Rmd")
@@ -75,7 +75,7 @@ colorMethods = c(
 ```
 
 
-```{r read, cache=FALSE, eval=TRUE}
+```{r read, cache=FALSE, eval=FALSE}
 get_idx = Vectorize(function(x, i){
   strsplit(x, "_")[[1]][i]
 })
@@ -152,8 +152,12 @@ df <- df %>%
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
 # file = "/Users/gabrielhoffman/workspace/repos/lucida_analysis/simulations/1k1k_v1/df.paruqet"
-file = "/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet"
-df = read_parquet(file) %>%
+# file = "/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet"
+# df = read_parquet(file) %>%
+#   mutate(cluster_id = factor(cluster_id, CTs))
+
+file = "/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.RDS"
+df = readRDS(file) %>%
   mutate(cluster_id = factor(cluster_id, CTs))
 ```
 
