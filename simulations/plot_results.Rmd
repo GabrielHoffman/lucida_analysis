@@ -14,7 +14,7 @@ output:
 <!---
 
 # cd /sc/arion/work/hoffmg01/lucida_analysis/simulations
-ml pandoc
+ml pandoc imagemagick
 
 rmarkdown::render("plot_results.Rmd")
 
@@ -148,6 +148,7 @@ df <- df %>%
 # write_parquet(df, "df.paruqet")
 
 # rsync -avPz minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet ~/workspace/repos/lucida_analysis/simulations/1k1k_v1/
+rsync -avPz minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.RDS ~/workspace/repos/lucida_analysis/simulations/1k1k_v1/
 
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
