@@ -385,7 +385,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
       mutate( FDR = p.adjust(P.Value, "BH")) %>%
       mutate(Method = "glmGamPoi")
       })
-    
+
     df <- bind_rows(df, res.gp)
   }
 
@@ -400,5 +400,16 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
           left_join(df_mu, by=c("cluster_id", "ID"))
   }
 
+  # join df.time
+  df.time2 = lapply(names(df.time), function(Method){
+    data.frame(Method = Method, df.time[[id]])
+    }) %>%
+  bind_rows
+
   df
 }
+
+
+
+
+
