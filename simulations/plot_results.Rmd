@@ -138,7 +138,8 @@ keep1 <- df %>%
 keep = keep1
 
 df <- df %>%
-      filter(paste(cluster_id, ID, simID, libScaleFactor, N) %in% keep)
+      filter(paste(cluster_id, ID, simID, libScaleFactor, N) %in% keep) %>% 
+      mutate(cluster_id = factor(cluster_id, CTs))
 ```
 
 
@@ -148,18 +149,13 @@ df <- df %>%
 # write_parquet(df, "df.paruqet")
 
 # rsync -avPz minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet ~/workspace/repos/lucida_analysis/simulations/1k1k_v1/
-rsync -avPz minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.RDS ~/workspace/repos/lucida_analysis/simulations/1k1k_v1/
 
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
-# file = "/Users/gabrielhoffman/workspace/repos/lucida_analysis/simulations/1k1k_v1/df.paruqet"
+file = "/Users/gabrielhoffman/workspace/repos/lucida_analysis/simulations/1k1k_v1/df.paruqet"
 # file = "/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet"
-# df = read_parquet(file) %>%
-#   mutate(cluster_id = factor(cluster_id, CTs))
+df = read_parquet(file)
 
-file = "/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.RDS"
-df = readRDS(file) %>%
-  mutate(cluster_id = factor(cluster_id, CTs))
 ```
 
 
@@ -230,7 +226,7 @@ df %>%
 
 
 ## Theta
-```{r theta}
+```{r theta, eval=FALSE}
 df %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
@@ -284,7 +280,7 @@ df %>%
 ## Theta (normalized)
 The variance of the negative binomial distribution is $\mu + \mu^2/theta$.  So once $\theta$ reaches a sufficient value, the log-likelihood becomes very flat because for moderately sized $\mu$, $\mu + \mu^2/1e4 \approx \mu + \mu^2/1e5$.  Therefore, show the estimate of $\mu^2/theta$ instead.
 
-```{r theta.normalized, fig.width=18, fig.height=12}
+```{r theta.normalized, fig.width=18, fig.height=12, eval=FALSE}
 df %>%
   filter(libScaleFactor == "1") %>%
   filter(N == "250") %>%
@@ -339,7 +335,7 @@ df %>%
 ```
 
 
-```{r other plots}
+```{r other.plots, eval=FALSE}
 # sigSq_g
 df %>%
   filter(libScaleFactor == "1") %>%
@@ -507,7 +503,6 @@ df %>%
 
 ## False positive rate
 ```{r FPR}
-
 df %>% 
   # filter(libScaleFactor == "1") %>%
   # filter(N == "250") %>%
@@ -526,18 +521,34 @@ df %>%
     ylab("False positive rate") +
     scale_fill_manual(values = colorMethods) +
     facet_grid(N ~ cluster_id)
+```
 
+```{r QQ.plot}
+ymax = 6
+alpha = 0.05
 df %>% 
   filter(libScaleFactor == "1") %>%
-  group_by(Method, cluster_id, libScaleFactor, N)  %>%
   filter(!is.na(P.Value), b.true == 0) %>% 
-  ggplot(aes(P.Value, color=Method)) +
-    geom_density() +
-    thm +
-    coord_cartesian(xlim = c(0, 1), expand=FALSE) +
-    facet_wrap(~cluster_id) +
+  group_by(Method, cluster_id, libScaleFactor, N) %>%
+  mutate( expected = -log10((1:n()) / (n() + 1)),
+          observed = -log10(sort(P.Value)),
+          ci_lower = -log10(qbeta(alpha/2, 1:n(), n():1)),
+          ci_upper = -log10(qbeta(1 - alpha/2, 1:n(), n():1))) %>%
+   ggplot(aes(expected, observed)) +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), fill = "grey80") +
+    geom_abline(intercept = 0, slope = 1, color = "black") +
+    labs(
+      x = expression(Expected~~-log[10](italic(P))),
+      y = expression(Observed~~-log[10](italic(P)))
+    ) +
+    geom_scattermore(aes(color=Method), pointsize=6) +
+    theme_classic(45) +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
     scale_color_manual(values = colorMethods) +
-    facet_grid( libScaleFactor + N ~ cluster_id )
+    facet_grid( libScaleFactor + N ~ cluster_id ) +
+    coord_cartesian(xlim=c(0, NA), ylim=c(0, ymax), expand=FALSE)
+```
+
 
 
 ```{r breaks, fig.height=10}
