@@ -49,8 +49,8 @@ for(n_donors in n_donors_array[9:10]){
 ml parallel
 DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 
-NREPS=50
-NSAMPLES="4 10 25 50 100 250 400 500"  # 700 981
+NREPS=20
+NSAMPLES="4 10 25 50 100" # 250 400 500"  # 700 981
 LSF="0.5 1 5 10 25" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/
 
@@ -111,6 +111,8 @@ comm -3 <(ls $OUTFOLDER/*recode.h5ad | sort) <(ls $OUTFOLDER/*.h5ad | sort) | xa
 # Run DE analysis
 #----------------
 
+# rm -f /sc/arion/scratch/hoffmg01/sims/1k1k_v1/*.parquet
+
 echo "" > script_de.sh
 for N in $(echo $NSAMPLES)
 do
@@ -142,6 +144,7 @@ cat script_de.sh | grep -v "sim_25_\|sim_50_\|sim_100_\|sim_250_" | parallel -P6
 cat script_de.sh | sed 's/res_sim_/test2\/res_sim_/g' | parallel
 
 
+# R --args --h5ad /sc/arion/scratch/hoffmg01/sims/1k1k_v1//sim_25_1_9_recode.h5ad --formula "~ Dx + (1|donor_id)" --cluster_id cell_type --output /sc/arion/scratch/hoffmg01/sims/1k1k_v1//res_sim_25_1_9.parquet
 
 
 

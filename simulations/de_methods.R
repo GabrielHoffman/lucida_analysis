@@ -45,51 +45,51 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
     bind_rows
 }
 
-# modify to extract theta
-.DESeq2_new <- function(x, k, design, contrast, ct, cs) {
-  library(DESeq2)
-  cd <- colData(x)
-  y <- assay(x, k)
-  mode(y) <- "integer"
-  y <- DESeqDataSetFromMatrix(y, cd, design)
-  y <- suppressMessages(DESeq(y))
-  tbl <- lapply(cs, function(c) {
-      tbl <- results(y, contrast[, c])
-      tbl <- muscat:::.res_df(tbl, k, ct, c)
-      tbl$theta <- 1 / DESeq2::dispersions(y)
-      rename(tbl, logFC = "log2FoldChange", 
-          p_val = "pvalue", p_adj.loc = "padj")
-  })
-  list(table = tbl, data = y)
-}
-assignInNamespace(".DESeq2", .DESeq2_new, "muscat")
+# # modify to extract theta
+# .DESeq2_new <- function(x, k, design, contrast, ct, cs) {
+#   library(DESeq2)
+#   cd <- colData(x)
+#   y <- assay(x, k)
+#   mode(y) <- "integer"
+#   y <- DESeqDataSetFromMatrix(y, cd, design)
+#   y <- suppressMessages(DESeq(y))
+#   tbl <- lapply(cs, function(c) {
+#       tbl <- results(y, contrast[, c])
+#       tbl <- muscat:::.res_df(tbl, k, ct, c)
+#       tbl$theta <- 1 / DESeq2::dispersions(y)
+#       rename(tbl, logFC = "log2FoldChange", 
+#           p_val = "pvalue", p_adj.loc = "padj")
+#   })
+#   list(table = tbl, data = y)
+# }
+# assignInNamespace(".DESeq2", .DESeq2_new, "muscat")
 
 
-# modify to extract theta
-.edgeR_new <- function(x, k, design, coef, contrast, ct, cs, treat) {
-    library(edgeR)
-    y <- assay(x, k)
-    y <- suppressMessages(DGEList(y, 
-        group = x$group_id[colnames(y)], 
-        remove.zeros = TRUE))
-    y <- calcNormFactors(y)
-    y <- estimateDisp(y, design)
-    fit <- glmQLFit(y, design)
-    # treat: test for DE relative to logFC threshold
-    # else:  genewise NB GLM with quasi-likelihood test
-    .fun <- ifelse(treat, glmTreat, glmQLFTest)
-    tbl <- lapply(cs, function(c) {
-        fit <- .fun(fit, coef[[c]], contrast[, c])
-        tbl <- topTags(fit, n = Inf, sort.by = "none")
-        # combine tables & reformat
-        tbl <- rename(tbl$table, p_val = "PValue", p_adj.loc = "FDR")
-        tbl <- muscat:::.res_df(tbl, k, ct, c)
-        tbl$theta <- 1 / y$tagwise.dispersion
-        tbl
-    })
-    list(table = tbl, data = y, fit = fit)
-}
-assignInNamespace(".edgeR", .edgeR_new, "muscat")
+# # modify to extract theta
+# .edgeR_new <- function(x, k, design, coef, contrast, ct, cs, treat) {
+#     library(edgeR)
+#     y <- assay(x, k)
+#     y <- suppressMessages(DGEList(y, 
+#         group = x$group_id[colnames(y)], 
+#         remove.zeros = TRUE))
+#     y <- calcNormFactors(y)
+#     y <- estimateDisp(y, design)
+#     fit <- glmQLFit(y, design)
+#     # treat: test for DE relative to logFC threshold
+#     # else:  genewise NB GLM with quasi-likelihood test
+#     .fun <- ifelse(treat, glmTreat, glmQLFTest)
+#     tbl <- lapply(cs, function(c) {
+#         fit <- .fun(fit, coef[[c]], contrast[, c])
+#         tbl <- topTags(fit, n = Inf, sort.by = "none")
+#         # combine tables & reformat
+#         tbl <- rename(tbl$table, p_val = "PValue", p_adj.loc = "FDR")
+#         tbl <- muscat:::.res_df(tbl, k, ct, c)
+#         tbl$theta <- 1 / y$tagwise.dispersion
+#         tbl
+#     })
+#     list(table = tbl, data = y, fit = fit)
+# }
+# assignInNamespace(".edgeR", .edgeR_new, "muscat")
 
 
 run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
@@ -110,10 +110,13 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
   stopifnot( all(methods %in% validMethods))
 
   df <- tibble()
+  df.time <- list()
 
   # lucida 
   if( "lucida" %in% methods ){
+    df.time[["lucida"]] <- system.time({
     fit.lucida <- lucida(sce.sim, formula, cluster_id, nthreads = nthreads)
+    })
 
     # merge with expression magnitude information
     df_mu <- lapply( names(fit.lucida), function(x){
@@ -131,15 +134,19 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
   # lucida one step
   if( "lucida [1 step]" %in% methods ){
 
+    df.time[["lucida [1 step]"]] <- system.time({
     fit.lucida1 <- lucida(sce.sim, formula, cluster_id, shrinkDispersion=FALSE, nthreads = nthreads)
+    })
 
     df <- bind_rows(df,
             results(fit.lucida1, "DxDisease", expand=TRUE) %>%
             mutate(Method = "lucida [1 step]"))
   }
 
-  if( any(c("dreamlet", "lucida [pb]", "DESeq2") %in% methods) ){
-    sce.tmp = SingleCellExperiment(list(counts = counts(sce.sim)), 
+  if( any(c("dreamlet", "lucida [pb]", "DESeq2", "edgeR") %in% methods) ){
+    df.time[["pseudobulk"]] <- system.time({
+    sce.tmp = SingleCellExperiment(list(
+                counts = counts(sce.sim)), 
                 colData = colData(sce.sim))
    
     sce.tmp$id <- lapply(all.vars(formula), function(x){
@@ -152,10 +159,12 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
           sce.tmp ,
          cluster_id = cluster_id,
          sample_id = "id")   
+    })
   }
 
   # lucida pseudobulk
   if( "lucida [pb]" %in% methods ){
+    df.time[["lucida [pb]"]] <- system.time({
     pb2 <- lapply(assayNames(pb), function(x){
       SingleCellExperiment(list(counts = assay(pb, x)), 
                 colData = data.frame(colData(pb), 
@@ -167,6 +176,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
     pb2 = pb2[,pb2$libSize > 0]
 
     fit.pb = lucida(pb2, ~ Dx, cluster_id = 'cluster_id', nthreads = nthreads)
+    })
 
     df <- bind_rows(df,
             results(fit.pb, "DxDisease", expand=TRUE) %>%
@@ -175,7 +185,10 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
 
   # nebula
   if( "nebula" %in% methods ){
+
+    df.time[["nebula"]] <- system.time({
     res.neb <- run_nebula(sce.sim, formula, cluster_id, nthreads = nthreads)
+    })
 
     df <- bind_rows(df,
             res.neb %>%
@@ -187,7 +200,9 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
   }
 
   if( "nebula (HL)" %in% methods ){
+    df.time[["nebula (HL)"]] <- system.time({
     res.neb.HL <- run_nebula(sce.sim, formula, cluster_id, method="HL", nthreads = nthreads)
+    })
 
     df <- bind_rows(df,
             res.neb.HL %>%
@@ -200,8 +215,10 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
 
   # dreamlet
   if( "dreamlet" %in% methods ){
+    df.time[["dreamlet"]] <- system.time({
     res.proc <- processAssays(pb, ~ Dx)
     res.dl <- dreamlet(res.proc, ~ Dx)
+    })
 
     df <- bind_rows(df,
             topTable(res.dl, "DxDisease", number=Inf) %>%
@@ -215,6 +232,8 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
   if( "DESeq2" %in% methods ){
 
     library(DESeq2)
+
+    df.time[["DESeq2"]] <- system.time({
 
     res.deq = lapply(assayNames(pb), function(CT){
       message(CT)
@@ -239,6 +258,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
         filter(!is.na(log2FoldChange))
       }) %>%
       bind_rows 
+    })
 
     df = res.deq %>%
       mutate(logFC = log2FoldChange, 
@@ -252,6 +272,8 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
   if( "edgeR" %in% methods ){
 
     library(edgeR)
+
+    df.time[["edgeR"]] <- system.time({
 
     res.edgeR = lapply(assayNames(pb), function(CT){
 
@@ -281,6 +303,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
         as_tibble 
       }) %>%
       bind_rows 
+    })
 
     df <- res.edgeR %>%
       mutate( 
@@ -332,6 +355,8 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
   # glmGamPoi
   if( "glmGamPoi" %in% methods ){
 
+    df.time[["glmGamPoi"]] <- system.time({
+
     x1 <- all.vars(nobars(formula))[1]
     x2 <- all.vars(findbars(formula)[[1]])
     sce.sim$id <- paste(colData(sce.sim)[,x1], 
@@ -359,7 +384,8 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
       bind_rows %>%
       mutate( FDR = p.adjust(P.Value, "BH")) %>%
       mutate(Method = "glmGamPoi")
-
+      })
+    
     df <- bind_rows(df, res.gp)
   }
 
