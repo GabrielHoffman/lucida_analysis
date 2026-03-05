@@ -124,7 +124,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
       bind_rows
 
     df <- bind_rows(df,
-            results(fit.lucida, "DxDisease", expand=TRUE) %>%
+            lucida::results(fit.lucida, "DxDisease", expand=TRUE) %>%
             mutate(Method = "lucida"))
   }
 
@@ -210,43 +210,80 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
             select(-t, -B, -z.std, -AveExpr))
   }
 
-  # muscat: edgeR, DESeq2
+
+
   if( "DESeq2" %in% methods ){
 
-    sce.tmp2 <- prepSCE(sce.tmp, 
-      kid = cluster_id, 
-      sid = "id", 
-      gid = all.vars(nobars(formula))[1])
+    res.deq = lapply(assayNames(pb), function(CT){
+      countMatrix = assay(pb, CT)
+      info = colData(pb)
 
-    pb <- aggregateData(sce.tmp2)
+      libSize = colSums2(countMatrix)
+      keep = libSize > 100
 
-    design <- model.matrix(~ group_id, colData(pb))
+      dds <- DESeqDataSetFromMatrix(
+               countMatrix[,keep],
+              DataFrame(info[keep,]), ~ Dx)
+      dds <- DESeq(dds, quiet=TRUE)
+      tbl <- results(dds, name = "Dx_Disease_vs_Control") 
+      tbl$theta <- 1 / DESeq2::dispersions(dds)
 
-    tab.muscat <- lapply( c("edgeR", "DESeq2"), function(method){
-      res.muscat = pbDS(pb, method = method, design, min_cells=2, filter="both")
-
-      tab = res.muscat$table$group_idDisease %>%
-        bind_rows %>%
+      tbl %>%
+        as.data.frame %>%
+        rownames_to_column("ID") %>%
+        mutate(cluster_id = CT) %>%
         as_tibble %>%
-        mutate(Method = method) %>%
-        rename(ID = "gene", 
-          P.Value = "p_val", 
-          FDR = 'p_adj.glb')
+        filter(!is.na(log2FoldChange))
+      }) %>%
+      bind_rows 
 
-      if( method == "DESeq2"){
-        tab = tab %>%
-          select(-baseMean, -lfcSE, -stat, -p_adj.loc)
-      }
-      if( method == "edgeR"){
-        tab = tab %>%
-          select(-logCPM, -F, -p_adj.loc, -contrast)
-      }
-      tab
-    }) %>%
-      bind_rows
+    res.deq %>%
+      mutate(logFC = log2FoldChange, 
+        P.Value = pvalue, 
+        FDR = p.adjust(P.Value),
+        Method = "DESeq2") %>%
+      select(ID, cluster_id, logFC, P.Value, FDR, theta, Method)
 
-    df <- bind_rows(df, tab.muscat)
+    df <- bind_rows(df, res.deq)
   }
+
+  # # muscat: edgeR, DESeq2
+  # if( "DESeq2" %in% methods ){
+
+  #   sce.tmp2 <- prepSCE(sce.tmp, 
+  #     kid = cluster_id, 
+  #     sid = "id", 
+  #     gid = all.vars(nobars(formula))[1])
+
+  #   pb <- aggregateData(sce.tmp2)
+
+  #   design <- model.matrix(~ group_id, colData(pb))
+
+  #   tab.muscat <- lapply( c("edgeR", "DESeq2"), function(method){
+  #     res.muscat = pbDS(pb, method = method, design, min_cells=2, filter="both")
+
+  #     tab = res.muscat$table$group_idDisease %>%
+  #       bind_rows %>%
+  #       as_tibble %>%
+  #       mutate(Method = method) %>%
+  #       rename(ID = "gene", 
+  #         P.Value = "p_val", 
+  #         FDR = 'p_adj.glb')
+
+  #     if( method == "DESeq2"){
+  #       tab = tab %>%
+  #         select(-baseMean, -lfcSE, -stat, -p_adj.loc)
+  #     }
+  #     if( method == "edgeR"){
+  #       tab = tab %>%
+  #         select(-logCPM, -F, -p_adj.loc, -contrast)
+  #     }
+  #     tab
+  #   }) %>%
+  #     bind_rows
+
+  #   df <- bind_rows(df, tab.muscat)
+  # }
 
   # glmGamPoi
   if( "glmGamPoi" %in% methods ){
