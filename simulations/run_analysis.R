@@ -14,6 +14,7 @@ opt <- getopt(spec)
 
 # load analysis code
 message("Loading packages...")
+library(arrow)
 source("/hpc/users/hoffmg01/work/lucida_analysis/simulations/de_methods.R")
 
 # read data
@@ -45,7 +46,7 @@ if( n_samples < 10 ){
 
 # Run analysis
 message("Run analysis...")
-df <- run_analysis(sce.sim, 
+res <- run_analysis(sce.sim, 
       formula = formula, 
       cluster_id = opt$cluster_id, 
       methods = methods,
@@ -59,10 +60,37 @@ params <- readRDS(file)
 simID <- paste(params, collapse="_")
 
 # write results to parquet
-library(arrow)
-
-df %>%
+res$df %>%
   mutate(simID = simID,
     cluster_id = factor(cluster_id),
     ID = factor(ID)) %>%
   write_parquet( sink = opt$out)
+
+# write timings to file
+time.file = gsub(".parquet", "_time.parquet", opt$out)
+
+res$df.time %>%
+  mutate(simID = simID) %>%
+  write_parquet( sink = time.file )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
