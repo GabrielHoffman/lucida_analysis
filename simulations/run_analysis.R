@@ -28,8 +28,8 @@ methods <- c(
     "lucida [pb]",
     # "nebula",
     # "nebula (HL)",
-    "dreamlet" ,
-    "DESeq2" ,
+    "dreamlet",
+    "DESeq2",
     "edgeR",
     "glmGamPoi")
 

@@ -217,6 +217,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
     library(DESeq2)
 
     res.deq = lapply(assayNames(pb), function(CT){
+      message(CT)
       countMatrix = assay(pb, CT)
       info = colData(pb)
 
