@@ -139,7 +139,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
     })
 
     df <- bind_rows(df,
-            results(fit.lucida1, "DxDisease", expand=TRUE) %>%
+            lucida::results(fit.lucida1, "DxDisease", expand=TRUE) %>%
             mutate(Method = "lucida [1 step]"))
   }
 
@@ -179,7 +179,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
     })
 
     df <- bind_rows(df,
-            results(fit.pb, "DxDisease", expand=TRUE) %>%
+            lucida::results(fit.pb, "DxDisease", expand=TRUE) %>%
             mutate(Method = "lucida [pb]"))
   }
 
