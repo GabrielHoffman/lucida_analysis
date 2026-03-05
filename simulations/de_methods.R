@@ -130,13 +130,8 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
 
   # lucida one step
   if( "lucida [1 step]" %in% methods ){
+    
     fit.lucida1 <- lucida(sce.sim, formula, cluster_id, shrinkDispersion=FALSE, nthreads = nthreads)
-
-
-    lucida::results(fit.lucida1, "DxDisease", expand=TRUE)
-
-
-
 
     df <- bind_rows(df,
             results(fit.lucida1, "DxDisease", expand=TRUE) %>%
