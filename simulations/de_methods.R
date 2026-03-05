@@ -389,7 +389,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
     df <- bind_rows(df, res.gp)
   }
 
-  if( "info" %in% names(metadata(sce3)) ){
+  if( "info" %in% names(metadata(sce.sim)) ){
 
     df <- df %>% 
       inner_join(metadata(sce.sim) %>%
