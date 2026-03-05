@@ -400,16 +400,14 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
           left_join(df_mu, by=c("cluster_id", "ID"))
   }
 
-  browser()
-  
   # join df.time
   df.time2 = lapply(names(df.time), function(Method){
-    data.frame(Method = Method, df.time[[id]])
+    data.frame(Method = Method, t(data.frame(df.time[[Method]])))
     }) %>%
   bind_rows %>%
   tibble
 
-  df
+  list(df = df, df.time = df.time2)
 }
 
 
