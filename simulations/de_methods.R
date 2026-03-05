@@ -389,9 +389,14 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
     df <- bind_rows(df, res.gp)
   }
 
-  df <- df %>% 
-    inner_join(metadata(sce.sim) %>%
-      as_tibble, by=c('cluster_id', "ID")) %>%
+  if( "info" %in% names(metadata(sce3)) ){
+
+    df <- df %>% 
+      inner_join(metadata(sce.sim) %>%
+        as_tibble, by=c('cluster_id', "ID"))
+  } 
+
+  df = df %>%
     mutate(Method = factor(Method, validMethods)) %>%
     droplevels
 
