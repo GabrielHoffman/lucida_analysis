@@ -92,7 +92,7 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 # assignInNamespace(".edgeR", .edgeR_new, "muscat")
 
 
-run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
+run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1, include_metadata = TRUE){
 
   validMethods <- c(  
     "lucida",
@@ -389,7 +389,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1){
     df <- bind_rows(df, res.gp)
   }
 
-  if( "info" %in% names(metadata(sce.sim)) ){
+  if( include_metadata ){
 
     df <- df %>% 
       inner_join(metadata(sce.sim) %>%
