@@ -75,7 +75,7 @@ colorMethods = c(
 ```
 
 
-```{r read, cache=FALSE, eval=FALSE}
+```{r read, cache=FALSE, eval=TRUE}
 get_idx = Vectorize(function(x, i){
   strsplit(x, "_")[[1]][i]
 })
@@ -145,7 +145,7 @@ df <- df %>%
 
 
 
-```{r read2, eval=TRUE, cache=FALSE}
+```{r read2, eval=FALSE, cache=FALSE}
 # write_parquet(df, "df.paruqet")
 
 # rsync -avPz minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet ~/workspace/repos/lucida_analysis/simulations/1k1k_v1/
