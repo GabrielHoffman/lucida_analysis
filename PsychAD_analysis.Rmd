@@ -80,7 +80,7 @@ sce$libSize = sce$n_counts
 sce$c02x[sce$c02x == "NA"] <- NA
 
 # set Control to be baseline
-sce$c02x = factor(sce$c02x, c("Control", "AD"))
+sce$c02x = factor(sce$c02x, c("Control", "AD", "NA"))
 ```
 
 ```{r lucida}
