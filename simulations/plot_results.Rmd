@@ -75,7 +75,7 @@ colorMethods = c(
 ```
 
 
-```{r read, cache=FALSE, eval=TRUE}
+```{r read, cache=TRUE, eval=TRUE}
 get_idx = Vectorize(function(x, i){
   strsplit(x, "_")[[1]][i]
 })
@@ -83,12 +83,14 @@ get_idx = Vectorize(function(x, i){
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
 files = list.files("/sc/arion/scratch/hoffmg01/sims/1k1k_v1/", "res_sim_.*.parquet", full.names=TRUE)
+files = grep("_time", files, invert=TRUE, value = TRUE)
+
 df = mclapply(files, function(file){
   open_dataset(file) %>%
   collect %>%
   mutate(libScaleFactor = get_idx(simID, 3),
         N = get_idx(simID, 6)) 
-}, mc.cores=60) %>%
+}, mc.cores=12) %>%
   bind_rows %>%
   mutate(libScaleFactor = factor(as.numeric(libScaleFactor))) %>%
   mutate(N = factor(as.numeric(N))) %>%
