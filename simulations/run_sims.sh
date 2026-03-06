@@ -49,8 +49,8 @@ for(n_donors in n_donors_array[9:10]){
 ml parallel
 DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 
-NREPS=20
-NSAMPLES="4 10 25 50 100" # 250 400 500"  # 700 981
+NREPS=50
+NSAMPLES="10 25 50 100 250 400 500"  # 700 981
 LSF="0.5 1 5 10 25" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/
 
