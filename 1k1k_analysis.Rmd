@@ -100,7 +100,7 @@ fit.null <- lucida(sce, ~ (1|donor_id), cluster_id = "cell_type")
 
 ```{r vp, fig.height = 20, fig.width =15}
 vp <- fitVarPart(fit, fit.null)
-
+ 
 plotVarPart(sortCols(vp), ncol=5)
 ```
 
