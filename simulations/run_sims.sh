@@ -19,7 +19,7 @@ sce$cell_type = droplevels(sce$cell_type)
 
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
-n_donors_array = c(4, 10, 25, 50, 100, 250, 400, 500, 700, 981)
+n_donors_array = c(10, 25, 50, 100, 250, 400, 500, 700, 981)
 
 for(n_donors in n_donors_array[9:10]){
 
@@ -53,6 +53,7 @@ NREPS=50
 NSAMPLES="10 25 50 100 250 400 500"  # 700 981
 LSF="0.5 1 5 10 25" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/
+LOGFC=0.07 
 
 mkdir -p $OUTFOLDER
 
@@ -66,7 +67,7 @@ do
   FIT=$DIR/test_lucida_fit_${N}.RDS
   DATA=$DIR/test_lucida_fit_data_${N}.RDS
   ID=${N}_${libScaleFactor}_${i}
-  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC 0.07 --pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> script_sim.sh
+  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC $LOGFC--pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> script_sim.sh
 done
 done
 done

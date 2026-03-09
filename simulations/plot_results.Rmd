@@ -14,11 +14,15 @@ output:
 <!---
 
 # cd /sc/arion/work/hoffmg01/lucida_analysis/simulations
+
+# rm -rf plot_results_cache/
 ml pandoc imagemagick
 
 rmarkdown::render("plot_results.Rmd")
 
+\cp -f plot_results.html ~/www/
 
+https://hoffmg01.dmz.hpc.mssm.edu/plot_results.html
 
 thm = theme_classic(30) +
     theme(aspect.ratio = 1, 
@@ -252,7 +256,8 @@ df %>%
     ylab("Root mean squared error of estimated logFC") +
     ggtitle("Estimating logFC") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(N ~ cluster_id, scale="free_y") 
+    facet_grid(N ~ cluster_id, scale="free_y") +
+    scale_y_continuous(limits=c(0, NA), expand=c(0,0))
 ```
 
 ```{r ceof3, fig.height=12, fig.width=12}
@@ -274,7 +279,7 @@ df %>%
 
 
 ## Theta
-```{r theta, eval=FALSE}
+```{r theta, eval=TRUE}
 df %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
@@ -364,8 +369,8 @@ df %>%
     xlab("Mean normalized counts") +
     ylab("Squared deviation of log(mu^2/theta)") +
     scale_x_log10() +
-    facet_grid(N ~ cluster_id) +
-    coord_cartesian(expand=FALSE, ylim=c(-0.1, 10)) 
+    facet_grid(N ~ cluster_id, scales="free_y") +
+    coord_cartesian(expand=FALSE, ylim=c(-0.1, 20)) 
 
 df %>% 
   group_by(Method, cluster_id, libScaleFactor, N) %>%
@@ -550,7 +555,7 @@ df %>%
 
 
 ## False positive rate
-```{r FPR}
+```{r FPR, fig.height=15, fig.width=12}
 df %>% 
   # filter(libScaleFactor == "1") %>%
   # filter(N == "250") %>%
@@ -578,19 +583,19 @@ df %>%
   filter(libScaleFactor == "1") %>%
   filter(!is.na(P.Value), b.true == 0) %>% 
   group_by(Method, cluster_id, libScaleFactor, N) %>%
-  mutate( expected = -log10((1:n()) / (n() + 1)),
-          observed = -log10(sort(P.Value)),
-          ci_lower = -log10(qbeta(alpha/2, 1:n(), n():1)),
-          ci_upper = -log10(qbeta(1 - alpha/2, 1:n(), n():1))) %>%
+  mutate( expected = -log10(seq(n()) / (n() + 1)),
+          observed = -log10(sort(P.Value))) %>%
+          # ci_lower = -log10(qbeta(alpha/2, seq(n()), seq(n(),1))))
+          # ci_upper = -log10(qbeta(1 - alpha/2, 1:n(), n():1))) 
    ggplot(aes(expected, observed)) +
-    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), fill = "grey80") +
+    # geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), fill = "grey80") +
     geom_abline(intercept = 0, slope = 1, color = "black") +
     labs(
       x = expression(Expected~~-log[10](italic(P))),
       y = expression(Observed~~-log[10](italic(P)))
     ) +
     geom_scattermore(aes(color=Method), pointsize=6) +
-    theme_classic(45) +
+    theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
     scale_color_manual(values = colorMethods) +
     facet_grid( libScaleFactor + N ~ cluster_id ) +

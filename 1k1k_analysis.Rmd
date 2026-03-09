@@ -26,6 +26,9 @@ module load pandoc
 
 rmarkdown::render("1k1k_analysis.Rmd")
 
+\cp -f 1k1k_analysis.html ~/www/
+
+
 
 # format H5AD
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
