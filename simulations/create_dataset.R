@@ -8,6 +8,7 @@ spec <- matrix(c(
   'subject',    'u', 1, "character",
   'logFC',      'l', 1, "numeric",
   'pDE',        'p', 1, "numeric",
+  'trajectory',  't', 0, "logical",
   'libScaleFactor', 's', 1, "numeric",
   'seed',       'e', 1, "integer",
   'output',     'o', 1, "character"
@@ -33,10 +34,16 @@ data <- readRDS( opt$data )
 # set seed
 set.seed(opt$seed)
 
-# Set disease status for simulations
-data$Dx = "Control"
-Dx_lvls = sample(levels(data[[opt$subject]]), nlevels(data[[opt$subject]])/2)
-data$Dx[data[[opt$subject]] %in% Dx_lvls] = "Disease"
+# Set trait for simulations
+if( opt$trajectory ){
+  # Continuous, vary across subject
+  data$Dx = rnorm(nrow(data))
+}else{
+  # Constant within each subject
+  data$Dx = "Control"
+  Dx_lvls = sample(levels(data[[opt$subject]]), nlevels(data[[opt$subject]])/2)
+  data$Dx[data[[opt$subject]] %in% Dx_lvls] = "Disease"
+}
 
 formula = as.formula(paste("~(1|", opt$subject, ")"))
 
