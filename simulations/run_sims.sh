@@ -49,11 +49,21 @@ for(n_donors in n_donors_array[9:10]){
 ml parallel
 DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 
-NREPS=50
-NSAMPLES="10 25 50 100 250 400 500"  # 700 981
-LSF="0.5 1 5 10 25" # libScaleFactors
+# testing
+NREPS=10
+NSAMPLES="10 25 50"  
+LSF="1 5" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/
-LOGFC=0.07 
+LOGFC=0.2
+
+
+
+# Production
+# NREPS=50
+# NSAMPLES="10 25 50 100 250 400 500"  # 700 981
+# LSF="0.5 1 5 10 25" # libScaleFactors
+# OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/
+# LOGFC=0.07 
 
 mkdir -p $OUTFOLDER
 
@@ -67,7 +77,7 @@ do
   FIT=$DIR/test_lucida_fit_${N}.RDS
   DATA=$DIR/test_lucida_fit_data_${N}.RDS
   ID=${N}_${libScaleFactor}_${i}
-  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC $LOGFC--pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> script_sim.sh
+  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC $LOGFC --pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> script_sim.sh
 done
 done
 done
