@@ -35,7 +35,7 @@ data <- readRDS( opt$data )
 set.seed(opt$seed)
 
 # Set trait for simulations
-if( opt$trajectory ){
+if( !is.null(opt$trajectory) ){
   # Continuous, vary across subject
   data$Dx = rnorm(nrow(data))
 }else{
