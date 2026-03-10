@@ -35,10 +35,10 @@ for(n_donors in n_donors_array){
 
   fit = lucida(sce2, ~ age + sex + (1|donor_id), cluster_id = "cell_type")
 
-  file = paste0("test_lucida_fit_", n_donors, ".RDS")
+  file = paste0("fits/test_lucida_fit_", n_donors, ".RDS")
   saveRDS(fit, file=file)
 
-  file = paste0("test_lucida_fit_data_", n_donors, ".RDS")
+  file = paste0("fits/test_lucida_fit_data_", n_donors, ".RDS")
   saveRDS(colData(sce2), file=file)
 }
 
@@ -47,14 +47,14 @@ for(n_donors in n_donors_array){
 # Simulate data
 #--------------
 ml parallel
-DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
+DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations/
 
 # testing
 NREPS=10
-NSAMPLES="10 25 50"  
-LSF="1" # libScaleFactors
-OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/
-LOGFC=0.2
+NSAMPLES="10 25 50 400 500"  
+LSF="1 5" # libScaleFactors
+OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/constant/
+LOGFC=0.1
 
 # Production
 # NREPS=50
@@ -72,8 +72,8 @@ for libScaleFactor in $(echo $LSF)
 do
 for i in $(seq 1 1 $NREPS)
 do
-  FIT=$DIR/test_lucida_fit_${N}.RDS
-  DATA=$DIR/test_lucida_fit_data_${N}.RDS
+  FIT=$DIR/fits/test_lucida_fit_${N}.RDS
+  DATA=$DIR/fits/test_lucida_fit_data_${N}.RDS
   ID=${N}_${libScaleFactor}_${i}
   echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC $LOGFC --pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> script_sim.sh
 done
@@ -179,10 +179,10 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 
 # testing
 NREPS=10
-NSAMPLES="10 25 50"  
+NSAMPLES="10 25 50 100 250"  
 LSF="1" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/trajectory
-LOGFC=0.2
+LOGFC=0.1
 
 
 
@@ -250,7 +250,9 @@ comm -3 <(ls $OUTFOLDER/*recode.h5ad | sort) <(ls $OUTFOLDER/*.h5ad | sort) | xa
 # Run DE analysis
 #----------------
 
-# rm -f /sc/arion/scratch/hoffmg01/sims/1k1k_v1/*.parquet
+# rm -f $OUTFOLDER/*.parquet
+
+METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.traj
 
 echo "" > script_de.sh
 for N in $(echo $NSAMPLES)
@@ -262,7 +264,7 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
   OUT=$OUTFOLDER/res_sim_${ID}.parquet
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\" --cluster_id cell_type --output $OUT" >>  script_de.sh
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\" --cluster_id cell_type --methods $METHODS --output $OUT" >>  script_de.sh
 done
 done
 done
@@ -287,7 +289,7 @@ cat script_de.sh | sed 's/res_sim_/test2\/res_sim_/g' | parallel
 # Performance plots
 ###################
 
-rmarkdown::render("plot_results.Rmd")
+rmarkdown::render("plot_results_across.Rmd")
 
 
 
