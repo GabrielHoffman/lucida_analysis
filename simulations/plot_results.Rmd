@@ -86,7 +86,7 @@ get_idx = Vectorize(function(x, i){
 
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
-files = list.files("/sc/arion/scratch/hoffmg01/sims/1k1k_v1/", "res_sim_.*.parquet", full.names=TRUE)
+files = list.files("/sc/arion/scratch/hoffmg01/sims/1k1k_v1/constant", "res_sim_.*.parquet", full.names=TRUE)
 files = grep("_time", files, invert=TRUE, value = TRUE)
 
 df = mclapply(files, function(file){

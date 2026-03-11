@@ -51,7 +51,7 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations/
 
 # testing
 NREPS=10
-NSAMPLES="10 25 50 400 500"  
+NSAMPLES="10 25 50 100 250 400 500"  
 LSF="1 5" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/constant/
 LOGFC=0.1
@@ -179,8 +179,8 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 
 # testing
 NREPS=10
-NSAMPLES="10 25 50 100 250"  
-LSF="1" # libScaleFactors
+NSAMPLES="10 25 50 100 250 400 500" 
+LSF="1 5" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/trajectory
 LOGFC=0.1
 
