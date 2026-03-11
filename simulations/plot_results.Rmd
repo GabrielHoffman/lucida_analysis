@@ -103,18 +103,18 @@ df = mclapply(files, function(file){
 table(df$libScaleFactor)
 
 # count genes retained by each method
-df %>%
-  filter(N == "8", libScaleFactor == "25", cluster_id == "naive B cell") %>%
-  group_by(Method, libScaleFactor, N, cluster_id) %>%
-  summarize(n = n()) %>%
-  ggplot(aes(Method, n, fill=Method)) +
-    geom_bar(stat="identity") +
-    thm +
-    theme(legend.position="none") + 
-    scale_fill_manual(values = colorMethods) + 
-    ylab("Number of genes retained") +
-    # facet_grid(N~libScaleFactor) +
-    facet_grid(N ~ cluster_id)
+# df %>%
+#   filter(N == "8", libScaleFactor == "25", cluster_id == "naive B cell") %>%
+#   group_by(Method, libScaleFactor, N, cluster_id) %>%
+#   summarize(n = n()) %>%
+#   ggplot(aes(Method, n, fill=Method)) +
+#     geom_bar(stat="identity") +
+#     thm +
+#     theme(legend.position="none") + 
+#     scale_fill_manual(values = colorMethods) + 
+#     ylab("Number of genes retained") +
+#     # facet_grid(N~libScaleFactor) +
+#     facet_grid(N ~ cluster_id)
 
 # keep only genes included in each result
 target = length(unique(df$Method))
