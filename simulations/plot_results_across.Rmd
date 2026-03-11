@@ -104,7 +104,7 @@ table(df$libScaleFactor)
 
 # count genes retained by each method
 df %>%
-  filter(N == "8", libScaleFactor == "25", cluster_id == "naive B cell") %>%
+  filter(N == "10", libScaleFactor == "1", cluster_id == "naive B cell") %>%
   group_by(Method, libScaleFactor, N, cluster_id) %>%
   summarize(n = n()) %>%
   ggplot(aes(Method, n, fill=Method)) +
