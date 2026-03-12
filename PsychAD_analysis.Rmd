@@ -18,7 +18,7 @@ output:
 <!---
 
 cd /hpc/users/hoffmg01/work/lucida_analysis
-module load pandoc
+module load pandoc imagemagick
 
 # rm -rf PsychAD_analysis_cache/
 
@@ -136,7 +136,7 @@ results(fit, "c02xAD") %>%
     scale_x_continuous(limits=c(0,NA), expand=c(0,0)) +
     xlab("# genes expressed")
 
-results(fit, "c02xAD") %>%
+figDx = results(fit, "c02xAD") %>%
   group_by(cluster_id) %>%
   summarize( nSignif = sum(FDR < 0.05)) %>%
   ggplot(aes(nSignif, cluster_id, fill=cluster_id)) +
@@ -146,24 +146,25 @@ results(fit, "c02xAD") %>%
     scale_x_continuous(limits=c(0,NA), expand=c(0,0)) +
     xlab("# significant genes") +
     ggtitle("Disease")
+figDx
 ```
 
 
 # One cell type
 ```{r one, fig.height=7, fig.width=12}
 library(cowplot)
+library(aplot)
 CT = "Immune"
 
 fig1 = plotDispEsts(fit, cluster_ids = CT )
 fig2 = plotVolcano(fit, coef='c02xAD', cluster_ids = CT)
 fig3 = plotVarPart(sortCols(vp), cluster_ids = CT)
 fig4 = plotTrendVP( fit, vp, "CountNoise", cluster_ids = CT)
-
 plot_grid(fig1, fig2, fig3, fig4, ncol=3)
 
-fig5 = plotForest(fit, coef="c02xAD", gene = "PTPRG", cluster_ids='Immune' )
-fig5 + theme_classic()  + theme(aspect.ratio=2) | 
-figAge + theme_classic() + theme(aspect.ratio=2, legend.position="none")
+fig5 = plotForest(fit, coef="c02xAD", gene = "PTPRG")
+fig5 + theme_classic()  + theme(aspect.ratio=1) | 
+figDx + theme_classic() + theme(aspect.ratio=1, legend.position="none")
 ```
 
 
