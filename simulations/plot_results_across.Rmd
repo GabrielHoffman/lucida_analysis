@@ -207,7 +207,7 @@ df %>%
     facet_grid(N ~ cluster_id) 
 ```
 
-```{r coef2}
+```{r coef2, fig.height=12, fig.width=12}
 rMSE = function(x,y){
   sqrt(mean((x-y)^2))
 }
@@ -246,7 +246,7 @@ df %>%
 
 
 ## Theta
-```{r theta, eval=TRUE}
+```{r theta, eval=TRUE, fig.height=8, fig.width=12}
 df %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
@@ -300,7 +300,7 @@ df %>%
 ## Theta (normalized)
 The variance of the negative binomial distribution is $\mu + \mu^2/theta$.  So once $\theta$ reaches a sufficient value, the log-likelihood becomes very flat because for moderately sized $\mu$, $\mu + \mu^2/1e4 \approx \mu + \mu^2/1e5$.  Therefore, show the estimate of $\mu^2/theta$ instead.
 
-```{r theta.normalized, fig.width=18, fig.height=12, eval=FALSE}
+```{r theta.normalized, fig.width=18, fig.height=12}
 df %>%
   filter(libScaleFactor == "1") %>%
   filter(N == "250") %>%
