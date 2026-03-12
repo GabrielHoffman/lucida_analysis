@@ -123,7 +123,7 @@ results(fit, "age") %>%
     scale_x_continuous(limits=c(0,NA), expand=c(0,0)) +
     xlab("# genes")
 
-results(fit, "age") %>%
+figAge = results(fit, "age") %>%
   group_by(cluster_id) %>%
   summarize( nSignif = sum(FDR < 0.05)) %>%
   ggplot(aes(nSignif, cluster_id, fill=cluster_id)) +
@@ -133,6 +133,7 @@ results(fit, "age") %>%
     scale_x_continuous(limits=c(0,NA), expand=c(0,0)) +
     xlab("# significant genes") +
     ggtitle("Age")
+figAge
 
 results(fit, "sexmale") %>%
   group_by(cluster_id) %>%
@@ -146,7 +147,25 @@ results(fit, "sexmale") %>%
     ggtitle("Sex")
 ```
 
+# One cell type
+```{r one, fig.height=7, fig.width=12}
+library(cowplot)
+CT = names(fit)[1]
 
+fig1 = plotDispEsts(fit, cluster_ids = CT )
+fig2 = plotVolcano(fit, coef='age', cluster_ids = CT)
+fig3 = plotVarPart(sortCols(vp), cluster_ids = CT)
+fig4 = plotTrendVP( fit, vp, "CountNoise", cluster_ids = CT)
+
+plot_grid(fig1, fig2, fig3, fig4, ncol=3)
+# ggsave(fig, file="~/www/test.pdf", height=7, width=12)
+
+
+# pdf("~/www/test.pdf", height=7, width=12)
+fig5 + theme_classic()  + theme(aspect.ratio=2) | 
+figAge + theme_classic() + theme(aspect.ratio=2, legend.position="none")
+# dev.off()
+```
 
 
 
