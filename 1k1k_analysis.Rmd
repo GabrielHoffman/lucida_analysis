@@ -157,7 +157,7 @@ fig2 = plotVolcano(fit, coef='age', cluster_ids = CT)
 fig3 = plotVarPart(sortCols(vp), cluster_ids = CT)
 fig4 = plotTrendVP( fit, vp, "CountNoise", cluster_ids = CT)
 
-plot_grid(fig1, fig2, fig3, fig4, fig5, ncol=3)
+plot_grid(fig1, fig2, fig3, fig4, ncol=3)
 # ggsave(fig, file="~/www/test.pdf", height=7, width=12)
 
 fig5 = plotForest(fit, coef="age", gene = "ENSG00000197747" )
