@@ -355,7 +355,7 @@ df %>%
 ```
 
 
-```{r other.plots, eval=FALSE}
+```{r other.plots}
 # sigSq_g
 df %>%
   filter(libScaleFactor == "1") %>%
