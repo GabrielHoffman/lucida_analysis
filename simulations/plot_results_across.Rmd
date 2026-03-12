@@ -22,7 +22,7 @@ rmarkdown::render("plot_results_across.Rmd")
 
 \cp -f plot_results_across.html ~/www/
 
-https://hoffmg01.dmz.hpc.mssm.edu/plot_results.html
+https://hoffmg01.dmz.hpc.mssm.edu/plot_results_across.html
 
 thm = theme_classic(30) +
     theme(aspect.ratio = 1, 
@@ -131,24 +131,9 @@ df <- df %>%
 ```
 
 
-
-
-```{r read2, eval=FALSE, cache=FALSE}
-# write_parquet(df, "df.paruqet")
-
-# rsync -avPz minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet ~/workspace/repos/lucida_analysis/simulations/1k1k_v1/
-
-CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
-
-file = "/Users/gabrielhoffman/workspace/repos/lucida_analysis/simulations/1k1k_v1/df.paruqet"
-# file = "/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet"
-df = read_parquet(file)
-
-```
-
 # Time
 ```{r time, fig.height=5, fig.width=12}
-files = list.files("/sc/arion/scratch/hoffmg01/sims/1k1k_v1/constant", "res_sim_.*.parquet", full.names=TRUE)
+files = list.files("/sc/arion/scratch/hoffmg01/sims/1k1k_v1/trajectory", "res_sim_.*.parquet", full.names=TRUE)
 files = grep("_time", files, value = TRUE)
 
 pb.methods = c("lucida [pb]", "dreamlet", "DESeq2", "edgeR")

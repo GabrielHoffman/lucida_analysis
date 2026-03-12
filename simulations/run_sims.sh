@@ -65,7 +65,7 @@ LOGFC=0.1
 
 mkdir -p $OUTFOLDER
 
-echo "" > script_sim.sh
+echo "" > $OUTFOLDER/script_sim.sh
 for N in $(echo $NSAMPLES)
 do
 for libScaleFactor in $(echo $LSF)
@@ -75,23 +75,23 @@ do
   FIT=$DIR/fits/test_lucida_fit_${N}.RDS
   DATA=$DIR/fits/test_lucida_fit_data_${N}.RDS
   ID=${N}_${libScaleFactor}_${i}
-  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC $LOGFC --pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> script_sim.sh
+  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC $LOGFC --pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> $OUTFOLDER/script_sim.sh
 done
 done
 done
 
 # run sims
-cat script_sim.sh | parallel -P 60
+cat $OUTFOLDER/script_sim.sh | parallel -P 60
 
 # check that files were written
-cat script_sim.sh | awk '{print $NF}' | xargs ls > /dev/null
+cat $OUTFOLDER/script_sim.sh | awk '{print $NF}' | xargs ls > /dev/null
 
 
 # Recode for efficient access
 #----------------------------
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 
-echo "" > script_recode.sh
+echo "" > $OUTFOLDER/script_recode.sh
 for N in $(echo $NSAMPLES)
 do
 for libScaleFactor in $(echo $LSF)
@@ -101,15 +101,15 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}.h5ad
   OUT=$OUTFOLDER/sim_${ID}_recode.h5ad
-  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT " >> script_recode.sh
+  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT " >> $OUTFOLDER/script_recode.sh
 done
 done
 done
 
-cat script_recode.sh | parallel -P 25
+cat $OUTFOLDER/script_recode.sh | parallel -P 25
 
 # check that files were written
-cat script_recode.sh | awk '{print $NF}' | xargs ls > /dev/null
+cat $OUTFOLDER/script_recode.sh | awk '{print $NF}' | xargs ls > /dev/null
 
 # remove tmp h5ad's
 comm -3 <(ls $OUTFOLDER/*recode.h5ad | sort) <(ls $OUTFOLDER/*.h5ad | sort) | xargs -n1 rm -f
@@ -124,7 +124,7 @@ comm -3 <(ls $OUTFOLDER/*recode.h5ad | sort) <(ls $OUTFOLDER/*.h5ad | sort) | xa
 
 METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.in
 
-echo "" > script_de.sh
+echo "" > $OUTFOLDER/script_de.sh
 for N in $(echo $NSAMPLES)
 do
 for libScaleFactor in $(echo $LSF)
@@ -134,25 +134,25 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
   OUT=$OUTFOLDER/res_sim_${ID}.parquet
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\" --cluster_id cell_type --methods $METHODS --output $OUT" >>  script_de.sh
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\" --cluster_id cell_type --methods $METHODS --output $OUT" >> $OUTFOLDER/script_de.sh
 done
 done
 done
 
-cat script_de.sh | parallel -P 60
+cat $OUTFOLDER/script_de.sh | parallel -P 60
 
 # check that files were written
-cat script_de.sh | awk '{print $NF}' | xargs ls > /dev/null 2> err.log
+cat $OUTFOLDER/script_de.sh | awk '{print $NF}' | xargs ls > /dev/null 2> err.log
 
 cat err.log | tr "'" " " | awk '{print $4}' | parallel basename {} .parquet > jobs.prefix
 
-grep -f jobs.prefix script_de.sh | parallel -P60
+grep -f jobs.prefix $OUTFOLDER/script_de.sh | parallel -P60
 
 
 cat script_de.sh | grep -v "sim_25_\|sim_50_\|sim_100_\|sim_250_" | parallel -P60
 
 
-cat script_de.sh | sed 's/res_sim_/test2\/res_sim_/g' | parallel
+cat $OUTFOLDER/script_de.sh | sed 's/res_sim_/test2\/res_sim_/g' | parallel
 
 
 
@@ -178,50 +178,41 @@ ml parallel
 DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 
 # testing
-NREPS=10
+NREPS=50
 NSAMPLES="10 25 50 100 250 400 500" 
 LSF="1 5" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/trajectory
 LOGFC=0.1
 
-
-
-# Production
-# NREPS=50
-# NSAMPLES="10 25 50 100 250 400 500"  # 700 981
-# LSF="0.5 1 5 10 25" # libScaleFactors
-# OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/
-# LOGFC=0.07 
-
 mkdir -p $OUTFOLDER
 
-echo "" > script_sim.sh
+echo "" > $OUTFOLDER/script_sim.sh
 for N in $(echo $NSAMPLES)
 do
 for libScaleFactor in $(echo $LSF)
 do
 for i in $(seq 1 1 $NREPS)
 do
-  FIT=$DIR/test_lucida_fit_${N}.RDS
-  DATA=$DIR/test_lucida_fit_data_${N}.RDS
+  FIT=$DIR/fits/test_lucida_fit_${N}.RDS
+  DATA=$DIR/fits/test_lucida_fit_data_${N}.RDS
   ID=${N}_${libScaleFactor}_${i}
-  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC $LOGFC --pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> script_sim.sh
+  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC $LOGFC --pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> $OUTFOLDER/script_sim.sh
 done
 done
 done
 
 # run sims
-cat script_sim.sh | parallel -P 60
+cat $OUTFOLDER/script_sim.sh | parallel -P 60
 
 # check that files were written
-cat script_sim.sh | awk '{print $NF}' | xargs ls > /dev/null
+cat $OUTFOLDER/script_sim.sh | awk '{print $NF}' | xargs ls > /dev/null
 
 
 # Recode for efficient access
 #----------------------------
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 
-echo "" > script_recode.sh
+echo "" > $OUTFOLDER/script_recode.sh
 for N in $(echo $NSAMPLES)
 do
 for libScaleFactor in $(echo $LSF)
@@ -231,15 +222,15 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}.h5ad
   OUT=$OUTFOLDER/sim_${ID}_recode.h5ad
-  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT " >> script_recode.sh
+  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT " >> s$OUTFOLDER/cript_recode.sh
 done
 done
 done
 
-cat script_recode.sh | parallel -P 25
+cat $OUTFOLDER/script_recode.sh | parallel -P 25
 
 # check that files were written
-cat script_recode.sh | awk '{print $NF}' | xargs ls > /dev/null
+cat $OUTFOLDER/script_recode.sh | awk '{print $NF}' | xargs ls > /dev/null
 
 # remove tmp h5ad's
 comm -3 <(ls $OUTFOLDER/*recode.h5ad | sort) <(ls $OUTFOLDER/*.h5ad | sort) | xargs -n1 rm -f
@@ -254,7 +245,7 @@ comm -3 <(ls $OUTFOLDER/*recode.h5ad | sort) <(ls $OUTFOLDER/*.h5ad | sort) | xa
 
 METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.traj
 
-echo "" > script_de.sh
+echo "" > $OUTFOLDER/script_de.sh
 for N in $(echo $NSAMPLES)
 do
 for libScaleFactor in $(echo $LSF)
@@ -264,25 +255,25 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
   OUT=$OUTFOLDER/res_sim_${ID}.parquet
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\" --cluster_id cell_type --methods $METHODS --output $OUT" >>  script_de.sh
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\" --cluster_id cell_type --methods $METHODS --output $OUT" >> $OUTFOLDER/script_de.sh
 done
 done
 done
 
-cat script_de.sh | parallel -P 60
+cat $OUTFOLDER/script_de.sh | parallel -P 60
 
 # check that files were written
-cat script_de.sh | awk '{print $NF}' | xargs ls > /dev/null 2> err.log
+cat $OUTFOLDER/script_de.sh | awk '{print $NF}' | xargs ls > /dev/null 2> err.log
 
 cat err.log | tr "'" " " | awk '{print $4}' | parallel basename {} .parquet > jobs.prefix
 
 grep -f jobs.prefix script_de.sh | parallel -P60
 
 
-cat script_de.sh | grep -v "sim_25_\|sim_50_\|sim_100_\|sim_250_" | parallel -P60
+cat $OUTFOLDER/script_de.sh | grep -v "sim_25_\|sim_50_\|sim_100_\|sim_250_" | parallel -P60
 
 
-cat script_de.sh | sed 's/res_sim_/test2\/res_sim_/g' | parallel
+cat $OUTFOLDER/script_de.sh | sed 's/res_sim_/test2\/res_sim_/g' | parallel
 
 
 
