@@ -190,7 +190,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     pb2$libSize = colSums(counts(pb2))
     pb2 = pb2[,pb2$libSize > 0]
 
-    fit.pb = lucida(pb2, ~ Dx, cluster_id = 'cluster_id', nthreads = nthreads)
+    fit.pb = lucida(pb2, ~ nobars(formula), cluster_id = 'cluster_id', nthreads = nthreads)
     })
 
     df <- bind_rows(df,
@@ -231,8 +231,8 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
   # dreamlet
   if( "dreamlet" %in% methods ){
     df.time[["dreamlet"]] <- system.time({
-    res.proc <- processAssays(pb, ~ Dx)
-    res.dl <- dreamlet(res.proc, ~ Dx)
+    res.proc <- processAssays(pb, nobars(formula))
+    res.dl <- dreamlet(res.proc, nobars(formula))
     })
 
     df <- bind_rows(df,
