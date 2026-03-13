@@ -190,7 +190,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     pb2$libSize = colSums(counts(pb2))
     pb2 = pb2[,pb2$libSize > 0]
 
-    fit.pb = lucida(pb2, ~ nobars(formula), cluster_id = 'cluster_id', nthreads = nthreads)
+    fit.pb = lucida(pb2, nobars(formula), cluster_id = 'cluster_id', nthreads = nthreads)
     })
 
     df <- bind_rows(df,
