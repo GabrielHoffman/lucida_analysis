@@ -180,7 +180,7 @@ ml parallel
 DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 
 # testing
-NREPS=50
+NREPS=10
 NSAMPLES="10 25 50 100 250 400 500" 
 LSF="1 5" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/trajectory
@@ -200,7 +200,7 @@ do
   FIT=$DIR/fits/test_lucida_fit_${N}.RDS
   DATA=$DIR/fits/test_lucida_fit_data_${N}.RDS
   ID=${N}_${libScaleFactor}_${i}
-  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC $LOGFC --pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> $OUTFOLDER/script_sim.sh
+  echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject donor_id --seed $i --logFC $LOGFC --pDE 0.05 --trajectory --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> $OUTFOLDER/script_sim.sh
 done
 done
 done
