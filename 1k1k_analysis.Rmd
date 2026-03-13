@@ -179,7 +179,7 @@ i = sce$cell_type == "CD14-low, CD16-positive monocyte"
 
 res.all = run_analysis(
       sce[seq(1000),i], 
-      formula = ~ age + sex + (1|donor_id), 
+      formula = ~ sex + age + (1|donor_id), 
       coefTest = "age",
       cluster_id = "cell_type", 
       methods = methods,

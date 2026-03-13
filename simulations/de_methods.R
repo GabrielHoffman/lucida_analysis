@@ -361,6 +361,13 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
     pb[[grpVariable]] = pb$group_id
 
+    # make sure numeric variables are numeric
+    for(x in all.vars(nobars(formula))){
+      if( is.numeric(sce.tmp[[x]]) ){
+        pb[[x]] = as.numeric(as.character(pb[[x]]))
+      }
+    }
+
     design <- model.matrix(nobars(formula), colData(pb))
 
     tab.muscat <- lapply( c("edgeR", "DESeq2"), function(method){
