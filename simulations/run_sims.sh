@@ -181,7 +181,7 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations
 
 # testing
 NREPS=10
-NSAMPLES="10 25 50 100 250 400 500" 
+NSAMPLES="10 25 50" #100 250 400 500" 
 LSF="1 5" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/trajectory
 LOGFC=0.1
@@ -214,6 +214,7 @@ cat $OUTFOLDER/script_sim.sh | awk '{print $NF}' | xargs ls > /dev/null
 
 # Recode for efficient access
 #----------------------------
+
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 
 echo "" > $OUTFOLDER/script_recode.sh
@@ -226,7 +227,7 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}.h5ad
   OUT=$OUTFOLDER/sim_${ID}_recode.h5ad
-  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT " >> s$OUTFOLDER/cript_recode.sh
+  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT " >> $OUTFOLDER/script_recode.sh
 done
 done
 done
@@ -259,7 +260,7 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
   OUT=$OUTFOLDER/res_sim_${ID}.parquet
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\"  --coefTest DxDisease --cluster_id cell_type --methods $METHODS --output $OUT" >> $OUTFOLDER/script_de.sh
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\"  --coefTest Dx --cluster_id cell_type --methods $METHODS --output $OUT" >> $OUTFOLDER/script_de.sh
 done
 done
 done
