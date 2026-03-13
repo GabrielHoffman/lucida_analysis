@@ -375,7 +375,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     design <- model.matrix(nobars(formula), colData(pb))
 
     tab.muscat <- lapply( c("edgeR", "DESeq2"), function(method){
-      df.time[[method]] <- system.time({
+      df.time[[method]] <<- system.time({
       res.muscat = pbDS(pb, 
         method = method, 
         design = design, 
@@ -383,7 +383,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
         min_cells = 2, 
         filter = "both")
       })
-      
+
       tab = res.muscat$table[[coefTest]] %>%
         bind_rows %>%
         as_tibble %>%
