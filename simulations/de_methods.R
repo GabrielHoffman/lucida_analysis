@@ -70,7 +70,7 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
       tbl <- results(y, contrast[, c])
       tbl <- muscat:::.res_df(tbl, k, ct, c)
       tbl$theta <- 1 / DESeq2::dispersions(y)
-      rename(tbl, logFC = "log2FoldChange", 
+      dplyr::rename(tbl, logFC = "log2FoldChange", 
           p_val = "pvalue", p_adj.loc = "padj")
   })
   list(table = tbl, data = y)
@@ -85,7 +85,7 @@ assignInNamespace(".DESeq2", .DESeq2_new, "muscat")
     })
     y <- assay(x, k)
     y <- suppressMessages(DGEList(y, 
-        group = x$group_id[colnames(y)], 
+        # group = x$group_id[colnames(y)], 
         remove.zeros = TRUE))
     y <- calcNormFactors(y)
     y <- estimateDisp(y, design)
@@ -97,7 +97,7 @@ assignInNamespace(".DESeq2", .DESeq2_new, "muscat")
         fit <- .fun(fit, coef[[c]], contrast[, c])
         tbl <- topTags(fit, n = Inf, sort.by = "none")
         # combine tables & reformat
-        tbl <- rename(tbl$table, p_val = "PValue", p_adj.loc = "FDR")
+        tbl <- dplyr::rename(tbl$table, p_val = "PValue", p_adj.loc = "FDR")
         tbl <- muscat:::.res_df(tbl, k, ct, c)
         tbl$theta <- 1 / y$tagwise.dispersion
         tbl
@@ -360,6 +360,8 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     pb <- aggregateData(sce.tmp2)
 
     pb[[grpVariable]] = pb$group_id
+    pb$group_id = 1
+    pb$group_id[seq(floor(ncol(pb)/2))] = 0
 
     # make sure numeric variables are numeric
     for(x in all.vars(nobars(formula))){
@@ -371,7 +373,12 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     design <- model.matrix(nobars(formula), colData(pb))
 
     tab.muscat <- lapply( c("edgeR", "DESeq2"), function(method){
-      res.muscat = pbDS(pb, method = method, design, min_cells=2, filter="both")
+      res.muscat = pbDS(pb, 
+        method = method, 
+        design = design, 
+        # coef = coefTest, 
+        min_cells = 2, 
+        filter = "both")
 
       tab = res.muscat$table[[coefTest]] %>%
         bind_rows %>%

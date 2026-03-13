@@ -170,7 +170,7 @@ source("/hpc/users/hoffmg01/work/lucida_analysis/simulations/de_methods.R")
 
 methods = c(
     # "nebula",
-    "dreamlet",
+    # "dreamlet",
     "DESeq2",
     "edgeR")
 
@@ -178,12 +178,13 @@ i = sce$cell_type == "CD14-low, CD16-positive monocyte"
 
 
 res.all = run_analysis(
-      sce[seq(1000),i], 
+      sce[seq(6000),i], 
       formula = ~ sex + age + (1|donor_id), 
       coefTest = "age",
       cluster_id = "cell_type", 
       methods = methods,
       nthreads = 12)
+
 
 
 

@@ -136,7 +136,7 @@ df <- df %>%
 files = list.files("/sc/arion/scratch/hoffmg01/sims/1k1k_v1/trajectory", "res_sim_.*.parquet", full.names=TRUE)
 files = grep("_time", files, value = TRUE)
 
-pb.methods = c("lucida [pb]", "dreamlet", "DESeq2", "edgeR")
+pb.methods = c("lucida [pb]", "dreamlet")#, "DESeq2", "edgeR")
 
 df_time = mclapply(files, function(file){
   a = read_parquet(file) 
