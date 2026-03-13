@@ -379,7 +379,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
       res.muscat = pbDS(pb, 
         method = method, 
         design = design, 
-        coef = coefTest, 
+        # coef = coefTest, 
         min_cells = 2, 
         filter = "both")
       })
