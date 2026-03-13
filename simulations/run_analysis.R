@@ -5,7 +5,7 @@ library(getopt)
 spec <- matrix(c(
   'h5ad',       'i', 1, "character",
   'formula',    'f', 1, "character",
-  "coefTest"    't', 1, "character",
+  "coefTest",   't', 1, "character",
   'cluster_id', 'c', 1, "character",
   'methods',    'm', 1, "character",
   'output',     'o', 1, "character"
@@ -16,7 +16,9 @@ opt <- getopt(spec)
 
 # load analysis code
 message("Loading packages...")
+suppressPackageStartupMessages({
 library(arrow)
+})
 source("/hpc/users/hoffmg01/work/lucida_analysis/simulations/de_methods.R")
 
 # read data

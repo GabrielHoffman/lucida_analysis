@@ -58,7 +58,9 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 
 # modify to extract theta
 .DESeq2_new <- function(x, k, design, contrast, ct, cs) {
+  suppressPackageStartupMessages({
   library(DESeq2)
+  })
   cd <- colData(x)
   y <- assay(x, k)
   mode(y) <- "integer"
@@ -78,7 +80,9 @@ assignInNamespace(".DESeq2", .DESeq2_new, "muscat")
 
 # modify to extract theta
 .edgeR_new <- function(x, k, design, coef, contrast, ct, cs, treat) {
+    suppressPackageStartupMessages({
     library(edgeR)
+    })
     y <- assay(x, k)
     y <- suppressMessages(DGEList(y, 
         group = x$group_id[colnames(y)], 
