@@ -5,6 +5,7 @@ library(getopt)
 spec <- matrix(c(
   'h5ad',       'i', 1, "character",
   'formula',    'f', 1, "character",
+  "coefTest"    't', 1, "character",
   'cluster_id', 'c', 1, "character",
   'methods',    'm', 1, "character",
   'output',     'o', 1, "character"
@@ -39,6 +40,7 @@ if( n_samples < 10 ){
 message("Run analysis...")
 res <- run_analysis(sce.sim, 
       formula = formula, 
+      coefTest = opt$coefTest,
       cluster_id = opt$cluster_id, 
       methods = methods,
       nthreads = 1)

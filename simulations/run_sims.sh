@@ -50,7 +50,7 @@ ml parallel
 DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations/
 
 # testing
-NREPS=10
+NREPS=50
 NSAMPLES="10 25 50 100 250 400 500"  
 LSF="1 5" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/constant/
@@ -63,7 +63,9 @@ LOGFC=0.1
 # OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/
 # LOGFC=0.07 
 
+# rm -f $OUTFOLDER/*
 mkdir -p $OUTFOLDER
+cd $OUTFOLDER
 
 echo "" > $OUTFOLDER/script_sim.sh
 for N in $(echo $NSAMPLES)
@@ -134,7 +136,7 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
   OUT=$OUTFOLDER/res_sim_${ID}.parquet
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\" --cluster_id cell_type --methods $METHODS --output $OUT" >> $OUTFOLDER/script_de.sh
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\" --coefTest DxDisease --cluster_id cell_type --methods $METHODS --output $OUT" >> $OUTFOLDER/script_de.sh
 done
 done
 done
@@ -184,7 +186,9 @@ LSF="1 5" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/trajectory
 LOGFC=0.1
 
+# rm -f $OUTFOLDER/*
 mkdir -p $OUTFOLDER
+cd $OUTFOLDER
 
 echo "" > $OUTFOLDER/script_sim.sh
 for N in $(echo $NSAMPLES)
@@ -255,7 +259,7 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
   OUT=$OUTFOLDER/res_sim_${ID}.parquet
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\" --cluster_id cell_type --methods $METHODS --output $OUT" >> $OUTFOLDER/script_de.sh
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|donor_id)\"  --coefTest DxDisease --cluster_id cell_type --methods $METHODS --output $OUT" >> $OUTFOLDER/script_de.sh
 done
 done
 done

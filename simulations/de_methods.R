@@ -26,13 +26,24 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
     data = colData(sceSub[,idx])
     data = droplevels(data)
 
+    success = TRUE
     if( nlevels(data[[ran_var]]) < 3 ){
-      return( NULL)
+      success = FALSE
     }
 
-    design = model.matrix(nobars(formula), data)
+    tryCatch(
+      {design = model.matrix(nobars(formula), data)},
+      error = function(e) success <<- FALSE)
 
-    fit = nebula( counts(sceSub[,idx]), data[[ran_var]], design, offset = sceSub$libSize[idx], method = method, ncore = nthreads)
+    if( ! success ) return(NULL)
+
+    fit = nebula( 
+      count = counts(sceSub[,idx]), 
+      id = data[[ran_var]], 
+      pred = design, 
+      offset = sceSub$libSize[idx], 
+      method = method, 
+      ncore = nthreads)
     
     tibble(cluster_id = CT, 
             ID = fit$summary$gene,
@@ -92,7 +103,7 @@ assignInNamespace(".DESeq2", .DESeq2_new, "muscat")
 assignInNamespace(".edgeR", .edgeR_new, "muscat")
 
 
-run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1, include_metadata = TRUE){
+run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthreads = 1, include_metadata = TRUE){
 
   validMethods <- c(  
     "lucida",
@@ -127,7 +138,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1, i
       bind_rows
 
     df <- bind_rows(df,
-            lucida::results(fit.lucida, "DxDisease", expand=TRUE) %>%
+            lucida::results(fit.lucida, coefTest, expand=TRUE) %>%
             mutate(Method = "lucida"))
   }
 
@@ -139,7 +150,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1, i
     })
 
     df <- bind_rows(df,
-            lucida::results(fit.lucida1, "DxDisease", expand=TRUE) %>%
+            lucida::results(fit.lucida1, coefTest, expand=TRUE) %>%
             mutate(Method = "lucida [1 step]"))
   }
 
@@ -179,7 +190,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1, i
     })
 
     df <- bind_rows(df,
-            lucida::results(fit.pb, "DxDisease", expand=TRUE) %>%
+            lucida::results(fit.pb, coefTest, expand=TRUE) %>%
             mutate(Method = "lucida [pb]"))
   }
 
@@ -192,8 +203,8 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1, i
 
     df <- bind_rows(df,
             res.neb %>%
-            rename(logFC = "logFC_DxDisease", 
-            P.Value = "p_DxDisease") %>%
+            rename(logFC = paste0("logFC_", coefTest), 
+            P.Value = paste0("p_", coefTest)) %>%
             select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
             mutate(FDR = p.adjust(P.Value)) %>%
             mutate(Method = "nebula"))
@@ -206,8 +217,8 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1, i
 
     df <- bind_rows(df,
             res.neb.HL %>%
-            rename(logFC = "logFC_DxDisease", 
-            P.Value = "p_DxDisease") %>%
+            rename(logFC = paste0("logFC_", coefTest), 
+            P.Value = paste0("p_", coefTest)) %>%
             select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
             mutate(FDR = p.adjust(P.Value)) %>%
             mutate(Method = "nebula (HL)"))
@@ -221,7 +232,7 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1, i
     })
 
     df <- bind_rows(df,
-            topTable(res.dl, "DxDisease", number=Inf) %>%
+            topTable(res.dl, coefTest, number=Inf) %>%
             as_tibble %>%
             mutate(Method = "dreamlet") %>%
             rename(FDR = "adj.P.Val", cluster_id = "assay") %>%
@@ -333,19 +344,25 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1, i
   # muscat: edgeR, DESeq2
   if( "DESeq2" %in% methods ){
 
+    # hypothesis test on _LAST_ fixed effect variable
+    grpVariable = all.vars(nobars(formula))
+    grpVariable = grpVariable[length(grpVariable)]
+
     sce.tmp2 <- prepSCE(sce.tmp, 
       kid = cluster_id, 
-      sid = "id", 
-      gid = all.vars(nobars(formula))[1])
+      sid = "id",
+      gid = grpVariable)
 
     pb <- aggregateData(sce.tmp2)
 
-    design <- model.matrix(~ group_id, colData(pb))
+    pb[[grpVariable]] = pb$group_id
+
+    design <- model.matrix(nobars(formula), colData(pb))
 
     tab.muscat <- lapply( c("edgeR", "DESeq2"), function(method){
       res.muscat = pbDS(pb, method = method, design, min_cells=2, filter="both")
 
-      tab = res.muscat$table$group_idDisease %>%
+      tab = res.muscat$table[[coefTest]] %>%
         bind_rows %>%
         as_tibble %>%
         mutate(Method = method) %>%
@@ -380,14 +397,14 @@ run_analysis <- function( sce.sim, formula, cluster_id, methods, nthreads = 1, i
 
     sce.pb <- pseudobulk( sce.sim, group_by = vars(id, !!sym(cluster_id), Dx))
 
-    coefID <- paste0(x1, levels(factor(colData(sce.pb)[[x1]]))[2])
+    # coefID <- paste0(x1, levels(factor(colData(sce.pb)[[x1]]))[2])
 
     CTs <- unique(colData(sce.pb)[[cluster_id]])
     res.gp <- lapply( CTs, function(CT){
       sceSub <- sce.pb[,colData(sce.pb)[[cluster_id]] == CT]
       fit.gp <- glm_gp(sceSub, nobars(formula))
 
-      test_de( fit.gp, coefID, compute_lfc_se=TRUE) %>%
+      test_de( fit.gp, coefTest, compute_lfc_se=TRUE) %>%
         as_tibble %>%
         rename(ID = name, P.Value = pval, logFC = lfc, se = lfc_se) %>%
         mutate(cluster_id = CT) %>%
