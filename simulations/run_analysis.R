@@ -34,10 +34,6 @@ formula <- as.formula(opt$formula)
 ran_var <- all.vars(findbars(formula)[[1]])
 n_samples <- nlevels(colData(sce.sim)[,ran_var])
 
-# if( n_samples < 10 ){
-#   methods <- setdiff(methods, c("nebula","nebula (HL)"))
-# }
-
 # Run analysis
 message("Run analysis...")
 res <- run_analysis(sce.sim, 
