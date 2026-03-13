@@ -1,0 +1,203 @@
+---
+title: "False positive rate for differential expression analysis"
+subtitle: 'Based on 1k1k dataset'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r format(Sys.time())`"
+documentclass: article
+vignette: >
+  %\VignetteIndexEntry{Simulation study for differential expression analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+---
+
+<!---
+
+# cd ~/workspace/repos/lucida/inst/simulations
+
+# rm -rf 1k1k_simulations_cache/
+
+# cd /Users/gabrielhoffman/workspace/repos/lucida_analysis
+rmarkdown::render("1k1k_permutations.Rmd")
+
+
+# devtools::reload("/Users/gabrielhoffman/workspace/repos/lucida")
+
+--->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = FALSE
+)
+```
+
+```{r packages, cache=FALSE}
+library(ggplot2)
+```
+
+
+```{r load.data, cache=FALSE}
+library(lucida)
+# donor_id, Sex, nCount_RNA, pool_number, Age, cell_type
+# file = "/Users/gabrielhoffman/Downloads/h5ad_formats/out_sort_CSC_lzf.h5ad"
+file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/1k1k_sort_CSC_lzf.h5ad"
+sce = readH5AD(file)
+
+# Library size for each cell
+sce$libSize = sce$nCount_RNA
+
+sce$CellType = sce$cell_type
+sce$Individual = sce$donor_id
+
+# filter to include only cell types with 1k observations
+tab = table(sce$CellType)
+sce = sce[,sce$CellType %in% names(tab[tab>1000])]
+sce = sce[,sce$libSize > 1000]
+sce$CellType = droplevels(sce$CellType)
+```
+
+
+```{r analysis}
+# source("~/workspace/repos/lucida_analysis/simulations/de_methods.R")
+source("/hpc/users/hoffmg01/work/lucida_analysis/simulations/de_methods.R")
+
+permute_labels = function(sce){
+  sce2 = sce
+
+  # Set disease status for simulations
+  sce2$Dx = "Control"
+  Dx_lvls = sample(levels(sce2$donor_id), nlevels(sce2$donor_id)/2)
+  sce2$Dx[sce2$donor_id %in% Dx_lvls] = "Disease"
+  sce2
+}
+
+subset_data = function(sce2, n, CTs){
+
+  subj1 = unique(sce2$Individual[sce2$Dx == "Control" & sce2$sex == "female"] )
+  subj2 = unique(sce2$Individual[sce2$Dx == "Disease" & sce2$sex == "female"] )
+
+  i = sample(length(subj1), n/2)
+  j = sample(length(subj2), n/2)
+
+  subjects = as.character(c(subj1[i], subj2[j]))
+
+  idx = (sce2$CellType == CTs) & (sce2$Individual %in% subjects)
+  sce2[,idx]
+}
+
+
+formula = ~ Dx + age + sex + (1|donor_id)
+
+colorMethods = c(
+  "lucida" = "#1F77B4FF",
+  "lucida [1 step]" = "#BECFE6FF",
+  "lucida [Bayesian]" = "#204e74",
+  "lucida [pb]"       = "navy",
+  "nebula" = "#FF7F0EFF",
+  "nebula (HL)" = "#c15a00",
+  "dreamlet" = "#2CA02CFF",
+  "DESeq2" = "#D62728FF",
+  "edgeR" = "#A020F0",
+  "glmGamPoi"  = "#FF69B4"
+  )
+
+n_samples = c(10, 25, 50, 100, 250, 400, 500)
+
+CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
+
+df = lapply(n_samples, function(N){
+
+  message(N)
+  lapply(seq(10), function(i){
+
+    sce2 = permute_labels(sce)
+    sce3 = subset_data(sce2, N, CTs)
+
+    res <- run_analysis(sce3, 
+          formula = formula, 
+          coefTest = "DxDisease",
+          cluster_id = "CellType", 
+          methods = names(colorMethods)[c(1)],
+          nthreads = 11, 
+          include_metadata = FALSE)
+
+    res$df %>%
+      group_by(Method) %>%
+      mutate(FDR = p.adjust(P.Value)) %>%
+      group_by(Method, cluster_id) %>%
+      summarize(n = n(), 
+        nFP = sum(P.Value < 0.05),
+        nFDRsignif = sum(FDR < 0.05)) %>%
+      mutate(N = N, i = i)
+    }) %>%
+    bind_rows
+}) %>%
+  bind_rows
+```
+
+```{r plot, cache=FALSE}
+thm = theme_classic() +
+    theme(aspect.ratio = 1, 
+      plot.title = element_text(hjust = 0.5)) 
+
+df2 = df %>%
+  group_by(Method, cluster_id, N) %>%
+  summarize(n = sum(n), 
+    nFP = sum(nFP),
+    nFDRsignif = sum(nFDRsignif)) %>%
+  mutate(
+    FPR = nFP / n,
+    se = sqrt(FPR*(1-FPR)/n),
+    N = factor(N)) 
+
+df2 %>%
+  ggplot(aes(N, FPR, fill=Method)) +
+    geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
+    geom_errorbar(aes(ymin = FPR - 1.96*se, 
+      ymax = FPR + 1.96*se), width=0, position = position_dodge(width = 0.9)) +
+    facet_wrap(~cluster_id) +
+    scale_fill_manual(values = colorMethods) +
+    thm +
+    scale_y_continuous(limits=c(0,NA), expand=c(0,0)) +
+    geom_hline(yintercept=0.05, linetype="dashed") +
+    ylab("False positive rate") +
+    xlab("Number of subjects")
+
+
+ylim = max(c(10, df2$nFDRsignif))*1.03 
+df2 %>%
+  ggplot(aes(N, nFDRsignif, fill=Method, label=nFDRsignif)) +
+    geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
+    facet_wrap(~cluster_id) +
+    scale_fill_manual(values = colorMethods) +
+    thm +
+    scale_y_continuous(limits=c(0,ylim), expand=c(0,0)) +
+    ylab("False positive findings at FDR 5%") +
+    xlab("Number of subjects") +
+    geom_text(position = position_dodge(width = 0.9))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
