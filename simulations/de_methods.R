@@ -348,6 +348,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
   # muscat: edgeR, DESeq2
   if( "DESeq2" %in% methods ){
 
+    df.time[["pb2"]] <- system.time({   
     # hypothesis test on _LAST_ fixed effect variable
     grpVariable = all.vars(nobars(formula))
     grpVariable = grpVariable[length(grpVariable)]
@@ -358,6 +359,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
       gid = grpVariable)
 
     pb <- aggregateData(sce.tmp2)
+    })
 
     pb[[grpVariable]] = pb$group_id
     pb$group_id = 1
@@ -373,13 +375,15 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     design <- model.matrix(nobars(formula), colData(pb))
 
     tab.muscat <- lapply( c("edgeR", "DESeq2"), function(method){
+      df.time[[method]] <- system.time({
       res.muscat = pbDS(pb, 
         method = method, 
         design = design, 
-        # coef = coefTest, 
+        coef = coefTest, 
         min_cells = 2, 
         filter = "both")
-
+      })
+      
       tab = res.muscat$table[[coefTest]] %>%
         bind_rows %>%
         as_tibble %>%

@@ -174,17 +174,36 @@ methods = c(
     "DESeq2",
     "edgeR")
 
-i = sce$cell_type == "CD14-low, CD16-positive monocyte" 
-
+i = sce$cell_type %in% levels(sce$cell_type)[1:2]
+j = sce$donor_id %in% levels(sce$donor_id)[1:30]
+keep = i & j
 
 res.all = run_analysis(
-      sce[seq(6000),i], 
+      sce[seq(5000),keep], 
       formula = ~ sex + age + (1|donor_id), 
       coefTest = "age",
       cluster_id = "cell_type", 
       methods = methods,
-      nthreads = 12)
+      nthreads = 12, 
+      include_metadata = FALSE)
 
+
+library(SingleCellExperiment)
+library(muscat)
+load("~/data.RDATA")
+
+    pb$group_id = 1
+    pb$group_id[seq(floor(ncol(pb)/2))] = 0
+
+design <- model.matrix(~ age, colData(pb))
+
+
+  res.muscat = pbDS(pb, 
+        method = "edgeR", 
+        design = design, 
+        # coef = 2, 
+        min_cells = 1, 
+        filter = "both")
 
 
 
