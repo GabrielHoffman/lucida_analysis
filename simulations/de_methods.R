@@ -205,13 +205,15 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     res.neb <- run_nebula(sce.sim, formula, cluster_id, nthreads = nthreads)
     })
 
-    df <- bind_rows(df,
+    if( nrow(res.neb) > 0){
+      df <- bind_rows(df,
             res.neb %>%
             rename(logFC = paste0("logFC_", coefTest), 
             P.Value = paste0("p_", coefTest)) %>%
             select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
             mutate(FDR = p.adjust(P.Value)) %>%
             mutate(Method = "nebula"))
+    }
   }
 
   if( "nebula (HL)" %in% methods ){
@@ -219,13 +221,15 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     res.neb.HL <- run_nebula(sce.sim, formula, cluster_id, method="HL", nthreads = nthreads)
     })
 
-    df <- bind_rows(df,
+    if( nrow(res.neb.HL) > 0){
+      df <- bind_rows(df,
             res.neb.HL %>%
             rename(logFC = paste0("logFC_", coefTest), 
             P.Value = paste0("p_", coefTest)) %>%
             select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
             mutate(FDR = p.adjust(P.Value)) %>%
             mutate(Method = "nebula (HL)"))
+    }
   }
 
   # dreamlet
