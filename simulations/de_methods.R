@@ -451,9 +451,11 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
         as_tibble, by=c('cluster_id', "ID"))
   } 
 
-  df = df %>%
-    mutate(Method = factor(Method, validMethods)) %>%
-    droplevels
+  if( nrow(df) > 1 ){
+    df = df %>%
+      mutate(Method = factor(Method, validMethods)) %>%
+      droplevels
+  }
 
   if( "lucida" %in% methods ){
     df <- df %>%
