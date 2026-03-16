@@ -381,17 +381,16 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     tab.muscat <- lapply( c("edgeR", "DESeq2"), function(method){
       df.time[[method]] <<- system.time({
 
-      success <- TRUE
-      tryCatch({
-        res.muscat = pbDS(pb, 
+        success <- TRUE        
+        tryCatch(
+        res.muscat <- pbDS(pb, 
           method = method, 
           design = design, 
           # coef = coefTest, 
           min_cells = 2, 
-          filter = "both")
-        }, 
-        function(e) success <<- FALSE)
-
+          filter = "both"), 
+          function(e) success <<- FALSE)
+      })
 
       if( ! success ) return( NULL )
 
@@ -416,7 +415,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
       bind_rows
 
     df <- bind_rows(df, tab.muscat)
-  })
+  }
 
   # glmGamPoi
   if( "glmGamPoi" %in% methods ){
