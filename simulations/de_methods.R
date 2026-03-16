@@ -382,13 +382,13 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
       df.time[[method]] <<- system.time({
 
         success <- TRUE        
-        tryCatch(
+        tryCatch({
         res.muscat <- pbDS(pb, 
           method = method, 
           design = design, 
           # coef = coefTest, 
           min_cells = 2, 
-          filter = "both"), 
+          filter = "both")}, 
           function(e) success <<- FALSE)
       })
 
