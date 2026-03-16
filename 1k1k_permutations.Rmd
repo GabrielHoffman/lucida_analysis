@@ -118,7 +118,7 @@ colorMethods = c(
   "nebula (HL)" = "#c15a00",
   "dreamlet" = "#2CA02CFF",
   "DESeq2" = "#D62728FF",
-  "edgeR" = "#A020F0",
+  "edgeR" = "#A020F0"
   # "glmGamPoi"  = "#FF69B4"
   )
 
