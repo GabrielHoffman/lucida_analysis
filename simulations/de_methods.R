@@ -392,6 +392,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
         }, 
         function(e) success <<- FALSE)
 
+
       if( ! success ) return( NULL )
 
       tab = res.muscat$table[[coefTest]] %>%
@@ -415,7 +416,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
       bind_rows
 
     df <- bind_rows(df, tab.muscat)
-  }
+  })
 
   # glmGamPoi
   if( "glmGamPoi" %in% methods ){
