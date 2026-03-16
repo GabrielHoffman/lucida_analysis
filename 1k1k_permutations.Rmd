@@ -15,19 +15,28 @@ output:
     toc_float: true
 ---
 
+
 <!---
 
-# cd ~/workspace/repos/lucida/inst/simulations
+# cd /sc/arion/work/hoffmg01/lucida_analysis/
 
 # rm -rf 1k1k_simulations_cache/
+ml pandoc imagemagick
 
-# cd /Users/gabrielhoffman/workspace/repos/lucida_analysis
 rmarkdown::render("1k1k_permutations.Rmd")
 
+\cp -f 1k1k_permutations.html ~/www/
 
-# devtools::reload("/Users/gabrielhoffman/workspace/repos/lucida")
+https://hoffmg01.dmz.hpc.mssm.edu/1k1k_permutations.html
+
+thm = theme_classic(30) +
+    theme(aspect.ratio = 1, 
+      plot.title = element_text(hjust = 0.5)) 
+
 
 --->
+
+
 
 
 ```{r setup, include=FALSE}
@@ -167,7 +176,7 @@ df2 %>%
     geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
     geom_errorbar(aes(ymin = FPR - 1.96*se, 
       ymax = FPR + 1.96*se), width=0, position = position_dodge(width = 0.9)) +
-    facet_wrap(~cluster_id) +
+    facet_wrap(~cluster_id, nrow=1) +
     scale_fill_manual(values = colorMethods) +
     thm +
     scale_y_continuous(limits=c(0,NA), expand=c(0,0)) +
@@ -180,7 +189,7 @@ ylim = max(c(10, df2$nFDRsignif))*1.03
 df2 %>%
   ggplot(aes(N, nFDRsignif, fill=Method, label=nFDRsignif)) +
     geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
-    facet_wrap(~cluster_id) +
+    facet_wrap(~cluster_id, nrow=1) +
     scale_fill_manual(values = colorMethods) +
     thm +
     scale_y_continuous(limits=c(0,ylim), expand=c(0,0)) +
@@ -188,16 +197,4 @@ df2 %>%
     xlab("Number of subjects") +
     geom_text(position = position_dodge(width = 0.9))
 ```
-
-
-
-
-
-
-
-
-
-
-
-
 
