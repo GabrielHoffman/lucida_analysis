@@ -389,7 +389,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
           # coef = coefTest, 
           min_cells = 2, 
           filter = "both")}, 
-          function(e) success <<- FALSE)
+          error = function(e) success <<- FALSE)
       })
 
       if( ! success ) return( NULL )
