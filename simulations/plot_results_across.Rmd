@@ -227,7 +227,7 @@ df %>%
     scale_y_continuous(limits=c(0, NA), expand=c(0,0))
 ```
 
-```{r ceof3, fig.height=12, fig.width=12}
+```{r coef3, fig.height=12, fig.width=12}
 df %>% 
   filter(libScaleFactor == "1") %>%
   # filter(N == "250") %>%
@@ -540,7 +540,7 @@ df %>%
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
     ylab("False positive rate") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(N ~ cluster_id) +
+    facet_grid(N ~ cluster_id)
 ```
 
 ```{r QQ.plot}
