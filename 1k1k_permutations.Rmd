@@ -122,7 +122,7 @@ colorMethods = c(
   "glmGamPoi"  = "#FF69B4"
   )
 
-n_samples = c(10, 25, 50, 100, 250, 400, 500)
+n_samples = c(25, 50, 100, 250, 400, 500)
 
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
@@ -155,6 +155,7 @@ df = lapply(n_samples, function(N){
 }) %>%
   bind_rows
 ```
+
 
 ```{r plot, cache=FALSE}
 thm = theme_classic() +
