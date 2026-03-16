@@ -350,7 +350,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
   # }
 
   # muscat: edgeR, DESeq2
-  if( "DESeq2" %in% methods ){
+  if( any(c("edgeR", "DESeq2") %in% methods) ){
 
     df.time[["pb2"]] <- system.time({   
     # hypothesis test on _LAST_ fixed effect variable
@@ -380,13 +380,19 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
     tab.muscat <- lapply( c("edgeR", "DESeq2"), function(method){
       df.time[[method]] <<- system.time({
-      res.muscat = pbDS(pb, 
-        method = method, 
-        design = design, 
-        # coef = coefTest, 
-        min_cells = 2, 
-        filter = "both")
-      })
+
+      success <- TRUE
+      tryCatch({
+        res.muscat = pbDS(pb, 
+          method = method, 
+          design = design, 
+          # coef = coefTest, 
+          min_cells = 2, 
+          filter = "both")
+        }, 
+        function(e) success <<- FALSE)
+
+      if( ! success ) return( NULL )
 
       tab = res.muscat$table[[coefTest]] %>%
         bind_rows %>%
