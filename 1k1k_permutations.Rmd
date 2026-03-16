@@ -119,7 +119,7 @@ colorMethods = c(
   "dreamlet" = "#2CA02CFF",
   "DESeq2" = "#D62728FF",
   "edgeR" = "#A020F0",
-  "glmGamPoi"  = "#FF69B4"
+  # "glmGamPoi"  = "#FF69B4"
   )
 
 n_samples = c(25, 50, 100, 250, 400, 500)
@@ -129,6 +129,7 @@ CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive
 df = lapply(n_samples, function(N){
 
   message(N)
+  set.seed(1)
   lapply(seq(10), function(i){
 
     sce2 = permute_labels(sce)
@@ -155,6 +156,7 @@ df = lapply(n_samples, function(N){
 }) %>%
   bind_rows
 ```
+
 
 
 ```{r plot, cache=FALSE}

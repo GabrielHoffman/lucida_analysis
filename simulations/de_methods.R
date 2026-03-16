@@ -429,6 +429,20 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
     sce.pb <- pseudobulk( sce.sim, group_by = vars(id, !!sym(cluster_id), Dx))
 
+    # include = setdiff(c("id", cluster_id, all.vars(formula)), x1)
+
+    # info = colData(sce.pb) %>% 
+    #         as.data.frame %>% 
+    #         left_join( colData(sce.sim)[,include] %>%
+    #           unique %>%
+    #           as.data.frame, by=c("id", cluster_id))
+
+    # i = match(paste(info$id, info[[cluster_id]]),
+    #           paste(sce.pb$id, sce.pb[[cluster_id]]))
+
+    # colData(sce.pb) = DataFrame(info)
+
+
     # coefID <- paste0(x1, levels(factor(colData(sce.pb)[[x1]]))[2])
 
     CTs <- unique(colData(sce.pb)[[cluster_id]])
