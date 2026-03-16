@@ -111,9 +111,9 @@ formula = ~ Dx + age + sex + (1|donor_id)
 
 colorMethods = c(
   "lucida" = "#1F77B4FF",
-  "lucida [1 step]" = "#BECFE6FF",
-  "lucida [Bayesian]" = "#204e74",
-  "lucida [pb]"       = "navy",
+  # "lucida [1 step]" = "#BECFE6FF",
+  # "lucida [Bayesian]" = "#204e74",
+  # "lucida [pb]"       = "navy",
   "nebula" = "#FF7F0EFF",
   "nebula (HL)" = "#c15a00",
   "dreamlet" = "#2CA02CFF",
@@ -138,7 +138,7 @@ df = lapply(n_samples, function(N){
           formula = formula, 
           coefTest = "DxDisease",
           cluster_id = "CellType", 
-          methods = names(colorMethods)[c(1)],
+          methods = names(colorMethods),
           nthreads = 11, 
           include_metadata = FALSE)
 
