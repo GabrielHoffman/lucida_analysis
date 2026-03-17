@@ -47,11 +47,12 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
     
     tibble(cluster_id = CT, 
             ID = fit$summary$gene,
-            fit$summary %>% select(-gene, -gene_id), 
+            fit$summary %>% 
+      dplyr::select(-gene, -gene_id), 
             fit$overdispersion) %>%
       dplyr::rename(sigSq_g = "Subject") %>%
       mutate(theta = 1 / Cell) %>%
-      select(-Cell)
+      dplyr::select(-Cell)
     }) %>%
     bind_rows
 }
@@ -165,7 +166,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
             res.neb %>%
             dplyr::rename(logFC = paste0("logFC_", coefTest), 
             P.Value = paste0("p_", coefTest)) %>%
-            select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
+            dplyr::select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
             mutate(FDR = p.adjust(P.Value)) %>%
             mutate(Method = "nebula"))
     }
@@ -181,7 +182,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
             res.neb.HL %>%
             dplyr::rename(logFC = paste0("logFC_", coefTest), 
             P.Value = paste0("p_", coefTest)) %>%
-            select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
+            dplyr::select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
             mutate(FDR = p.adjust(P.Value)) %>%
             mutate(Method = "nebula (HL)"))
     }
@@ -199,7 +200,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
             as_tibble %>%
             mutate(Method = "dreamlet") %>%
             dplyr::rename(FDR = "adj.P.Val", cluster_id = "assay") %>%
-            select(-t, -B, -z.std, -AveExpr))
+            dplyr::select(-t, -B, -z.std, -AveExpr))
   }
 
   # muscat: edgeR, DESeq2
@@ -257,11 +258,11 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
       if( method == "DESeq2"){
         tab = tab %>%
-          select(-baseMean, -lfcSE, -stat, -p_adj.loc)
+          dplyr::select(-baseMean, -lfcSE, -stat, -p_adj.loc)
       }
       if( method == "edgeR"){
         tab = tab %>%
-          select(-logCPM, -F, -p_adj.loc, -contrast)
+          dplyr::select(-logCPM, -F, -p_adj.loc, -contrast)
       }
       tab
     }) %>%
@@ -307,7 +308,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
         as_tibble %>%
         dplyr::rename(ID = name, P.Value = pval, logFC = lfc, se = lfc_se) %>%
         mutate(cluster_id = CT) %>%
-        select(cluster_id, ID, logFC, se, P.Value) %>%
+        dplyr::select(cluster_id, ID, logFC, se, P.Value) %>%
         filter(!is.na(se)) %>%
         inner_join(data.frame(
           ID = names(fit.gp$overdispersions),
