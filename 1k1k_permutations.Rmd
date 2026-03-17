@@ -139,7 +139,7 @@ df = lapply(n_samples, function(N){
           coefTest = "DxDisease",
           cluster_id = "CellType", 
           methods = names(colorMethods),
-          nthreads = 11, 
+          nthreads = 24, 
           include_metadata = FALSE)
 
     res$df %>%
