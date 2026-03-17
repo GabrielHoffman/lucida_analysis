@@ -232,10 +232,10 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
     design <- model.matrix(nobars(formula), colData(pb))
 
+    browser()
+    mth.include = c("edgeR", "DESeq2")[c("edgeR", "DESeq2") %in% methods]
 
-
-    tab.muscat <- lapply( c("edgeR", "DESeq2")[c("edgeR", "DESeq2") %in% methods],
-      function(method){
+    tab.muscat <- lapply( mth.include, function(method){
       df.time[[method]] <<- system.time({
 
         success <- TRUE        
