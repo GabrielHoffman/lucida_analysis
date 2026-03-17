@@ -256,6 +256,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
           P.Value = "p_val", 
           FDR = 'p_adj.glb')
 
+      browser()
       if( method == "DESeq2"){
         tab = tab %>%
           dplyr::select(-baseMean, -lfcSE, -stat, -p_adj.loc)
