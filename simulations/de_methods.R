@@ -232,7 +232,10 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
     design <- model.matrix(nobars(formula), colData(pb))
 
-    tab.muscat <- lapply( c("edgeR", "DESeq2"), function(method){
+
+
+    tab.muscat <- lapply( c("edgeR", "DESeq2")[c("edgeR", "DESeq2") %in% methods],
+      function(method){
       df.time[[method]] <<- system.time({
 
         success <- TRUE        
@@ -263,7 +266,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
       }
       if( method == "edgeR"){
         tab = tab %>%
-          dplyr::select(-logCPM, -F, -p_adj.loc, -contrast)
+          dplyr::select(-logCPM, -F, -p_adj.loc)
       }
       tab
     }) %>%
