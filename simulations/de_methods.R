@@ -49,7 +49,7 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
             ID = fit$summary$gene,
             fit$summary %>% select(-gene, -gene_id), 
             fit$overdispersion) %>%
-      rename(sigSq_g = "Subject") %>%
+      dplyr::rename(sigSq_g = "Subject") %>%
       mutate(theta = 1 / Cell) %>%
       select(-Cell)
     }) %>%
@@ -163,7 +163,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     if( nrow(res.neb) > 0){
       df <- bind_rows(df,
             res.neb %>%
-            rename(logFC = paste0("logFC_", coefTest), 
+            dplyr::rename(logFC = paste0("logFC_", coefTest), 
             P.Value = paste0("p_", coefTest)) %>%
             select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
             mutate(FDR = p.adjust(P.Value)) %>%
@@ -179,7 +179,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     if( nrow(res.neb.HL) > 0){
       df <- bind_rows(df,
             res.neb.HL %>%
-            rename(logFC = paste0("logFC_", coefTest), 
+            dplyr::rename(logFC = paste0("logFC_", coefTest), 
             P.Value = paste0("p_", coefTest)) %>%
             select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
             mutate(FDR = p.adjust(P.Value)) %>%
@@ -198,7 +198,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
             topTable(res.dl, coefTest, number=Inf) %>%
             as_tibble %>%
             mutate(Method = "dreamlet") %>%
-            rename(FDR = "adj.P.Val", cluster_id = "assay") %>%
+            dplyr::rename(FDR = "adj.P.Val", cluster_id = "assay") %>%
             select(-t, -B, -z.std, -AveExpr))
   }
 
@@ -239,7 +239,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
         res.muscat <- pbDS(pb, 
           method = method, 
           design = design, 
-          # coef = coefTest, 
+          coef = which(coefTest == colnames(design)), 
           min_cells = 2, 
           filter = "both")}, 
           error = function(e) success <<- FALSE)
@@ -247,12 +247,11 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
       if( ! success ) return( NULL )
 
-      browser()
       tab = res.muscat$table[[coefTest]] %>%
         bind_rows %>%
         as_tibble %>%
         mutate(Method = method) %>%
-        rename(ID = "gene", 
+        dplyr::rename(ID = "gene", 
           P.Value = "p_val", 
           FDR = 'p_adj.glb')
 
@@ -306,7 +305,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
       test_de( fit.gp, coefTest, compute_lfc_se=TRUE) %>%
         as_tibble %>%
-        rename(ID = name, P.Value = pval, logFC = lfc, se = lfc_se) %>%
+        dplyr::rename(ID = name, P.Value = pval, logFC = lfc, se = lfc_se) %>%
         mutate(cluster_id = CT) %>%
         select(cluster_id, ID, logFC, se, P.Value) %>%
         filter(!is.na(se)) %>%
