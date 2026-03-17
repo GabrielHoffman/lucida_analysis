@@ -86,7 +86,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
   # lucida 
   if( "lucida" %in% methods ){
     df.time[["lucida"]] <- system.time({
-    fit.lucida <- lucida(sce.sim, formula, cluster_id, nthreads = nthreads, nReaders=8)
+    fit.lucida <- lucida(sce.sim, formula, cluster_id, nthreads = nthreads, nReaders=min(nthreads, 8))
     })
 
     # merge with expression magnitude information
@@ -106,7 +106,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
   if( "lucida [1 step]" %in% methods ){
 
     df.time[["lucida [1 step]"]] <- system.time({
-    fit.lucida1 <- lucida(sce.sim, formula, cluster_id, shrinkDispersion=FALSE, nthreads = nthreads, nReaders=8)
+    fit.lucida1 <- lucida(sce.sim, formula, cluster_id, shrinkDispersion=FALSE, nthreads = nthreads, nReaders=min(nthreads, 8))
     })
 
     df <- bind_rows(df,
