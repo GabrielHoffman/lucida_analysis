@@ -247,6 +247,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
       if( ! success ) return( NULL )
 
+      browser()
       tab = res.muscat$table[[coefTest]] %>%
         bind_rows %>%
         as_tibble %>%
