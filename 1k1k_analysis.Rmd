@@ -79,7 +79,7 @@ sce$cell_type = droplevels(sce$cell_type)
 
 ```{r lucida}
 fit = lucida(sce, ~ age + sex + (1|donor_id), 
-  cluster_id = "cell_type")
+  cluster_id = "cell_type", nReaders=8)
 ```
 
 ## Plots
@@ -98,7 +98,7 @@ plotVolcano(fit, coef='sexmale', ncol=5)
 ```
 
 ```{r lucida.null}
-fit.null <- lucida(sce, ~ (1|donor_id), cluster_id = "cell_type")
+fit.null <- lucida(sce, ~ (1|donor_id), cluster_id = "cell_type", nReaders=8)
 ```
 
 ```{r vp, fig.height = 15, fig.width =15}
