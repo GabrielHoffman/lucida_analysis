@@ -186,8 +186,16 @@ res.all = run_analysis(
 
 
 
+sce2 = sce[,sce$cell_type == "platelet"]
 
-
+res.all = run_analysis(
+      sce2, 
+      formula = ~ sex + age + (1|donor_id), 
+      coefTest = "age",
+      cluster_id = "cell_type", 
+      methods = methods,
+      nthreads = 24, 
+      include_metadata = FALSE)
 
 
 
