@@ -56,58 +56,10 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
     bind_rows
 }
 
+# Add dispersion to edgeR, DESeq2
+# in pbDS(), remove design matrix from filterExpr()
 # devtools::install_github("GabrielHoffman/muscat")
 stopifnot(packageVersion("muscat") == "1.25.4")
-
-# modify to extract theta
-# .DESeq2_new <- function(x, k, design, contrast, ct, cs) {
-#   suppressPackageStartupMessages({
-#   library(DESeq2)
-#   })
-#   cd <- colData(x)
-#   y <- assay(x, k)
-#   mode(y) <- "integer"
-#   y <- DESeqDataSetFromMatrix(y, cd, design)
-#   y <- suppressMessages(DESeq(y))
-#   tbl <- lapply(cs, function(c) {
-#       tbl <- results(y, contrast[, c])
-#       tbl <- muscat:::.res_df(tbl, k, ct, c)
-#       tbl$theta <- 1 / DESeq2::dispersions(y)
-#       dplyr::rename(tbl, logFC = "log2FoldChange", 
-#           p_val = "pvalue", p_adj.loc = "padj")
-#   })
-#   list(table = tbl, data = y)
-# }
-# assignInNamespace(".DESeq2", .DESeq2_new, "muscat")
-
-
-# # modify to extract theta
-# .edgeR_new <- function(x, k, design, coef, contrast, ct, cs, treat) {
-#     suppressPackageStartupMessages({
-#     library(edgeR)
-#     })
-#     y <- assay(x, k)
-#     y <- suppressMessages(DGEList(y, 
-#         # group = x$group_id[colnames(y)], 
-#         remove.zeros = TRUE))
-#     y <- calcNormFactors(y)
-#     y <- estimateDisp(y, design)
-#     fit <- glmQLFit(y, design)
-#     # treat: test for DE relative to logFC threshold
-#     # else:  genewise NB GLM with quasi-likelihood test
-#     .fun <- ifelse(treat, glmTreat, glmQLFTest)
-#     tbl <- lapply(cs, function(c) {
-#         fit <- .fun(fit, coef[[c]], contrast[, c])
-#         tbl <- topTags(fit, n = Inf, sort.by = "none")
-#         # combine tables & reformat
-#         tbl <- dplyr::rename(tbl$table, p_val = "PValue", p_adj.loc = "FDR")
-#         tbl <- muscat:::.res_df(tbl, k, ct, c)
-#         tbl$theta <- 1 / y$tagwise.dispersion
-#         tbl
-#     })
-#     list(table = tbl, data = y, fit = fit)
-# }
-# assignInNamespace(".edgeR", .edgeR_new, "muscat")
 
 
 run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthreads = 1, include_metadata = TRUE){
@@ -249,108 +201,6 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
             rename(FDR = "adj.P.Val", cluster_id = "assay") %>%
             select(-t, -B, -z.std, -AveExpr))
   }
-
-
-  # if( "DESeq2" %in% methods ){
-
-  #   library(DESeq2)
-  #   library(edgeR)
-
-  #   df.time[["DESeq2"]] <- system.time({
-
-  #   res.deq = lapply(assayNames(pb), function(CT){
-  #     message(CT)
-  #     # get counts
-  #     countMatrix = assay(pb, CT)
-
-  #     # filter samples
-  #     libSize = colSums2(countMatrix)
-  #     keep = libSize > 100
-  #     countMatrix <- countMatrix[,keep,drop=FALSE]
-  #     info = colData(pb)[keep,]
-
-  #     # filter genes
-  #     keep <- filterByExpr(countMatrix)
-  #     countMatrix <- countMatrix[keep,,drop=FALSE]
-
-  #     dds <- DESeqDataSetFromMatrix(
-  #              countMatrix,
-  #             DataFrame(info), ~ Dx)
-  #     dds <- DESeq(dds, quiet=TRUE)
-  #     tbl <- results(dds, name = "Dx_Disease_vs_Control") 
-  #     tbl$theta <- 1 / DESeq2::dispersions(dds)
-
-  #     tbl %>%
-  #       as.data.frame %>%
-  #       rownames_to_column("ID") %>%
-  #       mutate(cluster_id = CT) %>%
-  #       as_tibble %>%
-  #       filter(!is.na(log2FoldChange))
-  #     }) %>%
-  #     bind_rows 
-  #   })
-
-  #   df = res.deq %>%
-  #     mutate(logFC = log2FoldChange, 
-  #       P.Value = pvalue, 
-  #       FDR = p.adjust(P.Value),
-  #       Method = "DESeq2") %>%
-  #     select(ID, cluster_id, logFC, P.Value, FDR, theta, Method) %>%
-  #     bind_rows(df, .)
-  # }
-
-  # if( "edgeR" %in% methods ){
-
-  #   library(edgeR)
-
-  #   df.time[["edgeR"]] <- system.time({
-
-  #   res.edgeR = lapply(assayNames(pb), function(CT){
-
-  #     message(CT)
-  #     # get counts
-  #     countMatrix = assay(pb, CT)
-
-  #     # filter samples
-  #     libSize = colSums2(countMatrix)
-  #     keep = libSize > 100
-  #     countMatrix <- countMatrix[,keep,drop=FALSE]
-  #     info = colData(pb)[keep,]
-
-  #     # filter genes
-  #     keep <- filterByExpr(countMatrix)
-  #     countMatrix <- countMatrix[keep,,drop=FALSE]
-
-  #     design <- model.matrix(~Dx, info)
-
-  #     y <- suppressMessages(DGEList(
-  #         countMatrix, 
-  #         remove.zeros = TRUE))
-  #     y <- calcNormFactors(y)
-  #     y <- estimateDisp(y, design)
-  #     fit <- glmQLFit(y, design)
-  #     res <- glmQLFTest(fit, coef = "DxDisease")
-  #     tbl <- topTags(res, n = Inf, sort.by = "none") %>%
-  #               as.data.frame
-  #     tbl$theta <- 1 / y$tagwise.dispersion
-
-  #     tbl %>%
-  #       as.data.frame %>%
-  #       rownames_to_column("ID") %>%
-  #       mutate(cluster_id = CT) %>%
-  #       as_tibble 
-  #     }) %>%
-  #     bind_rows 
-  #   })
-
-  #   df <- res.edgeR %>%
-  #     mutate( 
-  #       P.Value = PValue, 
-  #       FDR = p.adjust(P.Value),
-  #       Method = "edgeR") %>%
-  #     select(ID, cluster_id, logFC, P.Value, FDR, theta, Method) %>%
-  #     bind_rows(df, .)
-  # }
 
   # muscat: edgeR, DESeq2
   if( any(c("edgeR", "DESeq2") %in% methods) ){
