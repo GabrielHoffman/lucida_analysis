@@ -232,7 +232,6 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
     design <- model.matrix(nobars(formula), colData(pb))
 
-    browser()
     mth.include = c("edgeR", "DESeq2")[c("edgeR", "DESeq2") %in% methods]
 
     tab.muscat <- lapply( mth.include, function(method){

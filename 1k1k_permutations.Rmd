@@ -106,7 +106,7 @@ subset_data = function(sce2, n, CTs){
   sce2[,idx]
 }
 
-formula = ~ Dx + age + sex + (1|donor_id)
+formula = ~ age + sex + Dx + (1|donor_id)
 
 colorMethods = c(
   "lucida" = "#1F77B4FF",
@@ -156,11 +156,13 @@ df = lapply(n_samples, function(N){
   bind_rows
 ```
 
+source("/hpc/users/hoffmg01/work/lucida_analysis/simulations/de_methods.R")
+
  res <- run_analysis(sce3, 
           formula = formula, 
           coefTest = "DxDisease",
           cluster_id = "CellType", 
-          methods = "DESeq2",
+          methods = c("edgeR", "DESeq2"),
           nthreads = 11, 
           include_metadata = FALSE)
 
