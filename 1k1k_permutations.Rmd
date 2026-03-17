@@ -156,19 +156,6 @@ df = lapply(n_samples, function(N){
   bind_rows
 ```
 
-source("/hpc/users/hoffmg01/work/lucida_analysis/simulations/de_methods.R")
-
- res <- run_analysis(sce3, 
-          formula = formula, 
-          coefTest = "DxDisease",
-          cluster_id = "CellType", 
-          methods = c("edgeR", "DESeq2"),
-          nthreads = 11, 
-          include_metadata = FALSE)
-
-
-
-
 ```{r plot, cache=FALSE}
 thm = theme_classic() +
     theme(aspect.ratio = 1, 
