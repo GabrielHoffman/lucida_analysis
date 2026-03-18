@@ -78,7 +78,7 @@ thm = theme_classic(15) +
 
 # Lucida analysis
 ```{r load, cache=FALSE}
-file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/MSSM_2024-02-01_16_17_sort_CSC_lzf.h5ad"
+file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/FULL_2024-02-01_18_49_sort_CSC_lzf.h5ad"
 sce = readH5AD(file)
 sce$libSize = sce$n_counts
 
@@ -92,12 +92,12 @@ sce$c02x = factor(sce$c02x, c("Control", "AD", "NA"))
 ```{r lucida}
 # fit full model for differential expression
 form = ~ c02x + Age + Sex + PMI + (1|SubID)
-fit = lucida(sce, form, cluster_id = "class")
+fit = lucida(sce, form, cluster_id = "class", nReaders=8)
 ```
 
 ```{r lucida.null}
 # fit null model for variance partitioning analysis
-fit.null <- lucida(sce, ~ (1|SubID), cluster_id = "class")
+fit.null <- lucida(sce, ~ (1|SubID), cluster_id = "class", nReaders=8)
 ```
 
 ```{r vp, fig.height = 10, fig.width=12}
