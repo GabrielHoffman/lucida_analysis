@@ -38,6 +38,8 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
     if( ! success ) return(NULL)
 
     countMatrix = counts(sceSub[,idx])
+    countMatrix = as(countMatrix, "dgCMatrix")
+
     keep = BatchRegression:::filter_responses(countMatrix, "nb", 0.001, 0.001)
 
     fit = nebula( 
