@@ -20,7 +20,7 @@ ml pandoc imagemagick
 
 rmarkdown::render("plot_results.Rmd")
 
-\cp -f plot_results.html ~/www/
+system("cp -f plot_results.html ~/www/")
 
 https://hoffmg01.dmz.hpc.mssm.edu/plot_results.html
 

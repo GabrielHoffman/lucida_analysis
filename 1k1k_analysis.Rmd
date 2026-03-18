@@ -185,6 +185,33 @@ res.all = run_analysis(
 ```
 
 
+<!---
+CT = "central memory CD4-positive, alpha-beta T cell"
+
+countMatrix = as.matrix(counts(sceSub[,idx]))
+id = data[[ran_var]]
+ls = sceSub$libSize[idx]
+save(countMatrix, id, ls, method, nthreads, design, file="~/test_nebula_small.RDATA")
+
+#  devtools::install_github("GabrielHoffman/nebula", dep=FALSE)
+
+q()
+R
+library(nebula)
+load("~/test_nebula_small.RDATA")
+
+keep = rowSums(countMatrix) > 0
+keep = BatchRegression:::filter_responses(countMatrix, "nb", 0.001, 0.001)
+sum(keep)
 
 
+fit = nebula( 
+      count = countMatrix[keep,], 
+      id = id, 
+      pred = design, 
+      offset = ls, 
+      method = method, 
+      ncore = 1)
+
+--->
 
