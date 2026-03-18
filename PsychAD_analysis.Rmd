@@ -71,7 +71,7 @@ library(SingleCellExperiment)
 library(tidyverse)
 library(ggplot2)
 
-thm = theme_classic(15) +
+thm = theme_classic() +
     theme(aspect.ratio = 1, 
       plot.title = element_text(hjust = 0.5)) 
 ```
@@ -80,7 +80,6 @@ thm = theme_classic(15) +
 ```{r load, cache=FALSE}
 file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/FULL_2024-02-01_18_49_sort_CSC_lzf.h5ad"
 sce = readH5AD(file)
-sce$libSize = sce$n_counts
 
 # Set string "NA" to NA values to exclude
 sce$c02x[sce$c02x == "NA"] <- NA
@@ -91,7 +90,7 @@ sce$c02x = factor(sce$c02x, c("Control", "AD", "NA"))
 
 ```{r lucida}
 # fit full model for differential expression
-form = ~ c02x + Age + Sex + PMI + (1|SubID)
+form = ~ c02x + Age + Sex + PMI + Brain_bank + (1|SubID)
 fit = lucida(sce, form, cluster_id = "class", nReaders=8)
 ```
 
