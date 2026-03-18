@@ -180,7 +180,7 @@ res.all = run_analysis(
       coefTest = "age",
       cluster_id = "cell_type", 
       methods = methods,
-      nthreads = 24, 
+      nthreads = 4, 
       include_metadata = FALSE)
 ```
 

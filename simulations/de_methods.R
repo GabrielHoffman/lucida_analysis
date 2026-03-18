@@ -37,8 +37,11 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 
     if( ! success ) return(NULL)
 
+    countMatrix = counts(sceSub[,idx])
+    keep = BatchRegression:::filter_responses(countMatrix, "nb", 0.001, 0.001)
+
     fit = nebula( 
-      count = counts(sceSub[,idx]), 
+      count = countMatrix[keep,], 
       id = data[[ran_var]], 
       pred = design, 
       offset = sceSub$libSize[idx], 
@@ -60,6 +63,7 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 # Add dispersion to edgeR, DESeq2
 # in pbDS(), remove design matrix from filterExpr()
 # devtools::install_github("GabrielHoffman/muscat")
+# devtools::install_github("GabrielHoffman/nebula")
 stopifnot(packageVersion("muscat") == "1.25.4")
 
 
