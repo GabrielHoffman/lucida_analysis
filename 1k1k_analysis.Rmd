@@ -26,7 +26,7 @@ module load pandoc imagemagick
 
 rmarkdown::render("1k1k_analysis.Rmd")
 
-\cp -f 1k1k_analysis.html ~/www/
+system("cp -f 1k1k_analysis.html ~/www/")
 
 
 
@@ -54,6 +54,7 @@ knitr::opts_chunk$set(
 
 ```{r packages, cache=FALSE}
 library(lucida)
+library(aplot)
 library(SingleCellExperiment)
 library(tidyverse)
 library(ggplot2)
@@ -76,6 +77,41 @@ sce = sce[,sce$cell_type %in% names(tab[tab>1000])]
 sce = sce[,sce$libSize > 1000]
 sce$cell_type = droplevels(sce$cell_type)
 ```
+
+```{r summary, fig.height = 15, fig.width =15}
+fig1 = colData(sce) %>%
+  as.data.frame %>%
+  as_tibble %>%
+  ggplot(aes(libSize, cell_type, fill=cell_type)) +
+    geom_violin(linewidth = 0) +
+    geom_boxplot(width=.1, linewidth = 0.5) +
+    scale_x_log10() +
+    theme_classic() +
+    theme(aspect.ratio = 2, 
+      plot.title = element_text(hjust = 0.5), 
+      legend.position="none") +
+    xlab("Number of reads per cell (log10)")
+
+fig2 = colData(sce) %>%
+  as.data.frame %>%
+  as_tibble %>%
+  group_by(cell_type, donor_id) %>%
+  summarize(nCells = n()) %>%
+  ggplot(aes(nCells, cell_type, fill=cell_type)) +
+    geom_violin(linewidth = 0) +
+    geom_boxplot(width=.1, linewidth = 0.5) +
+    scale_x_log10() +
+    theme_classic() +
+    theme(aspect.ratio = 2, 
+      plot.title = element_text(hjust = 0.5), 
+      legend.position="none",
+      axis.title.y = element_blank(),
+      axis.text.y = element_blank()) +
+    xlab("Number of cells per donor (log10)")
+
+fig1 | fig2
+```
+
 
 ```{r lucida}
 fit = lucida(sce, ~ age + sex + (1|donor_id), 
