@@ -82,15 +82,15 @@ file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/FULL_2024-02
 sce = readH5AD(file)
 
 # Set string "NA" to NA values to exclude
-sce$c02x[sce$c02x == "NA"] <- NA
+sce$c11x[sce$c11x == "NA"] <- NA
 
 # set Control to be baseline
-sce$c02x = factor(sce$c02x, c("Control", "AD", "NA"))
+sce$c11x = factor(sce$c11x, c("Control", "AD", "NA"))
 ```
 
 ```{r lucida}
 # fit full model for differential expression
-form = ~ c02x + Age + Sex + PMI + Brain_bank + (1|SubID)
+form = ~ c11x + Age + Sex + PMI + Brain_bank + (1|SubID)
 fit = lucida(sce, form, cluster_id = "class", nReaders=8)
 ```
 
