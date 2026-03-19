@@ -25,7 +25,7 @@ ml pandoc imagemagick
 
 rmarkdown::render("1k1k_permutations.Rmd")
 
-\cp -f 1k1k_permutations.html ~/www/
+system("cp -f 1k1k_permutations.html ~/www/")
 
 https://hoffmg01.dmz.hpc.mssm.edu/1k1k_permutations.html
 
@@ -129,7 +129,7 @@ df = lapply(n_samples, function(N){
 
   message(N)
   set.seed(1)
-  lapply(seq(1), function(i){
+  lapply(seq(10), function(i){
 
     sce2 = permute_labels(sce)
     sce3 = subset_data(sce2, N, CTs)
