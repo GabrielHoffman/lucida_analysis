@@ -76,6 +76,7 @@ thm = theme_classic() +
       plot.title = element_text(hjust = 0.5)) 
 ```
 
+
 # Lucida analysis
 ```{r load, cache=FALSE}
 file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/FULL_2024-02-01_18_49_sort_CSC_lzf.h5ad"
@@ -86,6 +87,41 @@ sce$c11x[sce$c11x == "NA"] <- NA
 
 # set Control to be baseline
 sce$c11x = factor(sce$c11x, c("Control", "AD", "NA"))
+```
+
+
+```{r summary, fig.height = 15, fig.width =15}
+fig1 = colData(sce) %>%
+  as.data.frame %>%
+  as_tibble %>%
+  ggplot(aes(libSize, class, fill=class)) +
+    geom_violin(linewidth = 0) +
+    geom_boxplot(width=.1, linewidth = 0.5) +
+    scale_x_log10() +
+    theme_classic() +
+    theme(aspect.ratio = 2, 
+      plot.title = element_text(hjust = 0.5), 
+      legend.position="none") +
+    xlab("Number of reads per cell (log10)")
+
+fig2 = colData(sce) %>%
+  as.data.frame %>%
+  as_tibble %>%
+  group_by(class, SubID) %>%
+  summarize(nCells = n()) %>%
+  ggplot(aes(nCells, class, fill=class)) +
+    geom_violin(linewidth = 0) +
+    geom_boxplot(width=.1, linewidth = 0.5) +
+    scale_x_log10() +
+    theme_classic() +
+    theme(aspect.ratio = 2, 
+      plot.title = element_text(hjust = 0.5), 
+      legend.position="none",
+      axis.title.y = element_blank(),
+      axis.text.y = element_blank()) +
+    xlab("Number of cells per donor (log10)")
+
+fig1 | fig2
 ```
 
 ```{r lucida}
