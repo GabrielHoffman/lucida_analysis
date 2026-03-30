@@ -63,16 +63,16 @@ thm = theme_classic(15) +
       plot.title = element_text(hjust = 0.5)) 
 
 colorMethods = c(
-  "lucida" = "#1F77B4FF",
-  "lucida [1 step]" = "#BECFE6FF",
-  "lucida [Bayesian]" = "#204e74",
-  "lucida [pb]"       = "navy",
   "nebula" = "#FF7F0EFF",
   "nebula (HL)" = "#c15a00",
   "dreamlet" = "#2CA02CFF",
   "DESeq2" = "#D62728FF",
   "edgeR" = "#A020F0",
-  "glmGamPoi"  = "#FF69B4"
+  "glmGamPoi"  = "#FF69B4",
+  "lucida" = "#1F77B4FF",
+  "lucida [1 step]" = "#BECFE6FF",
+  "lucida [Bayesian]" = "#204e74",
+  "lucida [pb]"       = "navy",
   )
 
 # pie(rep(1, length(colorMethods)), col=colorMethods)
@@ -98,7 +98,8 @@ df = mclapply(files, function(file){
   bind_rows %>%
   mutate(libScaleFactor = factor(as.numeric(libScaleFactor))) %>%
   mutate(N = factor(as.numeric(N))) %>%
-  mutate(cluster_id = factor(cluster_id, CTs))
+  mutate(cluster_id = factor(cluster_id, CTs))%>%
+  mutate(Method = factor(Method, names(colorMethods)))
 
 table(df$libScaleFactor)
 
@@ -260,7 +261,7 @@ df %>%
     scale_y_continuous(limits=c(0, NA), expand=c(0,0))
 ```
 
-```{r ceof3, fig.height=12, fig.width=12}
+```{r coef3, fig.height=12, fig.width=12}
 df %>% 
   filter(libScaleFactor == "1") %>%
   # filter(N == "250") %>%
@@ -276,6 +277,12 @@ df %>%
     facet_grid(N ~ cluster_id, scales="free_y") + 
     scale_y_log10() 
 ```
+
+
+
+
+
+
 
 
 ## Theta
@@ -387,9 +394,8 @@ df %>%
     facet_grid(N ~ cluster_id)
 ```
 
-
-```{r other.plots, eval=FALSE}
 # sigSq_g
+```{r other.plots, eval=FALSE}
 df %>%
   filter(libScaleFactor == "1") %>%
   filter(N == "250") %>%
@@ -646,6 +652,135 @@ df %>%
 
 
 
+
+```{r panel1}
+
+library(aplot)
+
+df_sub = df %>% 
+  filter(libScaleFactor == "5") %>%
+  filter(N == "100") %>%
+  filter(cluster_id == "gamma-delta T cell") %>%
+  filter(Method != "lucida [pb]") %>%
+  filter(Method != "lucida [1 step]")
+
+table(df_sub$Method)
+
+
+
+fig1 = df_sub %>%
+  group_by(Method, cluster_id, libScaleFactor, N) %>%
+  summarize(rMSE = rMSE( logFC, b.true)) %>%
+  ggplot(aes(libScaleFactor, rMSE, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    # scale_y_sqrt(expand=c(0,0)) +
+    ylab("Root mean squared error of estimated logFC") +
+    ggtitle("Estimating logFC") +
+    scale_fill_manual(values = colorMethods) +
+    scale_y_continuous(limits=c(0, NA), expand=c(0,0))
+
+fig2 = df_sub %>%
+  mutate(Method = factor(Method, rev(levels(Method)))) %>%
+  ggplot(aes(mu, (b.true - logFC)^2, color=Method)) +
+    geom_smooth(se=FALSE, lwd=2) +
+    thm +  
+    theme(legend.position="none") +
+    scale_color_manual(values = colorMethods) +
+    ggtitle("Squared deviation of estimate logFC vs expression magnitude") +
+    scale_x_log10() +
+    xlab("Mean normalized counts") +
+    ylab("Squared deviation of estimated logFC (log10 scale)") +
+    scale_y_log10() 
+
+fig3 = df_sub %>%
+  group_by(Method, cluster_id, libScaleFactor, N) %>%
+  summarize(rMSE = rMSE( log(mu^2/theta.x), log(mu^2/theta.y))) %>%
+  filter(!is.na(rMSE)) %>%
+  filter(Method != "lucida [Bayesian]") %>%
+  ggplot(aes(libScaleFactor, rMSE, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE, ylim=c(0, NA)) +
+    ylab(bquote(rMSE~log(mu^2/theta))) +
+    ggtitle(bquote(Estimating~overdispersion~component~mu^2/theta)) +
+    scale_fill_manual(values = colorMethods) 
+
+fig4 = df_sub %>%
+  filter(!is.na(theta.x)) %>%
+  mutate(dev = (log(mu^2/theta.y) - log(mu^2/theta.x))^2) %>%
+  mutate(Method = factor(Method, rev(levels(Method)))) %>%
+  ggplot(aes(mu, dev, color=Method)) +
+    geom_smooth(se=FALSE, alpha = .15, aes(fill=Method), lwd=2) +
+    thm +    
+    theme(legend.position="none") +
+    scale_color_manual(values = colorMethods) +
+    scale_fill_manual(values = colorMethods) +
+    xlab("Mean normalized counts") +
+    ylab("Squared deviation of log(mu^2/theta)") +
+    scale_x_log10() +
+    coord_cartesian(expand=FALSE, ylim=c(-0.1, 20)) 
+
+fig5 = df_sub %>%
+  group_by(Method, cluster_id, libScaleFactor, N) %>%
+  summarize(rMSE = rMSE( sigSq_g.y, sigSq_g.x)) %>%
+  filter(!is.na(rMSE)) %>%
+  filter(Method != "lucida [Bayesian]") %>%
+  ggplot(aes(libScaleFactor , rMSE, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    theme(legend.position="none") +
+    coord_cartesian(expand=FALSE)+
+    ylab("Root mean squared error") +
+    ggtitle(bquote(Estimating~sigma[g]^2)) +
+    scale_fill_manual(values = colorMethods) 
+
+
+fig6 = df_sub %>%
+  group_by(Method, cluster_id, libScaleFactor, N)  %>%
+  filter(!is.na(P.Value), b.true == 0) %>% 
+  summarize( FPR = sum(P.Value < 0.05) / length(P.Value), 
+              np = length(P.Value),
+              se = sqrt(FPR*(1-FPR)/np)) %>%
+  ggplot(aes(libScaleFactor, FPR, fill=Method)) +
+    geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
+    geom_errorbar(aes(ymin = FPR - 1.96*se, 
+      ymax = FPR + 1.96*se), width=0, position = position_dodge(width = 0.9)) +
+    thm +
+    coord_cartesian(expand=FALSE) +
+    geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
+    ylab("False positive rate") +
+    scale_fill_manual(values = colorMethods) 
+
+
+df_perf_sub = df_perf %>% 
+  filter(libScaleFactor == "5") %>%
+  filter(cluster_id == "gamma-delta T cell") %>%
+  filter(Method != "lucida [pb]") %>%
+  filter(Method != "lucida [1 step]")
+
+fig7 = df_perf_sub %>%
+  ggplot(aes(N, AUPR, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    theme(legend.position="none") +
+    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+    geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
+    ggtitle("Differential expression performance") +
+    scale_fill_manual(values = colorMethods) 
+
+file = "~/www/test.pdf"
+pdf(file, width=16)
+fig1 | fig2 
+fig3 | fig4 
+fig5
+fig6 | fig7
+dev.off()
+
+
+
+
+```
 
 
 
