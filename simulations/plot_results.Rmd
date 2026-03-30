@@ -672,7 +672,7 @@ fig1 = df_sub %>%
     geom_bar(stat="identity", position="dodge") +
     thm +
     # scale_y_sqrt(expand=c(0,0)) +
-    ylab("Root mean squared error of estimated logFC") +
+    ylab("rMSE of estimated logFC") +
     ggtitle("Estimating logFC") +
     scale_fill_manual(values = colorMethods) +
     scale_y_continuous(limits=c(0, NA), expand=c(0,0))
@@ -687,7 +687,7 @@ fig2 = df_sub %>%
     # ggtitle("Squared deviation of estimate logFC vs expression magnitude") +
     scale_x_log10() +
     xlab("Mean normalized counts") +
-    ylab("Squared deviation of estimated logFC (log10 scale)") +
+    ylab("Squared dev. of estimated logFC (log10 scale)") +
     scale_y_log10() 
 
 fig3 = df_sub %>%
@@ -714,7 +714,7 @@ fig4 = df_sub %>%
     scale_color_manual(values = colorMethods) +
     scale_fill_manual(values = colorMethods) +
     xlab("Mean normalized counts") +
-    ylab("Squared deviation of log(mu^2/theta)") +
+    ylab("Squared dev. of log(mu^2/theta)") +
     scale_x_log10() +
     coord_cartesian(expand=FALSE, ylim=c(-0.1, 20)) 
 
