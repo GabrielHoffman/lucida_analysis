@@ -72,7 +72,7 @@ colorMethods = c(
   "lucida" = "#1F77B4FF",
   "lucida [1 step]" = "#BECFE6FF",
   "lucida [Bayesian]" = "#204e74",
-  "lucida [pb]"       = "navy",
+  "lucida [pb]"       = "navy"
   )
 
 # pie(rep(1, length(colorMethods)), col=colorMethods)
