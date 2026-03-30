@@ -150,18 +150,18 @@ plotDispEsts(fit, ncol=4)
 ```
 
 ```{r plotMA, fig.height = 10, fig.width = 12}
-plotMA(fit, coef='c02xAD', ncol=4)
+plotMA(fit, coef='c11xAD', ncol=4)
 ```
 
 ```{r plotVolcano, fig.height = 10, fig.width = 12}
-plotVolcano(fit, coef='c02xAD', ncol=4)
+plotVolcano(fit, coef='c11xAD', ncol=4)
 ```
 
 
 
 # Results
 ```{r results}
-results(fit, "c02xAD") %>%
+results(fit, "c11xAD") %>%
   group_by(cluster_id) %>%
   summarize( n = n()) %>%
   ggplot(aes(n, cluster_id, fill=cluster_id)) +
@@ -171,7 +171,7 @@ results(fit, "c02xAD") %>%
     scale_x_continuous(limits=c(0,NA), expand=c(0,0)) +
     xlab("# genes expressed")
 
-figDx = results(fit, "c02xAD") %>%
+figDx = results(fit, "c11xAD") %>%
   group_by(cluster_id) %>%
   summarize( nSignif = sum(FDR < 0.05)) %>%
   ggplot(aes(nSignif, cluster_id, fill=cluster_id)) +
@@ -192,12 +192,12 @@ library(aplot)
 CT = "Immune"
 
 fig1 = plotDispEsts(fit, cluster_ids = CT )
-fig2 = plotVolcano(fit, coef='c02xAD', cluster_ids = CT)
+fig2 = plotVolcano(fit, coef='c11xAD', cluster_ids = CT)
 fig3 = plotVarPart(sortCols(vp), cluster_ids = CT)
 fig4 = plotTrendVP( fit, vp, "CountNoise", cluster_ids = CT)
 plot_grid(fig1, fig2, fig3, fig4, ncol=3)
 
-fig5 = plotForest(fit, coef="c02xAD", gene = "PTPRG")
+fig5 = plotForest(fit, coef="c11xAD", gene = "PTPRG")
 fig5 + theme_classic()  + theme(aspect.ratio=1) | 
 figDx + theme_classic() + theme(aspect.ratio=1, legend.position="none")
 ```
