@@ -653,8 +653,7 @@ df %>%
 
 
 
-```{r panel1}
-
+```{r panel1, fig.height=4}
 library(aplot)
 
 df_sub = df %>% 
@@ -665,8 +664,6 @@ df_sub = df %>%
   filter(Method != "lucida [1 step]")
 
 table(df_sub$Method)
-
-
 
 fig1 = df_sub %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
@@ -687,7 +684,7 @@ fig2 = df_sub %>%
     thm +  
     theme(legend.position="none") +
     scale_color_manual(values = colorMethods) +
-    ggtitle("Squared deviation of estimate logFC vs expression magnitude") +
+    # ggtitle("Squared deviation of estimate logFC vs expression magnitude") +
     scale_x_log10() +
     xlab("Mean normalized counts") +
     ylab("Squared deviation of estimated logFC (log10 scale)") +
@@ -769,17 +766,10 @@ fig7 = df_perf_sub %>%
     ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) 
 
-# file = "~/www/test.pdf"
-# pdf(file, width=16)
 fig1 | fig2 
 fig3 | fig4 
 fig5
 fig6 | fig7
-# dev.off()
-
-
-
-
 ```
 
 
