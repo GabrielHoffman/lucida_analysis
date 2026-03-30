@@ -769,13 +769,13 @@ fig7 = df_perf_sub %>%
     ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) 
 
-file = "~/www/test.pdf"
-pdf(file, width=16)
+# file = "~/www/test.pdf"
+# pdf(file, width=16)
 fig1 | fig2 
 fig3 | fig4 
 fig5
 fig6 | fig7
-dev.off()
+# dev.off()
 
 
 
