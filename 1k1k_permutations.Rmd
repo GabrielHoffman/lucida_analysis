@@ -60,6 +60,7 @@ library(tidyverse)
 
 ```{r load.data, cache=FALSE}
 library(lucida)
+library(GenomicDataStream)
 # donor_id, Sex, nCount_RNA, pool_number, Age, cell_type
 # file = "/Users/gabrielhoffman/Downloads/h5ad_formats/out_sort_CSC_lzf.h5ad"
 file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/1k1k_sort_CSC_lzf.h5ad"
