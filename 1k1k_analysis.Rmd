@@ -28,13 +28,17 @@ rmarkdown::render("1k1k_analysis.Rmd")
 
 system("cp -f 1k1k_analysis.html ~/www/")
 
-
+ml purge
+ml anaconda3/latest
+conda activate jul2026
 
 # format H5AD
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 FILE=/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/08984b3c-3189-4732-be22-62f1fe8f15a4.h5ad
 
 $SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $(dirname $FILE)/1k1k_sort_CSC_lzf.h5ad
+
+$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression zstd --out $(dirname $FILE)/1k1k_sort_CSC_zstd.h5ad
 
 --->
 
@@ -54,8 +58,9 @@ knitr::opts_chunk$set(
 
 ```{r packages, cache=FALSE}
 library(lucida)
-library(aplot)
+library(GenomicDataStream)
 library(SingleCellExperiment)
+library(aplot)
 library(tidyverse)
 library(ggplot2)
 library(nebula)
@@ -68,8 +73,8 @@ thm = theme_classic(15) +
 # Lucida analysis
 ```{r load, cache=FALSE}
 file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/1k1k_sort_CSC_lzf.h5ad"
+# file = "~/Downloads/1k1k_sort_CSC_lzf.h5ad"
 sce = readH5AD(file)
-sce$libSize = sce$nCount_RNA
 
 # filter to include only cell types with 1k observations
 tab = table(sce$cell_type)
@@ -115,7 +120,7 @@ fig1 | fig2
 
 ```{r lucida}
 fit = lucida(sce, ~ age + sex + (1|donor_id), 
-  cluster_id = "cell_type", nReaders=8)
+  cluster_id = "cell_type", nReaders=6)
 ```
 
 ## Plots
@@ -133,12 +138,9 @@ plotVolcano(fit, coef='age', ncol=5)
 plotVolcano(fit, coef='sexmale', ncol=5)
 ```
 
-```{r lucida.null}
-fit.null <- lucida(sce, ~ (1|donor_id), cluster_id = "cell_type", nReaders=8)
-```
 
 ```{r vp, fig.height = 15, fig.width =15}
-vp <- fitVarPart(fit, fit.null)
+vp <- fitVarPart(fit)
  
 plotVarPart(sortCols(vp), ncol=5)
 ```
@@ -200,8 +202,10 @@ fig5 + theme_classic()  + theme(aspect.ratio=2) |
 figAge + theme_classic() + theme(aspect.ratio=2, legend.position="none")
 ```
 
+<!---
+
 # Other methods
-```{r other}
+```{r other, eval=FALSE}
 source("/hpc/users/hoffmg01/work/lucida_analysis/simulations/de_methods.R")
 
 methods = c(
@@ -221,7 +225,6 @@ res.all = run_analysis(
 ```
 
 
-<!---
 CT = "central memory CD4-positive, alpha-beta T cell"
 
 countMatrix = as.matrix(counts(sceSub[,idx]))
