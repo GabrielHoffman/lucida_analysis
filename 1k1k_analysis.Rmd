@@ -28,6 +28,10 @@ rmarkdown::render("1k1k_analysis.Rmd")
 
 system("cp -f 1k1k_analysis.html ~/www/")
 
+
+https://hoffmg01.dmz.hpc.mssm.edu/1k1k_analysis.html
+
+
 ml purge
 ml anaconda3/latest
 conda activate jul2026
@@ -140,7 +144,7 @@ plotVolcano(fit, coef='sexmale', ncol=5)
 
 
 ```{r vp, fig.height = 15, fig.width =15}
-vp <- fitVarPart(fit)
+vp <- varpart(fit)
  
 plotVarPart(sortCols(vp), ncol=5)
 ```
