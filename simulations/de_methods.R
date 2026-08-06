@@ -98,7 +98,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     # merge with expression magnitude information
     df_mu <- lapply( names(fit.lucida), function(x){
       tibble(cluster_id = x,
-        ID = rownames(fit.lucida[[x]]$fit),
+        ID = rownames(coef(fit.lucida[[x]]$fit)),
         mu = fit.lucida[[x]]$fit$mu_mean)
     }) %>%
       bind_rows
