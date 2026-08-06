@@ -515,12 +515,16 @@ df_perf %>%
 
 
 breaks <- df %>%
+          filter(cluster_id == "naive B cell") %>%
+          filter(libScaleFactor == "5") %>%
           filter(!is.na(mu)) %>%
           pull(mu) %>%
           log10 %>%
-          quantile(probs = seq(0, 1, by = 1/3), na.rm = TRUE)
+          quantile(probs = seq(0, 1, by = 1/6), na.rm = TRUE)
 
-df %>% 
+ df %>% 
+  filter(cluster_id == "naive B cell") %>%
+  filter(libScaleFactor == "5") %>%
   filter(N == "250") %>%
   filter(!is.na(mu)) %>%
   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
@@ -537,8 +541,10 @@ df %>%
     scale_fill_manual(values = colorMethods) +
     facet_grid( libScaleFactor ~ cluster_id )
 
+# ggsave(fig, file="~/www/test.pdf", width=16)
+
 df %>% 
-  filter(libScaleFactor == "1") %>%
+  filter(libScaleFactor == "5") %>%
   filter(!is.na(mu)) %>%
   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
   filter(!is.na(bin)) %>%
@@ -553,9 +559,6 @@ df %>%
     ggtitle("Differential expression performance vs expr magnitude") +
     scale_fill_manual(values = colorMethods) +
     facet_grid( N ~ cluster_id )
-
-
-
 ```
 
 
@@ -612,14 +615,16 @@ df %>%
 
 ```{r breaks, fig.height=10}
 breaks <- df %>%
+          filter(cluster_id == "naive B cell") %>%
           filter(!is.na(mu)) %>%
           pull(mu) %>%
           log10 %>%
-          quantile(probs = seq(0, 1, by = 1/3), na.rm = TRUE)
+          quantile(probs = seq(.02, 1, by = .1), na.rm = TRUE)
 
 df %>% 
+  filter(cluster_id == "naive B cell") %>%
   # filter(libScaleFactor == "1") %>%
-  filter(libScaleFactor != "25") %>%
+  # filter(libScaleFactor != "25") %>%
   filter(N == "250") %>%
   filter(!is.na(mu)) %>%
   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
@@ -638,7 +643,7 @@ df %>%
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
     ylab("False positive rate") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid( libScaleFactor ~ cluster_id )
+    facet_grid( libScaleFactor ~ cluster_id ) 
 ```
 
 

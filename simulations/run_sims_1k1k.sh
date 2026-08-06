@@ -5,6 +5,7 @@
 cd /hpc/users/hoffmg01/work/lucida_analysis/simulations
 
 library(lucida)
+library(GenomicDataStream)
 library(SingleCellExperiment)
 
 file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/1k1k_sort_CSC_lzf.h5ad"
@@ -33,7 +34,7 @@ for(n_donors in n_donors_array){
   sce2 = sce2[,sce2$donor_id %in% levels(sce2$donor_id)[seq(n_donors)]]
   colData(sce2) = droplevels(colData(sce2))
 
-  fit = lucida(sce2, ~ age + sex + (1|donor_id), cluster_id = "cell_type")
+  fit = lucida(sce2, ~ age + sex + (1|donor_id), cluster_id = "cell_type", nReaders=8)
 
   file = paste0("fits/test_lucida_fit_", n_donors, ".RDS")
   saveRDS(fit, file=file)
@@ -93,6 +94,11 @@ cat $OUTFOLDER/script_sim.sh | awk '{print $NF}' | xargs ls > /dev/null
 #----------------------------
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 
+ml purge
+ml anaconda3/latest
+ml parallel
+conda activate jul2026
+
 echo "" > $OUTFOLDER/script_recode.sh
 for N in $(echo $NSAMPLES)
 do
@@ -103,7 +109,7 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}.h5ad
   OUT=$OUTFOLDER/sim_${ID}_recode.h5ad
-  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression lzf --out $OUT " >> $OUTFOLDER/script_recode.sh
+  echo "$SRC --input $FILE --sortBy cell_type,donor_id --format CSC --compression zstd --out $OUT " >> $OUTFOLDER/script_recode.sh
 done
 done
 done
