@@ -55,6 +55,7 @@ knitr::opts_chunk$set(
 ```{r packages, cache=FALSE}
 library(ggplot2)
 library(tidyverse)
+library(parallel)
 ```
 
 
@@ -115,22 +116,22 @@ colorMethods = c(
   # "lucida [Bayesian]" = "#204e74",
   # "lucida [pb]"       = "navy",
   "nebula" = "#FF7F0EFF",
-  "nebula (HL)" = "#c15a00",
-  "dreamlet" = "#2CA02CFF",
-  "DESeq2" = "#D62728FF",
-  "edgeR" = "#A020F0"
+  # "nebula (HL)" = "#c15a00",
+  # "dreamlet" = "#2CA02CFF",
+  # "DESeq2" = "#D62728FF",
+  # "edgeR" = "#A020F0"
   # "glmGamPoi"  = "#FF69B4"
   )
 
-n_samples = c(25, 50, 100, 250, 400, 500)
+n_samples = c(25, 50)#, 100, 250, 400, 500)
 
 CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
 
 df = lapply(n_samples, function(N){
 
   message(N)
-  set.seed(1)
-  lapply(seq(10), function(i){
+  set.seed(N)
+  mclapply(seq(2), function(i){
 
     sce2 = permute_labels(sce)
     sce3 = subset_data(sce2, N, CTs)
@@ -151,12 +152,11 @@ df = lapply(n_samples, function(N){
         nFP = sum(P.Value < 0.05),
         nFDRsignif = sum(FDR < 0.05)) %>%
       mutate(N = N, i = i)
-    }) %>%
+    }, mc.cores=12) %>%
     bind_rows
 }) %>%
   bind_rows
 ```
-
 
 ```{r plot, cache=FALSE}
 thm = theme_classic() +
