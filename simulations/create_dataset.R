@@ -3,15 +3,16 @@
 library(getopt)
 
 spec <- matrix(c(
-  'fit',        'i', 1, "character",
-  'data',       'd', 1, "character",
-  'subject',    'u', 1, "character",
-  'logFC',      'l', 1, "numeric",
-  'pDE',        'p', 1, "numeric",
-  'trajectory',  't', 0, "logical",
+  'fit',            'i', 1, "character",
+  'data',           'd', 1, "character",
+  'subject',        'u', 1, "character",
+  'covariates',     'c', 1, "character",
+  'logFC',          'l', 1, "numeric",
+  'pDE',            'p', 1, "numeric",
+  'trajectory',     't', 0, "logical",
   'libScaleFactor', 's', 1, "numeric",
-  'seed',       'e', 1, "integer",
-  'output',     'o', 1, "character"
+  'seed',           'e', 1, "integer",
+  'output',         'o', 1, "character"
 ), byrow=TRUE, ncol=4)
 
 # Parse command line arguments
@@ -45,7 +46,11 @@ if( !is.null(opt$trajectory) ){
   data$Dx[data[[opt$subject]] %in% Dx_lvls] = "Disease"
 }
 
-formula = as.formula(paste("~(1|", opt$subject, ")"))
+formula <- paste("~(1|", opt$subject, ")")
+if( nchar(opt$covariates) > 0 ){
+  formula <- paste(formula, "+", opt$covariates)
+}
+formula <- as.formula(formula)
 
 # Simulate based on fit
 sce.sim <- simulateCountData(
