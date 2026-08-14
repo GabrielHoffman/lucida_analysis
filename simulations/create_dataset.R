@@ -64,7 +64,7 @@ sce.sim <- simulateCountData(
 
 # save simulation parameters
 metadata(sce.sim)$params$seed <- opt$seed
-metadata(sce.sim)$params$nDonor <- nlevels(sce.sim$donor_id)
+metadata(sce.sim)$params$nDonor <- nlevels(colData(sce.sim)[,opt$subject])
 
 # write params to separate file
 params <- metadata(sce.sim)$params

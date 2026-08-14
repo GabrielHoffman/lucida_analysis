@@ -84,7 +84,7 @@ get_idx = Vectorize(function(x, i){
   strsplit(x, "_")[[1]][i]
 })
 
-CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
+CTs = c('EN_L6_CT', 'IN_SST', 'Astro', 'Oligo')
 
 files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant", "res_sim_.*.parquet", full.names=TRUE)
 files = grep("_time", files, invert=TRUE, value = TRUE)
@@ -151,20 +151,6 @@ df <- df %>%
 
 
 
-
-```{r read2, eval=FALSE, cache=FALSE}
-# write_parquet(df, "df.paruqet")
-
-# rsync -avPz minerva:/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet ~/workspace/repos/lucida_analysis/simulations/1k1k_v1/
-
-CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive thymus-derived CD4-positive, alpha-beta T cell")
-
-file = "/Users/gabrielhoffman/workspace/repos/lucida_analysis/simulations/1k1k_v1/df.paruqet"
-# file = "/sc/arion/work/hoffmg01/lucida_analysis/simulations/df.paruqet"
-df = read_parquet(file)
-
-```
-
 # Time
 ```{r time, fig.height=5, fig.width=12}
 files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant", "res_sim_.*.parquet", full.names=TRUE)
@@ -198,6 +184,7 @@ df_time = mclapply(files, function(file){
   mutate(Method = factor(Method, names(colorMethods)))
 
 df_time %>%
+  filter(!is.na(Method)) %>%
   mutate(N = as.numeric(N)) %>%
   filter(libScaleFactor == 1) %>%
   ggplot(aes(N, elapsed, color=Method)) +
@@ -221,7 +208,7 @@ target = df %>%
         pull(b.true) %>%
         head(1)
 
-ylim = .2
+ylim = 1
 df %>%
   filter(libScaleFactor == "1") %>%
   droplevels %>%
