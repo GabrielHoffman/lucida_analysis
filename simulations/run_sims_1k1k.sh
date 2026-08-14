@@ -7,6 +7,7 @@ cd /hpc/users/hoffmg01/work/lucida_analysis/simulations
 library(lucida)
 library(GenomicDataStream)
 library(SingleCellExperiment)
+library(parallel)
 
 file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/Yazar_Science_2022/1k1k_sort_CSC_lzf.h5ad"
 sce = readH5AD(file)
@@ -22,7 +23,7 @@ CTs = c("mucosal invariant T cell", "gamma-delta T cell", "naive B cell", "naive
 
 n_donors_array = c(10, 25, 50, 100, 250, 400, 500, 700, 981)
 
-for(n_donors in n_donors_array){
+res = mclapply(n_donors_array, function(n_donors){
 
   message(n_donors)
   sce2 = sce[,sce$cell_type %in% CTs]
@@ -41,7 +42,7 @@ for(n_donors in n_donors_array){
 
   file = paste0("fits/test_lucida_fit_data_", n_donors, ".RDS")
   saveRDS(colData(sce2), file=file)
-}
+}, mc.cores=12)
 
 
 
@@ -51,8 +52,8 @@ ml parallel
 DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations/
 
 # testing
-NREPS=50
-NSAMPLES="25 50 100 250 400 500"  
+NREPS=15
+NSAMPLES="25 50 100" # 250 400 500"  
 LSF="1 5" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/constant/
 LOGFC=0.5
@@ -193,7 +194,6 @@ done
 done
 done
 done
-
 
 cat $OUTFOLDER/script_de_mem.sh | parallel -P 35
 
