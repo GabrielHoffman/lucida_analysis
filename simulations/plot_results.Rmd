@@ -525,7 +525,7 @@ breaks <- df %>%
  df %>% 
   filter(cluster_id == "naive B cell") %>%
   filter(libScaleFactor == "5") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   filter(!is.na(mu)) %>%
   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
   filter(!is.na(bin)) %>%
@@ -625,7 +625,7 @@ df %>%
   filter(cluster_id == "naive B cell") %>%
   # filter(libScaleFactor == "1") %>%
   # filter(libScaleFactor != "25") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   filter(!is.na(mu)) %>%
   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
   filter(!is.na(bin)) %>%
