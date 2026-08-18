@@ -53,10 +53,10 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations/
 
 # testing
 NREPS=15
-NSAMPLES="25 50 100" # 250 400 500"  
+NSAMPLES="25 50 100 250 400 500"  
 LSF="1 5" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/1k1k_v1/constant/
-LOGFC=0.5
+LOGFC=0.1
 COVARIATES="'age + sex'"
 
 # Production
@@ -116,7 +116,7 @@ done
 done
 done
 
-cat $OUTFOLDER/script_recode.sh | parallel -P 25
+cat $OUTFOLDER/script_recode.sh | parallel -P 60
 
 # check that files were written
 cat $OUTFOLDER/script_recode.sh | awk '{print $NF}' | xargs ls > /dev/null
@@ -167,11 +167,16 @@ cat $OUTFOLDER/script_de.sh | sed 's/res_sim_/test2\/res_sim_/g' | parallel
 # Performance plots
 ###################
 
+
+cd /sc/arion/work/hoffmg01/lucida_analysis/simulations
+
+
 rmarkdown::render("plot_results.Rmd")
 
 
 system("cp -f plot_results.html ~/www/")
 
+https://hoffmg01.dmz.hpc.mssm.edu/plot_results.html
 
 # Memory usage
 ##############
