@@ -291,7 +291,7 @@ df %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   filter(libScaleFactor == "1") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   ggplot(aes(theta.y, pmin(1e4, theta.x), color=Method)) +
     geom_scattermore(pointsize=5) +
     thm +
@@ -307,7 +307,7 @@ df %>%
 
 df %>%
   filter(libScaleFactor == "1") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method)) +
@@ -322,7 +322,7 @@ df %>%
     coord_cartesian(expand=FALSE, ylim=c(-.1, 5)) 
 
 df %>% 
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   group_by(Method, cluster_id, libScaleFactor) %>%
   summarize(rMSE = rMSE( pmin(1e4, theta.x), theta.y)) %>%
   filter(!is.na(rMSE)) %>%
@@ -343,7 +343,7 @@ The variance of the negative binomial distribution is $\mu + \mu^2/theta$.  So o
 ```{r theta.normalized, fig.width=18, fig.height=12, eval=FALSE}
 df %>%
   filter(libScaleFactor == "1") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(mu^2/theta.y, mu^2/theta.x, color=Method)) +
@@ -398,7 +398,7 @@ df %>%
 ```{r other.plots, eval=FALSE}
 df %>%
   filter(libScaleFactor == "1") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   filter(!is.na(sigSq_g.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(sigSq_g.y, sigSq_g.x, color=Method)) +
