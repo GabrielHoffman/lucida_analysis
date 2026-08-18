@@ -251,7 +251,7 @@ df %>%
 ```{r coef3, fig.height=12, fig.width=12}
 df %>% 
   filter(libScaleFactor == "1") %>%
-  # filter(N == "250") %>%
+  # filter(N == "100") %>%
   mutate(Method = factor(Method, rev(levels(Method)))) %>%
   ggplot(aes(mu, (b.true - logFC)^2, color=Method)) +
     geom_smooth(se=FALSE) +
@@ -278,7 +278,7 @@ df %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   filter(libScaleFactor == "1") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   ggplot(aes(theta.y, pmin(1e4, theta.x), color=Method)) +
     geom_scattermore(pointsize=5) +
     thm +
@@ -294,7 +294,7 @@ df %>%
 
 df %>%
   filter(libScaleFactor == "1") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method)) +
@@ -309,7 +309,7 @@ df %>%
     coord_cartesian(expand=FALSE, ylim=c(-.1, 5)) 
 
 df %>% 
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   group_by(Method, cluster_id, libScaleFactor) %>%
   summarize(rMSE = rMSE( pmin(1e4, theta.x), theta.y)) %>%
   filter(!is.na(rMSE)) %>%
@@ -330,7 +330,7 @@ The variance of the negative binomial distribution is $\mu + \mu^2/theta$.  So o
 ```{r theta.normalized, fig.width=18, fig.height=12, eval=FALSE}
 df %>%
   filter(libScaleFactor == "1") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(mu^2/theta.y, mu^2/theta.x, color=Method)) +
@@ -350,7 +350,7 @@ df %>%
 ```{r theta.normalized2, fig.width=13, fig.height=12}
 df %>%
   filter(libScaleFactor == "1") %>%
-  # filter(N == "250") %>%
+  # filter(N == "100") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   mutate(dev = (log(mu^2/theta.y) - log(mu^2/theta.x))^2) %>%
@@ -385,7 +385,7 @@ df %>%
 ```{r other.plots, eval=FALSE}
 df %>%
   filter(libScaleFactor == "1") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   filter(!is.na(sigSq_g.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(sigSq_g.y, sigSq_g.x, color=Method)) +
@@ -403,7 +403,7 @@ df %>%
 
 df %>% 
   # filter(libScaleFactor == "1") %>%
-  # filter(N == "250") %>%
+  # filter(N == "100") %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
   summarize(rMSE = rMSE( sigSq_g.y, sigSq_g.x)) %>%
   filter(!is.na(rMSE)) %>%
@@ -420,7 +420,7 @@ df %>%
 
 df %>%
   filter(libScaleFactor == "1") %>%
-  # filter(N == "250") %>%
+  # filter(N == "100") %>%
   # filter(!is.na(sigSq_g.x)) %>%
   filter(Method != "lucida [Bayesian]") %>%
   ggplot(aes(mu, abs((sigSq_g.x) - (sigSq_g.y)), color=Method)) +
@@ -512,7 +512,7 @@ breaks <- df %>%
  df %>% 
   filter(cluster_id == "naive B cell") %>%
   filter(libScaleFactor == "5") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   filter(!is.na(mu)) %>%
   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
   filter(!is.na(bin)) %>%
@@ -554,7 +554,7 @@ df %>%
 ```{r FPR, fig.height=15, fig.width=12}
 df %>% 
   # filter(libScaleFactor == "1") %>%
-  # filter(N == "250") %>%
+  # filter(N == "100") %>%
   group_by(Method, cluster_id, libScaleFactor, N)  %>%
   filter(!is.na(P.Value), b.true == 0) %>% 
   summarize( FPR = sum(P.Value < 0.05) / length(P.Value), 
@@ -612,7 +612,7 @@ df %>%
   filter(cluster_id == "naive B cell") %>%
   # filter(libScaleFactor == "1") %>%
   # filter(libScaleFactor != "25") %>%
-  filter(N == "250") %>%
+  filter(N == "100") %>%
   filter(!is.na(mu)) %>%
   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
   filter(!is.na(bin)) %>%

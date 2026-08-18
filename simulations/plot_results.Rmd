@@ -198,6 +198,7 @@ df_time = mclapply(files, function(file){
   mutate(Method = factor(Method, names(colorMethods)))
 
 df_time %>%
+  filter(!is.na(Method)) %>%
   mutate(N = as.numeric(N)) %>%
   filter(libScaleFactor == 1) %>%
   ggplot(aes(N, elapsed, color=Method)) +
