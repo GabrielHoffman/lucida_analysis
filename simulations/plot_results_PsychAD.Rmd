@@ -602,14 +602,14 @@ df %>%
 
 ```{r breaks, fig.height=10}
 breaks <- df %>%
-          filter(cluster_id == "naive B cell") %>%
+          filter(cluster_id == "IN_SST") %>%
           filter(!is.na(mu)) %>%
           pull(mu) %>%
           log10 %>%
           quantile(probs = seq(.02, 1, by = .1), na.rm = TRUE)
 
 df %>% 
-  filter(cluster_id == "naive B cell") %>%
+  filter(cluster_id == "IN_SST") %>%
   # filter(libScaleFactor == "1") %>%
   # filter(libScaleFactor != "25") %>%
   filter(N == "100") %>%
