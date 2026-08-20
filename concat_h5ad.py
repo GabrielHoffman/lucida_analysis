@@ -30,6 +30,8 @@ def main():
   # read list of h5a files
   files = open(args.files, "r").read().split('\n')
 
+  print(files)
+
   # 1. Read each file into a list of AnnData objects
   adatas = [ad.read_h5ad(path) for path in files]
 
