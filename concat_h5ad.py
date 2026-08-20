@@ -28,7 +28,7 @@ def main():
   args = parser.parse_args()
 
   # read list of h5a files
-  files = open(args.files, "r").read().split(' ')
+  files = open(args.files, "r").read().split('\n')
   files = [s.replace("\n", "") for s in files]
 
   # 1. Read each file into a list of AnnData objects
