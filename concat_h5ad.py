@@ -29,6 +29,7 @@ def main():
 
   # read list of h5a files
   files = open(args.files, "r").read().split(' ')
+  files = [s.replace("\n", "") for s in array]
 
   print(files)
 
