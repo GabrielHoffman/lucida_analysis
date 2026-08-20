@@ -33,6 +33,8 @@ def main():
   # remove empty strings
   files = [x for x in files if x.strip()]
 
+  print(files)
+
   # 1. Read each file into a list of AnnData objects
   adatas = [ad.read_h5ad(path) for path in files]
 
