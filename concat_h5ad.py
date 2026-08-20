@@ -28,7 +28,7 @@ def main():
   args = parser.parse_args()
 
   # read list of h5a files
-  files = open(args.files, "r").read().split('\n')
+  files = open(args.files, "r").read().split(' ')
 
   print(files)
 
