@@ -502,8 +502,8 @@ df_perf %>%
 
 
 breaks <- df %>%
-          filter(cluster_id == "naive B cell") %>%
-          filter(libScaleFactor == "5") %>%
+          filter(cluster_id == "IN_SST") %>%
+          # filter(libScaleFactor == "5") %>%
           filter(!is.na(mu)) %>%
           pull(mu) %>%
           log10 %>%
@@ -649,7 +649,7 @@ df %>%
 library(aplot)
 
 df_sub = df %>% 
-  filter(libScaleFactor == "5") %>%
+  # filter(libScaleFactor == "5") %>%
   filter(N == "100") %>%
   filter(cluster_id == "Oligo") %>%
   filter(Method != "lucida [pb]") %>%
@@ -743,7 +743,7 @@ fig6 = df_sub %>%
 
 
 df_perf_sub = df_perf %>% 
-  filter(libScaleFactor == "5") %>%
+  # filter(libScaleFactor == "5") %>%
   filter(cluster_id == "Oligo") %>%
   filter(Method != "lucida [pb]") %>%
   filter(Method != "lucida [1 step]")
