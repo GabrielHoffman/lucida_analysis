@@ -33,17 +33,18 @@ def main():
   # remove empty strings
   files = [x for x in files if x.strip()]
 
-  print(files)
-
   # 1. Read each file into a list of AnnData objects
+  print("Reading...")
   adatas = [ad.read_h5ad(path) for path in files]
 
   # 2. Concatenate them along the observations (cells) axis
+  print("Concating...")
   adataComb = ad.concat(adatas, 
     axis = 0, 
     join = "outer", 
     index_unique = "-",)
 
+  print("Writing...")
   adataComb.write_h5ad( args.output )
 
 
