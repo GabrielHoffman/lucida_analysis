@@ -31,8 +31,6 @@ def main():
   files = open(args.files, "r").read().split(' ')
   files = [s.replace("\n", "") for s in files]
 
-  print(files)
-
   # 1. Read each file into a list of AnnData objects
   adatas = [ad.read_h5ad(path) for path in files]
 
