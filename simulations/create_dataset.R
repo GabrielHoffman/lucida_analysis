@@ -52,27 +52,38 @@ if( nchar(opt$covariates) > 0 ){
 }
 formula <- as.formula(formula)
 
-# Simulate based on fit
-sce.sim <- simulateCountData(
-  fit = fit, 
-  formula = formula, 
-  data = data, 
-  target = "Dx", 
-  logFC = opt$logFC, 
-  pDE = opt$pDE, 
-  libScaleFactor = opt$libScaleFactor)
+# for each cell type
+for( CT in names(fit) ){
+  # Simulate based on fit
+  sce.sim <- simulateCountData(
+    fit = fit, 
+    formula = formula, 
+    data = data, 
+    target = "Dx", 
+    logFC = opt$logFC, 
+    pDE = opt$pDE, 
+    libScaleFactor = opt$libScaleFactor)
 
-# save simulation parameters
-metadata(sce.sim)$params$seed <- opt$seed
-metadata(sce.sim)$params$nDonor <- nlevels(colData(sce.sim)[,opt$subject])
+  # save simulation parameters
+  metadata(sce.sim)$params$seed <- opt$seed
+  metadata(sce.sim)$params$nDonor <- nlevels(colData(sce.sim)[,opt$subject])
 
-# write params to separate file
-params <- metadata(sce.sim)$params
-file = gsub("h5ad$", "info.RDS", opt$output)
-saveRDS(params, file = file)
+  # write params to separate file
+  params <- metadata(sce.sim)$params
+  file = gsub("h5ad$", "info.RDS", opt$output)
+  saveRDS(params, file = file)
 
-# only data.frame is readable to python
-metadata(sce.sim) <- metadata(sce.sim)$info
+  # only data.frame is readable to python
+  metadata(sce.sim) <- metadata(sce.sim)$info
 
-# write to file
-write_h5ad(sce.sim, opt$output, mode="w", compression="none")
+  # write to file
+  out <- gsub(".h5ad", paste0("_", CT, ".h5ad"), opt$output)
+  write_h5ad(sce.sim, out, mode="w", compression="none")
+}
+
+
+
+
+
+
+
