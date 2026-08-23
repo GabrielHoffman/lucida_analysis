@@ -245,7 +245,7 @@ df %>%
     ggtitle("Estimating logFC") +
     scale_fill_manual(values = colorMethods) +
     facet_grid(N ~ cluster_id, scale="free_y") +
-    scale_y_continuous(limits=c(0, NA), expand=c(0,0))
+    coord_cartesian(ylim=c(0, .25), expand=FALSE)
 ```
 
 ```{r coef3, fig.height=12, fig.width=12}
