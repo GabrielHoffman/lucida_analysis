@@ -54,9 +54,10 @@ formula <- as.formula(formula)
 
 # for each cell type
 for( CT in names(fit) ){
+
   # Simulate based on fit
   sce.sim <- simulateCountData(
-    fit = fit, 
+    fit = fit[CT], 
     formula = formula, 
     data = data, 
     target = "Dx", 
@@ -77,7 +78,7 @@ for( CT in names(fit) ){
   metadata(sce.sim) <- metadata(sce.sim)$info
 
   # write to file
-  out <- gsub(".h5ad", paste0("_", CT, ".h5ad"), opt$output)
+  out <- gsub(".h5ad$", paste0("_", CT, ".h5ad"), opt$output)
   write_h5ad(sce.sim, out, mode="w", compression="none")
 }
 

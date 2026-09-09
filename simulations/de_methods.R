@@ -64,8 +64,8 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 
 # Add dispersion to edgeR, DESeq2
 # in pbDS(), remove design matrix from filterExpr()
-# devtools::install_github("GabrielHoffman/muscat")
-# devtools::install_github("GabrielHoffman/nebula")
+# remotes::install_github("GabrielHoffman/muscat")
+# remotes::install_github("GabrielHoffman/nebula")
 stopifnot(packageVersion("muscat") == "1.25.4")
 
 
