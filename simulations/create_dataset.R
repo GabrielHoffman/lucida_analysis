@@ -52,6 +52,7 @@ if( nchar(opt$covariates) > 0 ){
 }
 formula <- as.formula(formula)
 
+
 # for each cell type
 for( CT in names(fit) ){
 
