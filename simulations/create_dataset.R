@@ -71,6 +71,8 @@ for( CT in names(fit) ){
 
   # write params to separate file
   params <- metadata(sce.sim)$params
+  params$nDonor <- length(unique(data[[opt$subject]]))
+
   file = gsub("h5ad$", "info.RDS", opt$output)
   saveRDS(params, file = file)
 
