@@ -25,6 +25,22 @@ source("/hpc/users/hoffmg01/work/lucida_analysis/simulations/de_methods.R")
 message("Read H5AD...")
 sce.sim <- readH5AD( opt$h5ad )
 
+# read metadata
+pattern <- opt$h5ad %>%
+        basename %>%
+        gsub("^sim_", "metadata_", .) %>%
+        gsub("recode.h5ad", ".*.RDS", .)
+
+files <- dir(
+  path = dirname(opt$h5ad), 
+  pattern = pattern, 
+  full.names =  TRUE)
+
+md <- lapply(files, readRDS) %>%
+  bind_rows
+metadata(sce.sim) <- md
+
+
 # select methods to run
 methods <- read.table(opt$methods)$V1
 
