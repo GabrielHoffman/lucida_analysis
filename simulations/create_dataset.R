@@ -81,6 +81,11 @@ for( CT in names(fit) ){
   metadata(sce.sim) <- metadata(sce.sim)$info %>%
                         as.data.frame
 
+  out <- opt$output %>%
+    gsub(".h5ad$", paste0("_", CT, ".RDS"), .) %>%
+    gsub("sim_", "metadata_", .)
+  saveRDS(metadata(sce.sim), out)
+
   # write to file
   out <- gsub(".h5ad$", paste0("_", CT, ".h5ad"), opt$output)
   write_h5ad(sce.sim, out, mode="w", compression="none")
