@@ -40,7 +40,6 @@ md <- lapply(files, readRDS) %>%
   bind_rows
 metadata(sce.sim) <- md
 
-
 # select methods to run
 methods <- read.table(opt$methods)$V1
 
