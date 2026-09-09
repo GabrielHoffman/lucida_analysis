@@ -78,7 +78,8 @@ for( CT in names(fit) ){
   saveRDS(params, file = file)
 
   # only data.frame is readable to python
-  metadata(sce.sim) <- metadata(sce.sim)$info
+  metadata(sce.sim) <- metadata(sce.sim)$info %>%
+                        as.data.frame
 
   # write to file
   out <- gsub(".h5ad$", paste0("_", CT, ".h5ad"), opt$output)
