@@ -18,6 +18,8 @@ output:
 # rm -rf plot_results_cache/
 ml pandoc imagemagick
 
+system("git pull")
+
 rmarkdown::render("plot_results_PsychAD.Rmd")
 
 system("cp -f plot_results_PsychAD.html ~/www/")
@@ -208,7 +210,7 @@ target = df %>%
         pull(b.true) %>%
         head(1)
 
-ylim = .2
+ylim = .3
 df %>%
   filter(libScaleFactor == "1") %>%
   droplevels %>%
