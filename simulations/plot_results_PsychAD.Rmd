@@ -120,12 +120,13 @@ table(df$libScaleFactor)
 #     facet_grid(N ~ cluster_id)
 
 # keep only genes included in each result
-target = length(unique(df$Method))
+# target = length(unique(df$Method))
+target = 6
 keep1 <- df %>%
   group_by(cluster_id, ID, simID, libScaleFactor, N) %>%
   summarize(n = n()) %>%
   mutate(ID2 = paste(cluster_id, ID, simID, libScaleFactor, N)) %>%
-  filter( n == target ) %>%
+  filter( n >= target ) %>%
   pull(ID2)
 
 # For small samples, nebula is omitted
