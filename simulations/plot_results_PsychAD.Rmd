@@ -15,7 +15,7 @@ output:
 
 # cd /sc/arion/work/hoffmg01/lucida_analysis/simulations
 
-# rm -rf plot_results_cache/
+# rm -rf plot_results_PsychAD_cache/
 ml pandoc imagemagick
 
 system("git pull")
@@ -120,8 +120,8 @@ table(df$libScaleFactor)
 #     facet_grid(N ~ cluster_id)
 
 # keep only genes included in each result
-# target = length(unique(df$Method))
-target = 6
+target = length(unique(df$Method))
+# target = 6
 keep1 <- df %>%
   group_by(cluster_id, ID, simID, libScaleFactor, N) %>%
   summarize(n = n()) %>%

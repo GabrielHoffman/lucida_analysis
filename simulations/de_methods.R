@@ -17,13 +17,16 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
     # cells of given type
     idx = (sce[[cluster_id]] == CT)
 
+    # subset cells
+    sceSub = sce[,idx]
+
     # grouping variable
     ran_var <- all.vars(findbars(formula)[[1]])
 
     # order cells by grouping variable
-    sceSub = sce[,order(sce[[ran_var]])]
+    sceSub = sceSub[,order(sceSub[[ran_var]])]
 
-    data = colData(sceSub[,idx])
+    data = colData(sceSub)
     data = droplevels(data)
 
     success = TRUE
@@ -37,7 +40,7 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 
     if( ! success ) return(NULL)
 
-    countMatrix = counts(sceSub[,idx])
+    countMatrix = counts(sceSub)
     countMatrix = as(countMatrix, "dgCMatrix")
 
     keep = BatchRegression:::filter_responses(countMatrix, "nb", 0.001, 0.001)
@@ -46,7 +49,7 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
       count = countMatrix[keep,], 
       id = data[[ran_var]], 
       pred = design, 
-      offset = sceSub$libSize[idx], 
+      offset = sceSub$libSize, 
       method = method, 
       ncore = nthreads)
     
