@@ -19,6 +19,7 @@ output:
 
 cd /hpc/users/hoffmg01/work/lucida_analysis
 module load pandoc imagemagick
+git pull
 
 # scp minerva:/hpc/users/hoffmg01/work/lucida_analysis/1k1k_analysis.html .
 
