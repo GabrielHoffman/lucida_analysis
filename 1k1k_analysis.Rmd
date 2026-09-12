@@ -206,6 +206,9 @@ fig5 + theme_classic()  + theme(aspect.ratio=2) |
 figAge + theme_classic() + theme(aspect.ratio=2, legend.position="none")
 ```
 
+
+
+
 <!---
 
 # Other methods
@@ -258,3 +261,11 @@ fit = nebula(
 
 --->
 
+
+
+#### Session info
+<details>
+```{r sessionInfo}
+sessionInfo()
+```
+</details>
