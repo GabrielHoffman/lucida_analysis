@@ -205,5 +205,12 @@ figDx + theme_classic() + theme(aspect.ratio=1, legend.position="none")
 ```
 
 
+#### Session info
+<details>
+```{r sessionInfo}
+sessionInfo()
+```
+</details>
+
 
 
