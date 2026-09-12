@@ -131,20 +131,13 @@ fig1 | fig2
 # fit full model for differential expression
 form = ~ c11x + Age + Sex + PMI + Brain_bank + (1|SubID)
 fit = lucida(sce, form, cluster_id = "class", nReaders=8)
-```
 
-```{r lucida.null}
-# fit null model for variance partitioning analysis
-fit.null <- lucida(sce, ~ (1|SubID), cluster_id = "class", nReaders=8)
+vp <- fitVarPart(fit)
 ```
 
 ```{r vp, fig.height = 10, fig.width=12}
-vp <- fitVarPart(fit, fit.null)
-
 plotVarPart(sortCols(vp), ncol=4)
 ```
-
-
 
 
 ## Plots
