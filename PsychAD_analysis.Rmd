@@ -1,6 +1,6 @@
 ---
 title: "Analysis of PsychAD single cell dataset with lucida"
-subtitle: '[Lee, et al. (2025)](https://psych-ad.org)'
+subtitle: '[Lee, et al. (2026)](https://psych-ad.org)'
 author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
 date: "Run on `r format(Sys.time())`"
 documentclass: article
@@ -19,6 +19,7 @@ output:
 
 cd /hpc/users/hoffmg01/work/lucida_analysis
 module load pandoc imagemagick
+git pull
 
 # rm -rf PsychAD_analysis_cache/
 
@@ -68,6 +69,7 @@ knitr::opts_chunk$set(
 ```{r packages, cache=FALSE}
 library(lucida)
 library(SingleCellExperiment)
+library(GenomicDataStream)
 library(tidyverse)
 library(ggplot2)
 
