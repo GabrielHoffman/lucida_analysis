@@ -88,7 +88,7 @@ sce = sce[,sce$libSize > 1000]
 sce$cell_type = droplevels(sce$cell_type)
 ```
 
-```{r summary, fig.height = 15, fig.width =15}
+```{r summary, fig.height = 15, fig.width=15, cache=FALSE}
 fig1 = colData(sce) %>%
   as.data.frame %>%
   as_tibble %>%
