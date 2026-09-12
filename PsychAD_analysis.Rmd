@@ -72,6 +72,7 @@ library(SingleCellExperiment)
 library(GenomicDataStream)
 library(tidyverse)
 library(ggplot2)
+library(aplot)
 
 thm = theme_classic() +
     theme(aspect.ratio = 1, 
