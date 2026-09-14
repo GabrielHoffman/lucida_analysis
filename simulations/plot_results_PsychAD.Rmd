@@ -18,11 +18,13 @@ output:
 # rm -rf plot_results_PsychAD_cache/
 ml pandoc imagemagick
 
+
 system("git pull")
 
 rmarkdown::render("plot_results_PsychAD.Rmd")
 
 system("cp -f plot_results_PsychAD.html ~/www/")
+
 
 https://hoffmg01.dmz.hpc.mssm.edu/plot_results_PsychAD.html
 
@@ -639,7 +641,7 @@ df %>%
 
 
 ## Combined
-```{r combined, fig.width=10, height=16, cache=FALSE}
+```{r combined, fig.width=10, fig.height=16, cache=FALSE}
 library(cowplot)
 
 plot_grid(
