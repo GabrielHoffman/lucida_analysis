@@ -135,12 +135,15 @@ fit = lucida(sce, form, cluster_id = "class", nReaders=8)
 vp <- varpart(fit)
 ```
 
+## Plots
 ```{r vp, fig.height = 10, fig.width=12}
 plotVarPart(sortCols(vp), ncol=4)
 ```
 
+```{r vp2, fig.height = 15, fig.width =15}
+plotTrendVP( fit, vp, "CountNoise")
+```
 
-## Plots
 ```{r plotDispEsts, fig.height = 10, fig.width = 12}
 plotDispEsts(fit, ncol=4)
 ```
