@@ -108,7 +108,8 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
     df <- bind_rows(df,
             lucida::results(fit.lucida, coefTest, expand=TRUE) %>%
-            mutate(Method = "lucida"))
+            mutate(Method = "lucida") %>%
+            select(-AveExpr))
   }
 
   # lucida one step
