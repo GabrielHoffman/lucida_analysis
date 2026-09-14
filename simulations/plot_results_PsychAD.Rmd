@@ -565,8 +565,8 @@ fig.FPR = df %>%
               se = sqrt(FPR*(1-FPR)/np)) %>%
   ggplot(aes(N, FPR, fill=Method)) +
     geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
-    geom_errorbar(aes(ymin = FPR - 1.96*se, 
-      ymax = FPR + 1.96*se), width=0, position = position_dodge(width = 0.9)) +
+    # geom_errorbar(aes(ymin = FPR - 1.96*se, 
+    #   ymax = FPR + 1.96*se), width=0, position = position_dodge(width = 0.9)) +
     thm +
     coord_cartesian(expand=FALSE) +
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
@@ -639,7 +639,7 @@ df %>%
 
 
 ## Combined
-```{r combined, fig.width=10, height=16}
+```{r combined, fig.width=10, height=16, cache=FALSE}
 library(cowplot)
 
 plot_grid(
