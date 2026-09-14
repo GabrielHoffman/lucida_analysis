@@ -65,12 +65,12 @@ thm = theme_classic(15) +
       plot.title = element_text(hjust = 0.5)) 
 
 colorMethods = c(
-  "nebula" = "#FF7F0EFF",
-  "nebula (HL)" = "#c15a00",
   "dreamlet" = "#2CA02CFF",
   "DESeq2" = "#D62728FF",
   "edgeR" = "#A020F0",
   "glmGamPoi"  = "#FF69B4",
+  "nebula" = "#FF7F0EFF",
+  "nebula (HL)" = "#c15a00",
   "lucida" = "#1F77B4FF",
   "lucida [1 step]" = "#BECFE6FF",
   "lucida [Bayesian]" = "#204e74",
@@ -297,26 +297,24 @@ df %>%
 
 df %>%
   filter(libScaleFactor == "1") %>%
-  filter(N == "50") %>%
+  # filter(N == "50") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method)) +
-    geom_smooth(se=FALSE, method = "loess") +
+    geom_smooth(se=TRUE, method = "loess", alpha =.1) +
     thm +    
     scale_color_manual(values = colorMethods) +
     xlab("Mean normalized counts") +
     ylab("Squared deviation of log theta") +
     scale_x_log10() +
-    facet_grid( ~ cluster_id) +
-    scale_y_continuous() +
-    coord_cartesian(expand=FALSE, ylim=c(-.1, 5)) 
+    facet_grid( N ~ cluster_id) +
+    scale_y_continuous()
 
 df %>% 
-  filter(N == "50") %>%
-  group_by(Method, cluster_id, libScaleFactor) %>%
-  summarize(rMSE = rMSE( pmin(1e4, theta.x), theta.y)) %>%
+  group_by(N, Method, cluster_id, libScaleFactor) %>%
+  summarize(rMSE = rMSE( log(pmin(1e4, theta.x)), log( theta.y))) %>%
   filter(!is.na(rMSE)) %>%
-  filter(Method != "lucida [Bayesian]") %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(libScaleFactor, rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
@@ -324,7 +322,7 @@ df %>%
     ylab("Root mean squared error") +
     ggtitle(bquote(Estimating~theta)) +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(~cluster_id)
+    facet_grid(N~cluster_id, scales="free_y")
 ```
 
 ## Theta (normalized)
@@ -366,8 +364,7 @@ df %>%
     xlab("Mean normalized counts") +
     ylab("Squared deviation of log(mu^2/theta)") +
     scale_x_log10() +
-    facet_grid(N ~ cluster_id, scales="free_y") +
-    coord_cartesian(expand=FALSE, ylim=c(-0.1, 20)) 
+    facet_grid(N ~ cluster_id, scales="free_y")  
 
 df %>% 
   group_by(Method, cluster_id, libScaleFactor, N) %>%
@@ -421,7 +418,7 @@ df %>%
     # scale_y_sqrt() +
     facet_grid(N ~ cluster_id) 
 
-df %>%
+fig = df %>%
   filter(libScaleFactor == "1") %>%
   # filter(N == "100") %>%
   # filter(!is.na(sigSq_g.x)) %>%
@@ -435,7 +432,10 @@ df %>%
     xlab("Mean normalized counts") +    
     ylab("Squared deviation of sigSq_g") +
     scale_x_log10() +
-    facet_grid(libScaleFactor ~ cluster_id) 
+    facet_grid(N ~ cluster_id) +    
+    coord_cartesian(expand=FALSE, ylim=c(0, .05))
+
+ggsave(fig, file="~/www/test.pdf")
 ```
 
 ## AUPR
