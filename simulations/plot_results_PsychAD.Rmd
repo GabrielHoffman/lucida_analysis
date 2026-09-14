@@ -418,7 +418,7 @@ df %>%
     # scale_y_sqrt() +
     facet_grid(N ~ cluster_id) 
 
-fig = df %>%
+df %>%
   filter(libScaleFactor == "1") %>%
   # filter(N == "100") %>%
   # filter(!is.na(sigSq_g.x)) %>%
@@ -434,8 +434,6 @@ fig = df %>%
     scale_x_log10() +
     facet_grid(N ~ cluster_id) +    
     coord_cartesian(expand=FALSE, ylim=c(0, .05))
-
-ggsave(fig, file="~/www/test.pdf")
 ```
 
 ## AUPR
@@ -462,7 +460,7 @@ aupr = function(status, score){
 df_perf = df %>% 
   group_by(Method, cluster_id, libScaleFactor, N) %>%
   filter(!is.na(FDR)) %>%
-  summarize(aupr(b.true, -log10(FDR)))
+  summarize(aupr(b.true, -log10(P.Value)))
 
 df_perf %>%
   ggplot(aes(libScaleFactor, AUPR, fill=Method)) +
@@ -687,7 +685,7 @@ fig2 = df_sub %>%
 
 fig3 = df_sub %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
-  summarize(rMSE = rMSE( log(mu^2/theta.x), log(mu^2/theta.y))) %>%
+  summarize(rMSE = rMSE( log(theta.x), log(theta.y))) %>%
   filter(!is.na(rMSE)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(libScaleFactor, rMSE, fill=Method)) +
@@ -695,23 +693,24 @@ fig3 = df_sub %>%
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0, NA)) +
     ylab(bquote(rMSE~log(mu^2/theta))) +
-    ggtitle(bquote(Estimating~overdispersion~component~mu^2/theta)) +
+    ggtitle(bquote(Estimating~theta)) +
     scale_fill_manual(values = colorMethods) 
 
 fig4 = df_sub %>%
   filter(!is.na(theta.x)) %>%
-  mutate(dev = (log(mu^2/theta.y) - log(mu^2/theta.x))^2) %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
+  mutate(dev = (log(theta.y) - log(theta.x))^2) %>%
   mutate(Method = factor(Method, rev(levels(Method)))) %>%
   ggplot(aes(mu, dev, color=Method)) +
-    geom_smooth(se=FALSE, alpha = .15, aes(fill=Method), lwd=2) +
+    geom_smooth(se=TRUE, alpha = .1, aes(fill=Method), lwd=2) +
     thm +    
     theme(legend.position="none") +
     scale_color_manual(values = colorMethods) +
     scale_fill_manual(values = colorMethods) +
     xlab("Mean normalized counts") +
-    ylab("Squared dev. of log(mu^2/theta)") +
+    ylab("Squared dev. of log(theta)") +
     scale_x_log10() +
-    coord_cartesian(expand=FALSE, ylim=c(-0.1, 20)) 
+    coord_cartesian(expand=FALSE, ylim=c(0, 0.05))
 
 fig5 = df_sub %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
