@@ -410,7 +410,7 @@ df %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
   summarize(rMSE = rMSE( sigSq_g.y, sigSq_g.x)) %>%
   filter(!is.na(rMSE)) %>%
-  filter(Method != "lucida [Bayesian]") %>%
+  filter(Method != "lucida [Bayesian]")   %>%
   ggplot(aes(libScaleFactor , rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
