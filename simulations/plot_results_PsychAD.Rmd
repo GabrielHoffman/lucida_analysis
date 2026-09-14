@@ -236,7 +236,7 @@ rMSE = function(x,y){
   sqrt(mean((x-y)^2))
 }
 
-df %>% 
+fig.logFC.rMSE = df %>% 
   filter(libScaleFactor == "1") %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
   summarize(rMSE = rMSE( logFC, b.true)) %>%
@@ -244,11 +244,12 @@ df %>%
     geom_bar(stat="identity", position="dodge") +
     thm +
     # scale_y_sqrt(expand=c(0,0)) +
-    ylab("Root mean squared error of estimated logFC") +
+    ylab("rMSE of logFC") +
     ggtitle("Estimating logFC") +
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id, scale="free_y") +
     coord_cartesian(ylim=c(0, .25), expand=FALSE)
+fig.logFC.rMSE
 ```
 
 ```{r coef3, fig.height=12, fig.width=12}
@@ -309,7 +310,7 @@ df %>%
 #     facet_grid( N ~ cluster_id) +
 #     scale_y_continuous()
 
-df %>% 
+fig.theta.rMSE = df %>% 
   group_by(N, Method, cluster_id, libScaleFactor) %>%
   summarize(rMSE = rMSE( log(pmin(1e4, theta.x)), log( theta.y))) %>%
   filter(!is.na(rMSE)) %>%
@@ -318,7 +319,7 @@ df %>%
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0, NA)) +
-    ylab("Root mean squared error") +
+    ylab("rMSE of log(theta)") +
     ggtitle(bquote(Estimating~theta)) +
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id, scales="free_y")
@@ -398,21 +399,22 @@ df %>%
     geom_abline( slope=1, color="black")  +
     scale_color_manual(values = colorMethods) 
 
-df %>% 
+fig.sigSqg.rMSE = df %>% 
   # filter(libScaleFactor == "1") %>%
   # filter(N == "100") %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
-  summarize(rMSE = rMSE( sigSq_g.y, sigSq_g.x)) %>%
+  summarize(rMSE = rMSE(sigSq_g.y, sigSq_g.x)) %>%
   filter(!is.na(rMSE)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(N , rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE)+
-    ylab("Root mean squared error") +
+    ylab("rMSE of sigSq_g") +
     ggtitle(bquote(Estimating~sigma[g]^2)) +
     scale_fill_manual(values = colorMethods) +
     facet_grid( libScaleFactor ~ cluster_id) 
+fig.sigSqg.rMSE
 
 df %>%
   filter(libScaleFactor == "1") %>%
@@ -468,7 +470,7 @@ df_perf = df %>%
 #     scale_fill_manual(values = colorMethods) +
 #     facet_grid(N ~ cluster_id)
 
-df_perf %>%
+fig.AUPR = df_perf %>%
   ggplot(aes(N, AUPR, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
@@ -477,6 +479,7 @@ df_perf %>%
     ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id)
+fig.AUPR
 
 # df_perf %>%
 #   ggplot(aes(libScaleFactor, F1.max, fill=Method)) +
@@ -487,7 +490,7 @@ df_perf %>%
 #     scale_fill_manual(values = colorMethods) +
 #     facet_grid(N ~ cluster_id)
 
-df_perf %>%
+fig.F1max = df_perf %>%
   ggplot(aes(N, F1.max, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
@@ -549,7 +552,7 @@ breaks <- df %>%
 
 ## False positive rate
 ```{r FPR, fig.width=12}
-df %>% 
+fig.FPR = df %>% 
   group_by(Method, cluster_id, libScaleFactor, N)  %>%
   filter(!is.na(P.Value), b.true == 0) %>% 
   summarize( FPR = sum(P.Value < 0.05) / length(P.Value), 
@@ -629,6 +632,15 @@ df %>%
 ```
 
 
+## Combined
+```{r combined}
+fig.logFC.rMSE /
+fig.theta.rMSE /
+fig.sigSqg.rMSE /
+fig.AUPR /
+fig.F1max /
+fig.FPR
+```
 
 
 
@@ -636,9 +648,7 @@ df %>%
 
 
 
-
-
-
+## Subset
 
 ```{r panel1, fig.height=4}
 library(aplot)
