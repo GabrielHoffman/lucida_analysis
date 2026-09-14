@@ -320,7 +320,7 @@ fig.theta.rMSE = df %>%
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0, NA)) +
     ylab("rMSE of log(theta)") +
-    ggtitle(bquote(Estimating~theta)) +
+    #ggtitle(bquote(Estimating~theta)) +
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id, scales="free_y")
 ```
@@ -411,7 +411,7 @@ fig.sigSqg.rMSE = df %>%
     thm +
     coord_cartesian(expand=FALSE)+
     ylab("rMSE of sigSq_g") +
-    ggtitle(bquote(Estimating~sigma[g]^2)) +
+    # ggtitle(bquote(Estimating~sigma[g]^2)) +
     scale_fill_manual(values = colorMethods) +
     facet_grid( libScaleFactor ~ cluster_id) 
 fig.sigSqg.rMSE
@@ -633,7 +633,7 @@ df %>%
 
 
 ## Combined
-```{r combined, fig.width=10, height=18}
+```{r combined, fig.width=10, height=16}
 library(cowplot)
 
 plot_grid(
