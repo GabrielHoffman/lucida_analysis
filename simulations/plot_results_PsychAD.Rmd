@@ -633,13 +633,19 @@ df %>%
 
 
 ## Combined
-```{r combined}
-fig.logFC.rMSE /
-fig.theta.rMSE /
-fig.sigSqg.rMSE /
-fig.AUPR /
-fig.F1max /
-fig.FPR
+```{r combined, fig.width=10, height=20}
+library(cowplot)
+
+plot_grid(
+  fig.logFC.rMSE, 
+  fig.theta.rMSE,
+  fig.sigSqg.rMSE,
+  fig.FPR, 
+  fig.AUPR,
+  fig.F1max,
+  ncol=1,
+  labels = LETTERS[1:6],
+  align = "vh")
 ```
 
 
