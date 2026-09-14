@@ -155,7 +155,7 @@ df <- df %>%
 
 
 # Time
-```{r time, fig.height=5, fig.width=12}
+```{r time, fig.height=5, fig.width=12, eval=FALSE}
 files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant", "res_sim_.*.parquet", full.names=TRUE)
 files = grep("_time", files, value = TRUE)
 
