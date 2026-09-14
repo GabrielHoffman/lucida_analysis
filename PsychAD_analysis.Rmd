@@ -132,7 +132,7 @@ fig1 | fig2
 form = ~ c11x + Age + Sex + PMI + Brain_bank + (1|SubID)
 fit = lucida(sce, form, cluster_id = "class", nReaders=8)
 
-vp <- fitVarPart(fit)
+vp <- varpart(fit)
 ```
 
 ```{r vp, fig.height = 10, fig.width=12}
