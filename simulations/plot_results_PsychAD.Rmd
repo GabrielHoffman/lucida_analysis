@@ -257,7 +257,7 @@ df %>%
   # filter(N == "100") %>%
   mutate(Method = factor(Method, rev(levels(Method)))) %>%
   ggplot(aes(mu, (b.true - logFC)^2, color=Method)) +
-    geom_smooth(se=FALSE) +
+    geom_smooth(se=FALSE, alpha = .1) +
     thm +  
     scale_color_manual(values = colorMethods) +
     ggtitle("Squared deviation of estimate logFC vs expression magnitude") +
@@ -279,7 +279,7 @@ df %>%
 ```{r theta, eval=TRUE}
 df %>%
   filter(!is.na(theta.x)) %>%
-  filter(Method != "lucida [Bayesian]") %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   filter(libScaleFactor == "1") %>%
   filter(N == "50") %>%
   ggplot(aes(theta.y, pmin(1e4, theta.x), color=Method)) +
@@ -299,7 +299,7 @@ df %>%
   filter(libScaleFactor == "1") %>%
   filter(N == "50") %>%
   filter(!is.na(theta.x)) %>%
-  filter(Method != "lucida [Bayesian]") %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method)) +
     geom_smooth(se=FALSE, method = "loess") +
     thm +    
@@ -335,7 +335,7 @@ df %>%
   filter(libScaleFactor == "1") %>%
   filter(N == "50") %>%
   filter(!is.na(theta.x)) %>%
-  filter(Method != "lucida [Bayesian]") %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(mu^2/theta.y, mu^2/theta.x, color=Method)) +
     geom_abline( slope=1, color="black") +
     geom_scattermore(pointsize=4) +
@@ -355,7 +355,7 @@ df %>%
   filter(libScaleFactor == "1") %>%
   # filter(N == "100") %>%
   filter(!is.na(theta.x)) %>%
-  filter(Method != "lucida [Bayesian]") %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   mutate(dev = (log(mu^2/theta.y) - log(mu^2/theta.x))^2) %>%
   mutate(Method = factor(Method, rev(levels(Method)))) %>%
   ggplot(aes(mu, dev, color=Method)) +
@@ -373,7 +373,7 @@ df %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
   summarize(rMSE = rMSE( log(mu^2/theta.x), log(mu^2/theta.y))) %>%
   filter(!is.na(rMSE)) %>%
-  filter(Method != "lucida [Bayesian]") %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(libScaleFactor, rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
@@ -390,7 +390,7 @@ df %>%
   filter(libScaleFactor == "1") %>%
   filter(N == "50") %>%
   filter(!is.na(sigSq_g.x)) %>%
-  filter(Method != "lucida [Bayesian]") %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(sigSq_g.y, sigSq_g.x, color=Method)) +
     geom_scattermore(pointsize=2) +
     thm +
@@ -410,7 +410,7 @@ df %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
   summarize(rMSE = rMSE( sigSq_g.y, sigSq_g.x)) %>%
   filter(!is.na(rMSE)) %>%
-  filter(Method != "lucida [Bayesian]")   %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(libScaleFactor , rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
@@ -425,10 +425,10 @@ df %>%
   filter(libScaleFactor == "1") %>%
   # filter(N == "100") %>%
   # filter(!is.na(sigSq_g.x)) %>%
-  filter(Method != "lucida [Bayesian]") %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(mu, abs((sigSq_g.x) - (sigSq_g.y)), color=Method)) +
     # geom_point() +
-    geom_smooth(se=FALSE) +
+    geom_smooth(se=TRUE, alpha = .1) +
     thm +    
     scale_color_manual(values = colorMethods) +
     facet_wrap(~cluster_id) +
@@ -689,7 +689,7 @@ fig3 = df_sub %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
   summarize(rMSE = rMSE( log(mu^2/theta.x), log(mu^2/theta.y))) %>%
   filter(!is.na(rMSE)) %>%
-  filter(Method != "lucida [Bayesian]") %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(libScaleFactor, rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
