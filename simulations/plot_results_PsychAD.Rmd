@@ -240,14 +240,14 @@ df %>%
   filter(libScaleFactor == "1") %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
   summarize(rMSE = rMSE( logFC, b.true)) %>%
-  ggplot(aes(libScaleFactor, rMSE, fill=Method)) +
+  ggplot(aes(N, rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
     # scale_y_sqrt(expand=c(0,0)) +
     ylab("Root mean squared error of estimated logFC") +
     ggtitle("Estimating logFC") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(N ~ cluster_id, scale="free_y") +
+    facet_grid(libScaleFactor ~ cluster_id, scale="free_y") +
     coord_cartesian(ylim=c(0, .25), expand=FALSE)
 ```
 
@@ -292,8 +292,7 @@ df %>%
     scale_x_log10() +
     scale_y_log10() +
     geom_abline( slope=1, color="black") +
-    scale_color_manual(values = colorMethods) +
-    facet_grid(Method ~ cluster_id )
+    scale_color_manual(values = colorMethods) 
 
 # df %>%
 #   filter(libScaleFactor == "1") %>%
@@ -315,14 +314,14 @@ df %>%
   summarize(rMSE = rMSE( log(pmin(1e4, theta.x)), log( theta.y))) %>%
   filter(!is.na(rMSE)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
-  ggplot(aes(libScaleFactor, rMSE, fill=Method)) +
+  ggplot(aes(N, rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0, NA)) +
     ylab("Root mean squared error") +
     ggtitle(bquote(Estimating~theta)) +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(N~cluster_id, scales="free_y")
+    facet_grid(libScaleFactor ~ cluster_id, scales="free_y")
 ```
 
 ## Theta (normalized)
@@ -344,8 +343,7 @@ df %>%
     ylab(bquote(Estimated~mu^2/theta)) +
     scale_x_log10() +
     scale_y_log10() +
-    scale_color_manual(values = colorMethods) +
-    facet_grid(Method ~ cluster_id)
+    scale_color_manual(values = colorMethods) 
 ```
 
 ```{r theta.normalized2, fig.width=13, fig.height=12}
@@ -371,14 +369,14 @@ df %>%
   summarize(rMSE = rMSE( log(mu^2/theta.x), log(mu^2/theta.y))) %>%
   filter(!is.na(rMSE)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
-  ggplot(aes(libScaleFactor, rMSE, fill=Method)) +
+  ggplot(aes(N, rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0, NA)) +
     ylab(bquote(rMSE~log(mu^2/theta))) +
     ggtitle(bquote(Estimating~overdispersion~component~mu^2/theta)) +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(N ~ cluster_id)
+    facet_grid( libScaleFactor ~ cluster_id)
 ```
 
 # sigSq_g
@@ -398,8 +396,7 @@ df %>%
     scale_x_log10() +
     scale_y_log10() +
     geom_abline( slope=1, color="black")  +
-    scale_color_manual(values = colorMethods) + 
-    facet_grid(Method ~ cluster_id)
+    scale_color_manual(values = colorMethods) 
 
 df %>% 
   # filter(libScaleFactor == "1") %>%
@@ -408,15 +405,14 @@ df %>%
   summarize(rMSE = rMSE( sigSq_g.y, sigSq_g.x)) %>%
   filter(!is.na(rMSE)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
-  ggplot(aes(libScaleFactor , rMSE, fill=Method)) +
+  ggplot(aes(N , rMSE, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
     coord_cartesian(expand=FALSE)+
     ylab("Root mean squared error") +
     ggtitle(bquote(Estimating~sigma[g]^2)) +
     scale_fill_manual(values = colorMethods) +
-    # scale_y_sqrt() +
-    facet_grid(N ~ cluster_id) 
+    facet_grid( libScaleFactor ~ cluster_id) 
 
 df %>%
   filter(libScaleFactor == "1") %>%
@@ -482,14 +478,14 @@ df_perf %>%
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id)
 
-df_perf %>%
-  ggplot(aes(libScaleFactor, F1.max, fill=Method)) +
-    geom_bar(stat="identity", position="dodge") +
-    thm +
-    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
-    ggtitle("Differential expression performance") +
-    scale_fill_manual(values = colorMethods) +
-    facet_grid(N ~ cluster_id)
+# df_perf %>%
+#   ggplot(aes(libScaleFactor, F1.max, fill=Method)) +
+#     geom_bar(stat="identity", position="dodge") +
+#     thm +
+#     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+#     ggtitle("Differential expression performance") +
+#     scale_fill_manual(values = colorMethods) +
+#     facet_grid(N ~ cluster_id)
 
 df_perf %>%
   ggplot(aes(N, F1.max, fill=Method)) +
@@ -568,7 +564,7 @@ df %>%
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
     ylab("False positive rate") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid( ~ cluster_id)
+    facet_grid( libScaleFactor ~ cluster_id)
 ```
 
 ```{r QQ.plot}
