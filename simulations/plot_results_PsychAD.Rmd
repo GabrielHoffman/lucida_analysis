@@ -245,7 +245,7 @@ fig.logFC.rMSE = df %>%
     thm +
     # scale_y_sqrt(expand=c(0,0)) +
     ylab("rMSE of logFC") +
-    ggtitle("Estimating logFC") +
+    # ggtitle("Estimating logFC") +
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id, scale="free_y") +
     coord_cartesian(ylim=c(0, .25), expand=FALSE)
@@ -476,7 +476,7 @@ fig.AUPR = df_perf %>%
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
-    ggtitle("Differential expression performance") +
+    # ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id)
 fig.AUPR
@@ -496,7 +496,7 @@ fig.F1max = df_perf %>%
     thm +
     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
-    ggtitle("Differential expression performance") +
+    # ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id)
 
@@ -633,7 +633,7 @@ df %>%
 
 
 ## Combined
-```{r combined, fig.width=10, height=20}
+```{r combined, fig.width=10, height=18}
 library(cowplot)
 
 plot_grid(
@@ -676,7 +676,7 @@ fig1 = df_sub %>%
     thm +
     # scale_y_sqrt(expand=c(0,0)) +
     ylab("rMSE of estimated logFC") +
-    ggtitle("Estimating logFC") +
+    # ggtitle("Estimating logFC") +
     scale_fill_manual(values = colorMethods) +
     scale_y_continuous(limits=c(0, NA), expand=c(0,0))
 
@@ -733,7 +733,7 @@ fig5 = df_sub %>%
     theme(legend.position="none") +
     coord_cartesian(expand=FALSE)+
     ylab("Root mean squared error") +
-    ggtitle(bquote(Estimating~sigma[g]^2)) +
+    # ggtitle(bquote(Estimating~sigma[g]^2)) +
     scale_fill_manual(values = colorMethods) 
 
 
