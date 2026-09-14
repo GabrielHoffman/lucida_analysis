@@ -295,20 +295,20 @@ df %>%
     scale_color_manual(values = colorMethods) +
     facet_grid(Method ~ cluster_id )
 
-df %>%
-  filter(libScaleFactor == "1") %>%
-  # filter(N == "50") %>%
-  filter(!is.na(theta.x)) %>%
-  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
-  ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method)) +
-    geom_smooth(se=TRUE, method = "loess", alpha =.1) +
-    thm +    
-    scale_color_manual(values = colorMethods) +
-    xlab("Mean normalized counts") +
-    ylab("Squared deviation of log theta") +
-    scale_x_log10() +
-    facet_grid( N ~ cluster_id) +
-    scale_y_continuous()
+# df %>%
+#   filter(libScaleFactor == "1") %>%
+#   # filter(N == "50") %>%
+#   filter(!is.na(theta.x)) %>%
+#   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
+#   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method)) +
+#     geom_smooth(se=TRUE, method = "loess", alpha =.1) +
+#     thm +    
+#     scale_color_manual(values = colorMethods) +
+#     xlab("Mean normalized counts") +
+#     ylab("Squared deviation of log theta") +
+#     scale_x_log10() +
+#     facet_grid( N ~ cluster_id) +
+#     scale_y_continuous()
 
 df %>% 
   group_by(N, Method, cluster_id, libScaleFactor) %>%
@@ -462,15 +462,15 @@ df_perf = df %>%
   filter(!is.na(FDR)) %>%
   summarize(aupr(b.true, -log10(P.Value)))
 
-df_perf %>%
-  ggplot(aes(libScaleFactor, AUPR, fill=Method)) +
-    geom_bar(stat="identity", position="dodge") +
-    thm +
-    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
-    geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
-    ggtitle("Differential expression performance") +
-    scale_fill_manual(values = colorMethods) +
-    facet_grid(N ~ cluster_id)
+# df_perf %>%
+#   ggplot(aes(libScaleFactor, AUPR, fill=Method)) +
+#     geom_bar(stat="identity", position="dodge") +
+#     thm +
+#     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+#     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
+#     ggtitle("Differential expression performance") +
+#     scale_fill_manual(values = colorMethods) +
+#     facet_grid(N ~ cluster_id)
 
 df_perf %>%
   ggplot(aes(N, AUPR, fill=Method)) +
@@ -552,16 +552,14 @@ breaks <- df %>%
 
 
 ## False positive rate
-```{r FPR, fig.height=15, fig.width=12}
+```{r FPR, fig.width=12}
 df %>% 
-  # filter(libScaleFactor == "1") %>%
-  # filter(N == "100") %>%
   group_by(Method, cluster_id, libScaleFactor, N)  %>%
   filter(!is.na(P.Value), b.true == 0) %>% 
   summarize( FPR = sum(P.Value < 0.05) / length(P.Value), 
               np = length(P.Value),
               se = sqrt(FPR*(1-FPR)/np)) %>%
-  ggplot(aes(libScaleFactor, FPR, fill=Method)) +
+  ggplot(aes(N, FPR, fill=Method)) +
     geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
     geom_errorbar(aes(ymin = FPR - 1.96*se, 
       ymax = FPR + 1.96*se), width=0, position = position_dodge(width = 0.9)) +
@@ -570,7 +568,7 @@ df %>%
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
     ylab("False positive rate") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(N ~ cluster_id)
+    facet_grid( ~ cluster_id)
 ```
 
 ```{r QQ.plot}
