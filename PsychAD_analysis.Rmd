@@ -26,7 +26,7 @@ git pull
 rmarkdown::render("PsychAD_analysis.Rmd")
 
 
-\cp -f PsychAD_analysis.html ~/www/
+system("cp -f PsychAD_analysis.html ~/www/")
 
 http://hoffmg01.dmz.hpc.mssm.edu/PsychAD_analysis.html
 
@@ -93,7 +93,7 @@ sce$c11x = factor(sce$c11x, c("Control", "AD", "NA"))
 ```
 
 
-```{r summary, fig.height = 15, fig.width =15}
+```{r summary, fig.height = 15, fig.width =15, eval=FALSE}
 fig1 = colData(sce) %>%
   as.data.frame %>%
   as_tibble %>%
