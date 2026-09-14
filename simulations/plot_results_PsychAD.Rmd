@@ -248,7 +248,8 @@ fig.logFC.rMSE = df %>%
     # ggtitle("Estimating logFC") +
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id, scale="free_y") +
-    coord_cartesian(ylim=c(0, .25), expand=FALSE)
+    coord_cartesian(ylim=c(0, .25), expand=FALSE) +
+    xlab("Sample size")
 fig.logFC.rMSE
 ```
 
@@ -322,7 +323,8 @@ fig.theta.rMSE = df %>%
     ylab("rMSE of log(theta)") +
     #ggtitle(bquote(Estimating~theta)) +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(libScaleFactor ~ cluster_id, scales="free_y")
+    facet_grid(libScaleFactor ~ cluster_id, scales="free_y") +
+    xlab("Sample size")
 ```
 
 ## Theta (normalized)
@@ -413,7 +415,8 @@ fig.sigSqg.rMSE = df %>%
     ylab("rMSE of sigSq_g") +
     # ggtitle(bquote(Estimating~sigma[g]^2)) +
     scale_fill_manual(values = colorMethods) +
-    facet_grid( libScaleFactor ~ cluster_id) 
+    facet_grid( libScaleFactor ~ cluster_id) +
+    xlab("Sample size")
 fig.sigSqg.rMSE
 
 df %>%
@@ -478,7 +481,8 @@ fig.AUPR = df_perf %>%
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     # ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(libScaleFactor ~ cluster_id)
+    facet_grid(libScaleFactor ~ cluster_id) +
+    xlab("Sample size")
 fig.AUPR
 
 # df_perf %>%
@@ -498,7 +502,8 @@ fig.F1max = df_perf %>%
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     # ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(libScaleFactor ~ cluster_id)
+    facet_grid(libScaleFactor ~ cluster_id) +
+    xlab("Sample size")
 
 
 breaks <- df %>%
@@ -567,7 +572,8 @@ fig.FPR = df %>%
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
     ylab("False positive rate") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid( libScaleFactor ~ cluster_id)
+    facet_grid( libScaleFactor ~ cluster_id) +
+    xlab("Sample size")
 ```
 
 ```{r QQ.plot}
