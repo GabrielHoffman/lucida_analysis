@@ -57,6 +57,7 @@ library(tidyverse)
 library(scattermore)
 library(PRROC)
 library(parallel)
+library(cowplot)
 
 thm = theme_classic(15) +
     theme(aspect.ratio = 1, 
@@ -215,7 +216,7 @@ df_logs = lapply(files, function(file){
   }) %>%
   bind_rows
 
-df_logs %>%
+fig1 = df_logs %>%
   ggplot(aes(N, CPU.time / 60, color=Method)) +
     geom_point() +
     geom_smooth(method="lm", se=FALSE) +    
@@ -227,7 +228,7 @@ df_logs %>%
     xlab("Sample size")+
     ylab("CPU time (minutes)")
 
-df_logs %>%
+fig2 = df_logs %>%
   ggplot(aes(N, Wall.time / 60, color=Method)) +
     geom_point() +
     geom_smooth(method="lm", se=FALSE) +    
@@ -239,7 +240,7 @@ df_logs %>%
     xlab("Sample size")+
     ylab("Wall time (minutes)")
 
-df_logs %>%
+fig3 = df_logs %>%
   ggplot(aes(N, Mem.Mb/1000, color=Method)) +
     geom_point() +
     geom_smooth(method="lm", se=FALSE) +    
@@ -251,6 +252,13 @@ df_logs %>%
     xlab("Sample size")+
     ylab("Memory usage (Gb)")
 
+plot_grid(
+  fig1 + theme(legend.position="none"), 
+  fig2 + theme(legend.position="none"), 
+  fig3, 
+  labels=LETTERS[1:3],
+  align = "vh",
+  nrow = 1 )
 ```
 
 
@@ -696,8 +704,6 @@ df %>%
 
 ## Combined
 ```{r combined, fig.width=10, fig.height=16, cache=FALSE}
-library(cowplot)
-
 plot_grid(
   fig.logFC.rMSE, 
   fig.theta.rMSE,
