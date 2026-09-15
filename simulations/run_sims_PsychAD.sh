@@ -217,16 +217,24 @@ do
 #BSUB -n $NTHREADS
 #BSUB -R span[hosts=1] 
 #BSUB -R rusage[mem=8000]
-#BSUB -W 00:10
+#BSUB -W 36:00
 #BSUB -e $LOG/${ID}_${METHOD}.err
 #BSUB -o $LOG/${ID}_${METHOD}.out" >> $JOB
   echo -e "" >> $JOB
 
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --nthreads $NTHREADS --methods <(echo $METHOD) --output $OUT" >> $JOB
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --nthreads $NTHREADS --methods <(echo \"$METHOD\") --output $OUT" >> $JOB
 done
 done
 done
 done
+
+# submit jobs
+ls $OUTFOLDER/jobs/* | parallel -P1 "bsub < {}"
+
+
+
+
+
 
 
 
