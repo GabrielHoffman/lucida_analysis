@@ -456,7 +456,7 @@ df %>%
 ```{r other.plots, eval=TRUE}
 df %>%
   filter(libScaleFactor == "1") %>%
-  filter(N == "50") %>%
+  filter(N == "12") %>%
   filter(!is.na(sigSq_g.x)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(sigSq_g.y, sigSq_g.x, color=Method)) +
@@ -849,6 +849,14 @@ fig3 | fig4
 fig5
 fig6 | fig7
 ```
+
+
+#### Session info
+<details>
+```{r sessionInfo}
+sessionInfo()
+```
+</details>
 
 
 
