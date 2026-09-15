@@ -46,12 +46,12 @@ md <- lapply(files, readRDS) %>%
 metadata(sce.sim) <- md
 
 # select methods to run
-if( file.exists(opt$methods) )
+if( file.exists(opt$methods) ){
   # read file storing method
   methods <- read.table(opt$methods)$V1
 }else{
   # get single method
-  methods = opt$methods
+  methods <- opt$methods
 }
 
 formula <- as.formula(opt$formula)
