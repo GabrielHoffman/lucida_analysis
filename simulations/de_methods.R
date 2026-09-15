@@ -70,7 +70,7 @@ run_MAST = function(sce, formula, cluster_id, nthreads = 1){
 
 
 run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
-  
+
   old_threads <- omp_get_max_threads()
   on.exit(omp_set_num_threads(old_threads), add = TRUE)
   omp_set_num_threads(1)
@@ -411,7 +411,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     df <- bind_rows(df, res.gp)
   }
 
-  if( include_metadata && length(metadata(sce.sim)) != 0){
+  if( (nrow(df) > 0) && include_metadata && length(metadata(sce.sim)) != 0){
 
     df <- df %>% 
       inner_join(metadata(sce.sim) %>%

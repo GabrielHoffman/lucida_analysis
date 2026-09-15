@@ -73,6 +73,7 @@ colorMethods = c(
   "glmGamPoi"  = "#FF69B4",
   "nebula" = "#FF7F0EFF",
   "nebula (HL)" = "#c15a00",
+  "MAST" = "#eaff00",
   "lucida" = "#1F77B4FF",
   "lucida [1 step]" = "#BECFE6FF",
   "lucida [Bayesian]" = "#204e74",
@@ -123,7 +124,7 @@ table(df$libScaleFactor)
 
 # keep only genes included in each result
 target = length(unique(df$Method))
-# target = 6
+
 keep1 <- df %>%
   group_by(cluster_id, ID, simID, libScaleFactor, N) %>%
   summarize(n = n()) %>%
@@ -161,7 +162,7 @@ df <- df %>%
 files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant", "res_sim_.*.parquet", full.names=TRUE)
 files = grep("_time", files, value = TRUE)
 
-pb.methods = c("lucida [pb]", "dreamlet")#, "DESeq2", "edgeR")
+pb.methods = c("lucida [pb]", "dreamlet", "DESeq2", "edgeR")
 
 df_time = mclapply(files, function(file){
   a = read_parquet(file) 
@@ -179,7 +180,7 @@ df_time = mclapply(files, function(file){
   }
 
   a %>%
-    filter(Method != "pseudobulk")
+    filter(!Method %in% c("pseudobulk", "pb2"))
 
 }, mc.cores=12) %>%
   bind_rows %>%
@@ -201,6 +202,84 @@ df_time %>%
     scale_y_log10() +
     scale_color_manual(values=colorMethods) +
     facet_wrap(~libScaleFactor, nrow=1) 
+```
+
+
+# Memory
+```{r mem.usage}
+library(stringr)
+files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/logs/", "*out", full.names=TRUE)
+
+df_logs = lapply(files, function(file){
+
+  tmp = basename(file) %>%
+    gsub(".out", "", .) %>%
+    strsplit("_") %>%
+    unlist
+
+  a = data.frame(N = as.numeric(tmp[1]), Method = tmp[4])
+
+  cmd = paste("grep \"CPU time :\"", file)
+  a$CPU.time =  system(cmd, intern=TRUE) %>%
+    str_squish %>%
+    strsplit(., " ") %>%
+    sapply(., `[[`, 4) %>%
+    as.numeric
+
+  cmd = paste("grep \"Max Memory :\"", file)
+  a$Mem.Mb = system(cmd, intern=TRUE) %>%
+    str_squish %>%
+    strsplit(., " ") %>%
+    sapply(., `[[`, 4) %>%
+    as.numeric
+
+  cmd = paste("grep \"Run time :\"", file)
+  a$Wall.time =  system(cmd, intern=TRUE) %>%
+    str_squish %>%
+    strsplit(., " ") %>%
+    sapply(., `[[`, 4) %>%
+    as.numeric
+
+  as.data.frame(a)
+  }) %>%
+  bind_rows
+
+df_logs %>%
+  ggplot(aes(N, CPU.time / 60, color=Method)) +
+    geom_point() +
+    geom_smooth(method="lm", se=FALSE) +    
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    scale_x_log10() +
+    scale_y_log10() +
+    scale_color_manual(values=colorMethods) +
+    xlab("Sample size")+
+    ylab("CPU time (minutes)")
+
+df_logs %>%
+  ggplot(aes(N, Wall.time / 60, color=Method)) +
+    geom_point() +
+    geom_smooth(method="lm", se=FALSE) +    
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    scale_x_log10() +
+    scale_y_log10() +
+    scale_color_manual(values=colorMethods) +
+    xlab("Sample size")+
+    ylab("Wall time (minutes)")
+
+df_logs %>%
+  ggplot(aes(N, Mem.Mb/1000, color=Method)) +
+    geom_point() +
+    geom_smooth(method="lm", se=FALSE) +    
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    scale_x_log10() +
+    ylim(0, NA) +
+    scale_color_manual(values=colorMethods) +
+    xlab("Sample size")+
+    ylab("Memory usage (Gb)")
+
 ```
 
 

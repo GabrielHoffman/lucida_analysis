@@ -211,27 +211,32 @@ do
   OUT=$OUTFOLDER/res_sim_${ID}_${METHOD}.parquet
   JOB=$OUTFOLDER/jobs/script_${ID}_${METHOD}.sh
 
+  if [ ($METHOD == "nebula") || ($METHOD == "nebula_HL") ]; then MEM=16000; else MEM=8000; fi
+
   echo '#!/bin/bash' > $JOB
   echo "#BSUB -P acc_CommonMind
 #BSUB -q premium
+#BSUB -J ${ID}_${METHOD}
 #BSUB -n $NTHREADS
 #BSUB -R span[hosts=1] 
-#BSUB -R rusage[mem=8000]
+#BSUB -R rusage[mem=$MEM]
 #BSUB -W 36:00
 #BSUB -e $LOG/${ID}_${METHOD}.err
 #BSUB -o $LOG/${ID}_${METHOD}.out" >> $JOB
   echo -e "" >> $JOB
 
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --nthreads $NTHREADS --methods <(echo \"$METHOD\") --output $OUT" >> $JOB
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --nthreads $NTHREADS --methods $METHOD --output $OUT" >> $JOB
 done
 done
 done
 done
+
+# rm -f logs/*
 
 # submit jobs
 ls $OUTFOLDER/jobs/* | parallel -P1 "bsub < {}"
 
-
+less jobs/script_12_1_10_DESeq2.sh
 
 
 
