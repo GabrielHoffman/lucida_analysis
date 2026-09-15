@@ -17,9 +17,9 @@ run_MAST = function(sce, formula, cluster_id, nthreads = 1){
 
   options(mc.cores = nthreads) 
 
-  old_threads <- omp_get_max_threads()
-  on.exit(omp_set_num_threads(old_threads), add = TRUE)
-  omp_set_num_threads(1)
+  old_threads <- blas_get_num_procs()
+  on.exit(blas_set_num_threads(old_threads), add = TRUE)
+  blas_set_num_threads(1)
 
   lapply( unique(sce[[cluster_id]]), function(CT){
     message(CT)

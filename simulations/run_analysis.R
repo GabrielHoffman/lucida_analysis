@@ -8,6 +8,7 @@ spec <- matrix(c(
   "coefTest",   't', 1, "character",
   'cluster_id', 'c', 1, "character",
   'methods',    'm', 1, "character",
+  'nthreads',   'r', 1, "integer",
   'output',     'o', 1, "character"
 ), byrow=TRUE, ncol=4)
 
@@ -56,7 +57,7 @@ res <- run_analysis(sce.sim,
       coefTest = opt$coefTest,
       cluster_id = opt$cluster_id, 
       methods = methods,
-      nthreads = 1)
+      nthreads = 12)
 
 # Get sim params
 file <- gsub("_recode.h5ad$", ".info.RDS", opt$h5ad)
