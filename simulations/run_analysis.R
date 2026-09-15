@@ -57,7 +57,7 @@ res <- run_analysis(sce.sim,
       coefTest = opt$coefTest,
       cluster_id = opt$cluster_id, 
       methods = methods,
-      nthreads = 12)
+      nthreads = opt$nthreads)
 
 # Get sim params
 file <- gsub("_recode.h5ad$", ".info.RDS", opt$h5ad)
