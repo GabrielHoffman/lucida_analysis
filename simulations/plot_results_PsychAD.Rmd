@@ -177,8 +177,8 @@ df_time %>%
 ```
 
 
-# Memory
-```{r mem.usage}
+# Resource usage
+```{r mem.usage, fig.height=3.5, fig.width=8}
 library(stringr)
 files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/logs/", "*out", full.names=TRUE)
 
@@ -255,7 +255,7 @@ fig3 = df_logs %>%
 plot_grid(
   fig1 + theme(legend.position="none"), 
   fig2 + theme(legend.position="none"), 
-  fig3, 
+  fig3 + theme(legend.position="none"), 
   labels=LETTERS[1:3],
   align = "vh",
   nrow = 1 )
