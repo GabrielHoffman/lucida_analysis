@@ -15,6 +15,10 @@ spec <- matrix(c(
 # Parse command line arguments
 opt <- getopt(spec)
 
+if( is.null(opt$nthreads) ){
+  opt$nthreads = 1
+}
+
 # load analysis code
 message("Loading packages...")
 suppressPackageStartupMessages({
