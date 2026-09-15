@@ -180,15 +180,14 @@ df_time %>%
 library(stringr)
 files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/logs/", "*out", full.names=TRUE)
 
-df_logs = lapply(files, function(file){
+df_logs = mclapply(files, function(file){
 
-  message(file)
   tmp = basename(file) %>%
     gsub(".out", "", .) %>%
     gsub("nebula_HL", "nebulaHL", .) %>%
     strsplit("_") %>%
     unlist  %>%
-    gsub("nebulaHL", "nebula_HL", .)
+    gsub("nebulaHL", "nebula (HL)", .)
 
   a = data.frame(N = as.numeric(tmp[1]), Method = tmp[4])
 
@@ -217,8 +216,10 @@ df_logs = lapply(files, function(file){
     as.numeric
 
   as.data.frame(a)
-  }) %>%
-  bind_rows
+  }, mc.cores=12) %>%
+  bind_rows %>%
+  as_tibble %>%
+  filter(CPU.time > 5)
 
 fig1 = df_logs %>%
   ggplot(aes(N, CPU.time / 60, color=Method)) +
