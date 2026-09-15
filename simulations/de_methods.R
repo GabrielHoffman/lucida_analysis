@@ -8,7 +8,61 @@ library(dreamlet)
 library(reformulas)
 library(muscat)
 library(glmGamPoi)
+library(MAST)
 })
+
+
+run_MAST = function(sce, formula, cluster_id, nthreads = 1){
+
+  options(mc.cores = nthreads) 
+
+  lapply( unique(sce[[cluster_id]]), function(CT){
+    message(CT)
+    # cells of given type
+    idx = (sce[[cluster_id]] == CT)
+
+    # subset cells
+    sceSub = sce[,idx]
+
+    # read into memory as sparse matrix
+    # counts(sceSub) = as(counts(sceSub), "dgCMatrix")
+
+    # filter genes
+    keep = BatchRegression:::filter_responses(counts(sceSub), "nb", 0.001, 0.001)
+    sceSub = sceSub[keep,]
+
+    # Convert to new data structure
+    sca = FromMatrix(
+        exprsArray = list(et = counts(sceSub)),
+        cData = colData(sceSub) %>% 
+          as.data.frame %>%
+          droplevels,
+          check_sanity=FALSE)
+
+    # grouping variable
+    ran_var <- all.vars(findbars(formula)[[1]])
+
+    sca[[ran_var]] = factor(sca[[ran_var]])
+
+    # fit MAST model
+    fit = zlm(formula, sca, method="glmer", ebayes=FALSE)
+
+    # get results
+    res = summary(fit)
+     
+    res$datatable %>% 
+      as_tibble %>% 
+      # filter(contrast == "Statusstim") %>%
+      filter(!is.na(z)) %>%
+      filter(component == "logFC") %>%
+      mutate(P.Value = 2*pnorm(abs(z), lower.tail=FALSE)) %>%
+      rename(ID = primerid, logFC = coef ) %>%
+      mutate(cluster_id = CT) %>%
+      select(cluster_id, ID, logFC, P.Value) 
+  }) %>%
+    bind_rows
+}
+
 
 run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 
@@ -182,6 +236,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     }
   }
 
+
   if( "nebula (HL)" %in% methods ){
     df.time[["nebula (HL)"]] <- system.time({
     res.neb.HL <- run_nebula(sce.sim, formula, cluster_id, method="HL", nthreads = nthreads)
@@ -196,6 +251,18 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
             mutate(FDR = p.adjust(P.Value)) %>%
             mutate(Method = "nebula (HL)"))
     }
+  }
+
+  # MAST
+ if( "MAST" %in% methods ){
+
+    df.time[["MAST"]] <- system.time({
+      res.mast <- run_MAST(sce.sim, formula, cluster_id, nthreads = nthreads)
+    })
+
+    df = bind_rows(df, res.mast) %>%
+            mutate(FDR = p.adjust(P.Value)) %>%
+            mutate(Method = "MAST")
   }
 
   # dreamlet
@@ -334,7 +401,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     df <- bind_rows(df, res.gp)
   }
 
-  if( include_metadata ){
+  if( include_metadata && length(metadata(sce)) != 0){
 
     df <- df %>% 
       inner_join(metadata(sce.sim) %>%
