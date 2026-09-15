@@ -263,7 +263,7 @@ target = df %>%
         pull(b.true) %>%
         head(1)
 
-ylim = .3
+ylim = 2*target
 df %>%
   filter(libScaleFactor == "1") %>%
   droplevels %>%
@@ -378,12 +378,15 @@ fig.theta.rMSE = df %>%
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id, scales="free_y") +
     xlab("Sample size")
+fig.theta.rMSE
 ```
 
+<!---
 ## Theta (normalized)
 The variance of the negative binomial distribution is $\mu + \mu^2/theta$.  So once $\theta$ reaches a sufficient value, the log-likelihood becomes very flat because for moderately sized $\mu$, $\mu + \mu^2/1e4 \approx \mu + \mu^2/1e5$.  Therefore, show the estimate of $\mu^2/theta$ instead.
+--->
 
-```{r theta.normalized, fig.width=18, fig.height=12, eval=FALSE}
+```{r theta.normalized, fig.width=18, fig.height=12, eval=FALSE, eval=FALSE}
 df %>%
   filter(libScaleFactor == "1") %>%
   filter(N == "50") %>%

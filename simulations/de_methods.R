@@ -247,7 +247,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
 
   if( "nebula_HL" %in% methods ){
-    df.time[["nebula (HL)"]] <- system.time({
+    df.time[["nebula_HL"]] <- system.time({
     res.neb.HL <- run_nebula(sce.sim, formula, cluster_id, method="HL", nthreads = nthreads)
     })
 
@@ -258,7 +258,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
             P.Value = paste0("p_", coefTest)) %>%
             dplyr::select(cluster_id, ID, logFC, P.Value, sigSq_g, theta) %>%
             mutate(FDR = p.adjust(P.Value)) %>%
-            mutate(Method = "nebula (HL)"))
+            mutate(Method = "nebula_HL"))
     }
   }
 
