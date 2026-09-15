@@ -331,7 +331,6 @@ fig.logFC.rMSE
 ```
 
 ```{r coef3, fig.height=12, fig.width=12}
-if( !is.null(df$mu)){
 df %>% 
   filter(libScaleFactor == "1") %>%
   # filter(N == "100") %>%
@@ -346,7 +345,7 @@ df %>%
     ylab("Squared deviation of estimated logFC (log10 scale)") +
     facet_grid(N ~ cluster_id, scales="free_y") + 
     scale_y_log10() 
-}
+
 ```
 
 
@@ -428,7 +427,7 @@ df %>%
     scale_color_manual(values = colorMethods) 
 ```
 
-```{r theta.normalized2, fig.width=13, fig.height=12}
+```{r theta.normalized2, fig.width=13, fig.height=12, eval=FALSE}
 df %>%
   filter(libScaleFactor == "1") %>%
   # filter(N == "100") %>%
