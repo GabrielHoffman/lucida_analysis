@@ -104,47 +104,22 @@ df = mclapply(files, function(file){
 
 table(df$libScaleFactor)
 
-# count genes retained by each method
-# df %>%
-#   filter(N == "8", libScaleFactor == "25", cluster_id == "naive B cell") %>%
-#   group_by(Method, libScaleFactor, N, cluster_id) %>%
-#   summarize(n = n()) %>%
-#   ggplot(aes(Method, n, fill=Method)) +
-#     geom_bar(stat="identity") +
-#     thm +
-#     theme(legend.position="none") + 
-#     scale_fill_manual(values = colorMethods) + 
-#     ylab("Number of genes retained") +
-#     # facet_grid(N~libScaleFactor) +
-#     facet_grid(N ~ cluster_id)
 
-# keep only genes included in each result
-target = length(unique(df$Method))
+# keep only genes included in each result,
+# for each sample size
+df.tg = df %>%
+  group_by(N) %>%
+  summarize(target = length(unique(Method))) %>%
+  data.frame %>%
+  column_to_rownames('N')
 
-keep1 <- df %>%
+keep = df %>%
   group_by(cluster_id, ID, simID, libScaleFactor, N) %>%
   summarize(n = n()) %>%
   mutate(ID2 = paste(cluster_id, ID, simID, libScaleFactor, N)) %>%
-  filter( n >= target ) %>%
+  mutate(target = df.tg[N,] ) %>%
+  filter(n == target) %>%
   pull(ID2)
-
-# For small samples, nebula is omitted
-# target = df %>%
-#           filter(N %in% c("4", "8")) %>%
-#           pull(Method) %>%
-#           unique %>%
-#           length
-
-# keep2 <- df %>%
-#   filter(N %in% c("4", "8")) %>%
-#   group_by(cluster_id, ID, simID, libScaleFactor, N) %>%
-#   summarize(n = n()) %>%
-#   mutate(ID2 = paste(cluster_id, ID, simID, libScaleFactor, N)) %>%
-#   filter( n == target ) %>%
-#   pull(ID2)
-
-# keep = unique(c(keep1, keep2))
-keep = keep1
 
 df <- df %>%
       filter(paste(cluster_id, ID, simID, libScaleFactor, N) %in% keep) %>% 

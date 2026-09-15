@@ -161,33 +161,33 @@ rm -f file*.txt
 
 # source ~/.bash_profile
 
-METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.in
-LOG=$OUTFOLDER/logs
-mkdir -p $LOG
+# METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.in
+# LOG=$OUTFOLDER/logs
+# mkdir -p $LOG
 
-echo "" > $OUTFOLDER/script_de.sh
-for N in $(echo $NSAMPLES)
-do
-for libScaleFactor in $(echo $LSF)
-do
-for i in $(seq 1 1 $NREPS)
-do
-  ID=${N}_${libScaleFactor}_${i}
-  FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
-  OUT=$OUTFOLDER/res_sim_${ID}.parquet
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --methods $METHODS --output $OUT 2>&1 > $LOG/${ID}.log " >> $OUTFOLDER/script_de.sh
-done
-done
-done
+# echo "" > $OUTFOLDER/script_de.sh
+# for N in $(echo $NSAMPLES)
+# do
+# for libScaleFactor in $(echo $LSF)
+# do
+# for i in $(seq 1 1 $NREPS)
+# do
+#   ID=${N}_${libScaleFactor}_${i}
+#   FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
+#   OUT=$OUTFOLDER/res_sim_${ID}.parquet
+#   echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --methods $METHODS --output $OUT 2>&1 > $LOG/${ID}.log " >> $OUTFOLDER/script_de.sh
+# done
+# done
+# done
 
-cat $OUTFOLDER/script_de.sh | parallel -P 60
+# cat $OUTFOLDER/script_de.sh | parallel -P 60
 
-# check that files were written
-cat $OUTFOLDER/script_de.sh | awk '{print $16}' | xargs ls > /dev/null 2> err.log
+# # check that files were written
+# cat $OUTFOLDER/script_de.sh | awk '{print $16}' | xargs ls > /dev/null 2> err.log
 
-cat err.log | tr "'" " " | awk '{print $4}' | parallel basename {} .parquet > jobs.prefix
+# cat err.log | tr "'" " " | awk '{print $4}' | parallel basename {} .parquet > jobs.prefix
 
-grep -f jobs.prefix $OUTFOLDER/script_de.sh | parallel -P 60
+# grep -f jobs.prefix $OUTFOLDER/script_de.sh | parallel -P 60
 
 # Run Distributed DE
 ####################
@@ -196,7 +196,7 @@ METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.in
 LOG=$OUTFOLDER/logs
 mkdir -p $LOG 
 mkdir -p $OUTFOLDER/jobs/ 
-NTHREADS=36
+NTHREADS=12
 
 for N in $(echo $NSAMPLES)
 do
@@ -211,7 +211,11 @@ do
   OUT=$OUTFOLDER/res_sim_${ID}_${METHOD}.parquet
   JOB=$OUTFOLDER/jobs/script_${ID}_${METHOD}.sh
 
-  if [ ($METHOD == "nebula") || ($METHOD == "nebula_HL") ]; then MEM=16000; else MEM=8000; fi
+  if [[ ("$METHOD" == "nebula") || ("$METHOD" == "nebula_HL") ]]; then 
+    MEM=16000; 
+  else 
+    MEM=8000; 
+  fi
 
   echo '#!/bin/bash' > $JOB
   echo "#BSUB -P acc_CommonMind
@@ -220,7 +224,7 @@ do
 #BSUB -n $NTHREADS
 #BSUB -R span[hosts=1] 
 #BSUB -R rusage[mem=$MEM]
-#BSUB -W 36:00
+#BSUB -W 96:00
 #BSUB -e $LOG/${ID}_${METHOD}.err
 #BSUB -o $LOG/${ID}_${METHOD}.out" >> $JOB
   echo -e "" >> $JOB
@@ -232,13 +236,22 @@ done
 done
 
 # rm -f logs/*
+# rm -f res_sim_*
+
+
 
 # submit jobs
-ls $OUTFOLDER/jobs/* | parallel -P1 "bsub < {}"
+ls $OUTFOLDER/jobs/* | grep dreamlet | parallel -P1 "bsub < {}"
+ls $OUTFOLDER/jobs/* | grep DESeq2 | parallel -P1 "bsub < {}"
+ls $OUTFOLDER/jobs/* | grep edgeR | parallel -P1 "bsub < {}"
+ls $OUTFOLDER/jobs/* | grep glmGamPoi | parallel -P1 "bsub < {}"
 
-less jobs/script_12_1_10_DESeq2.sh
 
 
+
+ls $OUTFOLDER/jobs/* | grep lucida | parallel -P1 "bsub < {}"
+ls $OUTFOLDER/jobs/* | grep nebula | parallel -P1 "bsub < {}"
+ls $OUTFOLDER/jobs/* | grep MAST | parallel -P1 "bsub < {}"
 
 
 
