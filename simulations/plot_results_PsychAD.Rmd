@@ -184,15 +184,19 @@ files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/logs/", "*o
 
 df_logs = lapply(files, function(file){
 
+  message(file)
   tmp = basename(file) %>%
     gsub(".out", "", .) %>%
+    gsub("nebula_HL", "nebulaHL", .) %>%
     strsplit("_") %>%
-    unlist
+    unlist  %>%
+    gsub("nebulaHL", "nebula_HL", .)
 
   a = data.frame(N = as.numeric(tmp[1]), Method = tmp[4])
 
   cmd = paste("grep \"CPU time :\"", file)
   a$CPU.time =  system(cmd, intern=TRUE) %>%
+    tail(1) %>%
     str_squish %>%
     strsplit(., " ") %>%
     sapply(., `[[`, 4) %>%
@@ -200,6 +204,7 @@ df_logs = lapply(files, function(file){
 
   cmd = paste("grep \"Max Memory :\"", file)
   a$Mem.Mb = system(cmd, intern=TRUE) %>%
+    tail(1) %>%
     str_squish %>%
     strsplit(., " ") %>%
     sapply(., `[[`, 4) %>%
@@ -207,6 +212,7 @@ df_logs = lapply(files, function(file){
 
   cmd = paste("grep \"Run time :\"", file)
   a$Wall.time =  system(cmd, intern=TRUE) %>%
+    tail(1) %>%
     str_squish %>%
     strsplit(., " ") %>%
     sapply(., `[[`, 4) %>%
