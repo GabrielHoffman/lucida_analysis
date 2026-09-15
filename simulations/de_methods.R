@@ -9,12 +9,17 @@ library(reformulas)
 library(muscat)
 library(glmGamPoi)
 library(MAST)
+library(RhpcBLASctl)
 })
 
 
 run_MAST = function(sce, formula, cluster_id, nthreads = 1){
 
   options(mc.cores = nthreads) 
+
+  old_threads <- omp_get_max_threads()
+  on.exit(omp_set_num_threads(old_threads), add = TRUE)
+  omp_set_num_threads(1)
 
   lapply( unique(sce[[cluster_id]]), function(CT){
     message(CT)
@@ -65,6 +70,10 @@ run_MAST = function(sce, formula, cluster_id, nthreads = 1){
 
 
 run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
+  
+  old_threads <- omp_get_max_threads()
+  on.exit(omp_set_num_threads(old_threads), add = TRUE)
+  omp_set_num_threads(1)
 
   lapply( unique(sce[[cluster_id]]), function(CT){
     message(CT)
@@ -255,6 +264,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
   # MAST
  if( "MAST" %in% methods ){
+    message("MAST")
 
     df.time[["MAST"]] <- system.time({
       res.mast <- run_MAST(sce.sim, formula, cluster_id, nthreads = nthreads)

@@ -14,6 +14,10 @@ library(parallel)
 file = "/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/MSSM_2024-02-01_16_17_sort_CSC_lzf.h5ad"
 sce = readH5AD(file)
 
+# keep autosomal genes
+keep = rowData(sce)$gene_chrom %in% 1:22
+sce = sce[keep,]
+
 # filter to include only cell types with 1k observations
 tab = table(sce$subclass)
 sce = sce[,sce$subclass %in% names(tab[tab>1000])]
@@ -22,11 +26,7 @@ sce$subclass = droplevels(sce$subclass)
 
 CTs = c("EN_L6_CT", "IN_SST", "Astro", "Oligo")
 
-# large sample size
-n_donors_array = c(10, 25, 50, 100, 250, 400, 500, 700, 1000)
-
-# small sample size
-# n_donors_array = c(4, 6, 8, 10, 12, 16, 20)
+n_donors_array = c(4, 6, 8, 10, 12, 16, 20, 25, 50, 100, 250, 400, 500, 700, 1000)
 
 res = mclapply(n_donors_array, function(n_donors){
 
@@ -54,11 +54,13 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations/
 
 # testing
 NREPS=10
-NSAMPLES="20 50 100 250 400 500"  
+# NSAMPLES="25 50 100 250 400 500"  
 # NSAMPLES="4 6 8 10 12 16 20" 
+NSAMPLES="12 16 20 25 50" 
 LSF="1" # libScaleFactors
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/
-LOGFC=0.07
+# LOGFC=0.07 # large N
+LOGFC=.3 # small N
 COVARIATES="'Age + Sex + PMI'"
 
 # rm -f $OUTFOLDER/* $OUTFOLDER/logs/*
@@ -173,7 +175,7 @@ do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
   OUT=$OUTFOLDER/res_sim_${ID}.parquet
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID) + Age + Sex + PMI\" --coefTest DxDisease --cluster_id subclass --methods $METHODS --output $OUT 2>&1 > $LOG/${ID}.log " >> $OUTFOLDER/script_de.sh
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --methods $METHODS --output $OUT 2>&1 > $LOG/${ID}.log " >> $OUTFOLDER/script_de.sh
 done
 done
 done
