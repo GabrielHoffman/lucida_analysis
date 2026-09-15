@@ -189,29 +189,46 @@ cat err.log | tr "'" " " | awk '{print $4}' | parallel basename {} .parquet > jo
 
 grep -f jobs.prefix $OUTFOLDER/script_de.sh | parallel -P 60
 
-# Distributed DE
-################
+# Run Distributed DE
+####################
 
 METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.in
 LOG=$OUTFOLDER/logs
-mkdir -p $LOG
+mkdir -p $LOG 
+mkdir -p $OUTFOLDER/jobs/ 
+NTHREADS=36
 
-echo "" > $OUTFOLDER/script_de.sh
 for N in $(echo $NSAMPLES)
 do
 for libScaleFactor in $(echo $LSF)
 do
 for i in $(seq 1 1 $NREPS)
 do
-for METHOD in $(grep -v "#" $METHODS)
+for METHOD in $(grep -v "#" $METHODS | sed 's/"//g')
 do
   ID=${N}_${libScaleFactor}_${i}
   FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
   OUT=$OUTFOLDER/res_sim_${ID}_${METHOD}.parquet
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --methods <(echo $METHOD) --output $OUT 2>&1 > $LOG/${ID}.log " >> $OUTFOLDER/script_de.sh
+  JOB=$OUTFOLDER/jobs/script_${ID}_${METHOD}.sh
+
+  echo '#!/bin/bash' > $JOB
+  echo "#BSUB -P acc_CommonMind
+#BSUB -q premium
+#BSUB -n $NTHREADS
+#BSUB -R span[hosts=1] 
+#BSUB -R rusage[mem=8000]
+#BSUB -W 00:10
+#BSUB -e $LOG/${ID}_${METHOD}.err
+#BSUB -o $LOG/${ID}_${METHOD}.out" >> $JOB
+  echo -e "" >> $JOB
+
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --nthreads $NTHREADS --methods <(echo $METHOD) --output $OUT" >> $JOB
 done
 done
 done
+done
+
+
 
 # Performance plots
 ###################

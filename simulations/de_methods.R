@@ -143,7 +143,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     "lucida [Bayesian]",
     "lucida [pb]",
     "nebula",
-    "nebula (HL)",
+    "nebula_HL",
     "dreamlet",
     "DESeq2",
     "edgeR",
@@ -246,7 +246,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
   }
 
 
-  if( "nebula (HL)" %in% methods ){
+  if( "nebula_HL" %in% methods ){
     df.time[["nebula (HL)"]] <- system.time({
     res.neb.HL <- run_nebula(sce.sim, formula, cluster_id, method="HL", nthreads = nthreads)
     })
