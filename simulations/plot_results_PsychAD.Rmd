@@ -100,11 +100,9 @@ df = mclapply(files, function(file){
   bind_rows %>%
   mutate(libScaleFactor = factor(as.numeric(libScaleFactor))) %>%
   mutate(N = factor(as.numeric(N))) %>%
-  mutate(cluster_id = factor(cluster_id, CTs))%>%
+  mutate(cluster_id = factor(cluster_id, CTs)) %>%
+  mutate(Method = gsub("nebula_HL", "nebula (HL)", Method)) %>%
   mutate(Method = factor(Method, names(colorMethods)))
-
-table(df$libScaleFactor)
-
 
 # keep only genes included in each result,
 # for each sample size
