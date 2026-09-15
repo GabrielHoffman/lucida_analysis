@@ -189,13 +189,29 @@ cat err.log | tr "'" " " | awk '{print $4}' | parallel basename {} .parquet > jo
 
 grep -f jobs.prefix $OUTFOLDER/script_de.sh | parallel -P 60
 
+# Distributed DE
+################
 
-# cat script_de.sh | grep -v "sim_25_\|sim_50_\|sim_100_\|sim_250_" | parallel -P60
+METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.in
+LOG=$OUTFOLDER/logs
+mkdir -p $LOG
 
-
-cat $OUTFOLDER/script_de.sh | sed 's/res_sim_/test2\/res_sim_/g' | parallel
-
-
+echo "" > $OUTFOLDER/script_de.sh
+for N in $(echo $NSAMPLES)
+do
+for libScaleFactor in $(echo $LSF)
+do
+for i in $(seq 1 1 $NREPS)
+do
+for METHOD in $(grep -v "#" $METHODS)
+do
+  ID=${N}_${libScaleFactor}_${i}
+  FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
+  OUT=$OUTFOLDER/res_sim_${ID}_${METHOD}.parquet
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --methods <(echo $METHOD) --output $OUT 2>&1 > $LOG/${ID}.log " >> $OUTFOLDER/script_de.sh
+done
+done
+done
 
 # Performance plots
 ###################

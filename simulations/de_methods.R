@@ -411,7 +411,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     df <- bind_rows(df, res.gp)
   }
 
-  if( include_metadata && length(metadata(sce)) != 0){
+  if( include_metadata && length(metadata(sce.sim)) != 0){
 
     df <- df %>% 
       inner_join(metadata(sce.sim) %>%
