@@ -106,6 +106,7 @@ df = mclapply(files, function(file){
 
 # keep only genes included in each result,
 # for each sample size
+#--------------------
 df.tg = df %>%
   group_by(N) %>%
   summarize(target = length(unique(Method))) %>%
@@ -123,6 +124,20 @@ keep = df %>%
 df <- df %>%
       filter(paste(cluster_id, ID, simID, libScaleFactor, N) %in% keep) %>% 
       mutate(cluster_id = factor(cluster_id, CTs))
+
+# Assign for each row
+#####################
+
+if( sum(df$Method == "lucida") > 0 ){
+
+  df_mu = df %>%
+    filter(Method == "lucida") %>%
+    select(ID, cluster_id, simID, mu)
+
+  df = df %>%
+        select(-mu) %>%
+        inner_join( df_mu, by = c("ID", "cluster_id", "simID"))
+}
 ```
 
 
@@ -321,30 +336,26 @@ fig.logFC.rMSE
 
 ```{r coef3, fig.height=12, fig.width=12}
 df %>% 
+  filter(Method != "MAST") %>%
+  # filter(Method == "lucida") %>%
   filter(libScaleFactor == "1") %>%
-  # filter(N == "100") %>%
+  # filter(cluster_id == "Astro") %>%
   mutate(Method = factor(Method, rev(levels(Method)))) %>%
-  ggplot(aes(mu, (b.true - logFC)^2, color=Method)) +
-    geom_smooth(se=FALSE, alpha = .1) +
+  ggplot(aes(mu, (b.true - logFC)^2, color=Method, fill=Method)) +
+    geom_smooth(se=TRUE, alpha = .1) +
     thm +  
     scale_color_manual(values = colorMethods) +
-    ggtitle("Squared deviation of estimate logFC vs expression magnitude") +
+    scale_fill_manual(values = colorMethods) +
     scale_x_log10() +
+    scale_y_log10() +
     xlab("Mean normalized counts") +
     ylab("Squared deviation of estimated logFC (log10 scale)") +
-    facet_grid(N ~ cluster_id, scales="free_y") + 
-    scale_y_log10() 
+    facet_grid(N ~ cluster_id, scales="free_y")
 ```
 
 
-
-
-
-
-
-
 ## Theta
-```{r theta, eval=TRUE}
+```{r theta}
 df %>%
   filter(!is.na(theta.x)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
@@ -361,22 +372,29 @@ df %>%
     scale_y_log10() +
     geom_abline( slope=1, color="black") +
     scale_color_manual(values = colorMethods) 
+```
 
-# df %>%
-#   filter(libScaleFactor == "1") %>%
-#   # filter(N == "50") %>%
-#   filter(!is.na(theta.x)) %>%
-#   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
-#   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method)) +
-#     geom_smooth(se=TRUE, method = "loess", alpha =.1) +
-#     thm +    
-#     scale_color_manual(values = colorMethods) +
-#     xlab("Mean normalized counts") +
-#     ylab("Squared deviation of log theta") +
-#     scale_x_log10() +
-#     facet_grid( N ~ cluster_id) +
-#     scale_y_continuous()
+```{r theta.trend, fig.height=12, fig.width=12}
+df %>%
+  # filter(libScaleFactor == "1") %>%
+  # filter(Method == "lucida") %>%
+  filter(!is.na(theta.x)) %>%
+  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
+  ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method, fill=Method)) +
+    geom_smooth(se=TRUE, method = "loess", alpha =.1) +
+    thm +    
+    scale_color_manual(values = colorMethods) +
+    scale_fill_manual(values = colorMethods) +
+    xlab("Mean normalized counts") +
+    ylab("Squared deviation of log theta") +
+    scale_x_log10() +
+    facet_grid( N ~ cluster_id, scales="free_y") +
+    scale_y_continuous()+    
+    coord_cartesian(expand=FALSE, ylim=c(0, NA))
+```
 
+
+```{r fig.theta.rMSE}
 fig.theta.rMSE = df %>% 
   group_by(N, Method, cluster_id, libScaleFactor) %>%
   summarize(rMSE = rMSE( log(pmin(1e4, theta.x)), log( theta.y))) %>%
@@ -391,68 +409,10 @@ fig.theta.rMSE = df %>%
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id, scales="free_y") +
     xlab("Sample size")
-fig.theta.rMSE
-```
-
-<!---
-## Theta (normalized)
-The variance of the negative binomial distribution is $\mu + \mu^2/theta$.  So once $\theta$ reaches a sufficient value, the log-likelihood becomes very flat because for moderately sized $\mu$, $\mu + \mu^2/1e4 \approx \mu + \mu^2/1e5$.  Therefore, show the estimate of $\mu^2/theta$ instead.
---->
-
-```{r theta.normalized, fig.width=18, fig.height=12, eval=FALSE, eval=FALSE}
-df %>%
-  filter(libScaleFactor == "1") %>%
-  filter(N == "50") %>%
-  filter(!is.na(theta.x)) %>%
-  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
-  ggplot(aes(mu^2/theta.y, mu^2/theta.x, color=Method)) +
-    geom_abline( slope=1, color="black") +
-    geom_scattermore(pointsize=4) +
-    thm +
-    theme(legend.position="none") +
-    facet_grid(Method ~ cluster_id) +
-    xlab(bquote(Simulated~mu^2/theta)) +
-    ylab(bquote(Estimated~mu^2/theta)) +
-    scale_x_log10() +
-    scale_y_log10() +
-    scale_color_manual(values = colorMethods) 
-```
-
-```{r theta.normalized2, fig.width=13, fig.height=12, eval=FALSE}
-df %>%
-  filter(libScaleFactor == "1") %>%
-  # filter(N == "100") %>%
-  filter(!is.na(theta.x)) %>%
-  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
-  mutate(dev = (log(mu^2/theta.y) - log(mu^2/theta.x))^2) %>%
-  mutate(Method = factor(Method, rev(levels(Method)))) %>%
-  ggplot(aes(mu, dev, color=Method)) +
-    geom_smooth(se=FALSE, alpha = .15, aes(fill=Method)) +
-    thm +    
-    scale_color_manual(values = colorMethods) +
-    scale_fill_manual(values = colorMethods) +
-    xlab("Mean normalized counts") +
-    ylab("Squared deviation of log(mu^2/theta)") +
-    scale_x_log10() +
-    facet_grid(N ~ cluster_id, scales="free_y")  
-
-df %>% 
-  group_by(Method, cluster_id, libScaleFactor, N) %>%
-  summarize(rMSE = rMSE( log(mu^2/theta.x), log(mu^2/theta.y))) %>%
-  filter(!is.na(rMSE)) %>%
-  filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
-  ggplot(aes(N, rMSE, fill=Method)) +
-    geom_bar(stat="identity", position="dodge") +
-    thm +
-    coord_cartesian(expand=FALSE, ylim=c(0, NA)) +
-    ylab(bquote(rMSE~log(mu^2/theta))) +
-    ggtitle(bquote(Estimating~overdispersion~component~mu^2/theta)) +
-    scale_fill_manual(values = colorMethods) +
-    facet_grid( libScaleFactor ~ cluster_id)
 ```
 
 # sigSq_g
-```{r other.plots, eval=TRUE}
+```{r other.plots}
 df %>%
   filter(libScaleFactor == "1") %>%
   filter(N == "12") %>%
@@ -486,24 +446,24 @@ fig.sigSqg.rMSE = df %>%
     scale_fill_manual(values = colorMethods) +
     facet_grid( libScaleFactor ~ cluster_id) +
     xlab("Sample size")
-fig.sigSqg.rMSE
+```
 
+```{r sigSqg.trend, fig.height=12, fig.width=12}
 df %>%
   filter(libScaleFactor == "1") %>%
-  # filter(N == "100") %>%
-  # filter(!is.na(sigSq_g.x)) %>%
+  filter(!is.na(sigSq_g.x)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
-  ggplot(aes(mu, abs((sigSq_g.x) - (sigSq_g.y)), color=Method)) +
-    # geom_point() +
+  ggplot(aes(mu, abs((sigSq_g.x) - (sigSq_g.y)), color=Method, fill=Method)) +
     geom_smooth(se=TRUE, alpha = .1) +
     thm +    
     scale_color_manual(values = colorMethods) +
+    scale_fill_manual(values = colorMethods) +
     facet_wrap(~cluster_id) +
     xlab("Mean normalized counts") +    
     ylab("Squared deviation of sigSq_g") +
     scale_x_log10() +
-    facet_grid(N ~ cluster_id) +    
-    coord_cartesian(expand=FALSE, ylim=c(0, .05))
+    facet_grid(N ~ cluster_id, scales="free_y") +    
+    coord_cartesian(expand=FALSE, ylim=c(0, NA))
 ```
 
 ## AUPR
@@ -552,7 +512,6 @@ fig.AUPR = df_perf %>%
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id) +
     xlab("Sample size")
-fig.AUPR
 
 # df_perf %>%
 #   ggplot(aes(libScaleFactor, F1.max, fill=Method)) +
