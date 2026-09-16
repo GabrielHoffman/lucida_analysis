@@ -216,6 +216,8 @@ files = list.files("logs/", "*out", full.names=TRUE)
 
 df_logs = mclapply(files, function(file){
 
+  message(file)
+  
   tmp = basename(file) %>%
     gsub(".out", "", .) %>%
     gsub("nebula_HL", "nebulaHL", .) %>%
