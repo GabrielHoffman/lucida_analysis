@@ -375,8 +375,7 @@ df %>%
 
 ```{r theta.trend, fig.height=12, fig.width=12}
 df %>%
-  # filter(Method == "lucida") %>%
-  filter(!is.na(theta.x)) %>%
+  filter(!is.na(theta.x), is.finite(theta.x)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method, fill=Method)) +
     geom_smooth(se=TRUE, alpha =.1) +
@@ -386,9 +385,8 @@ df %>%
     xlab("Mean normalized counts") +
     ylab("Squared deviation of log theta") +
     scale_x_log10() +
-    facet_grid( N ~ cluster_id, scales="free_y") +
-    scale_y_log10()+    
-    coord_cartesian(expand=FALSE, ylim=c(0, NA))
+    scale_y_log10() +    
+    facet_grid( N ~ cluster_id, scales="free_y") 
 ```
 
 
