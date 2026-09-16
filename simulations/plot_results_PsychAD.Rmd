@@ -375,7 +375,7 @@ df %>%
 
 ```{r theta.trend, fig.height=12, fig.width=12}
 df %>%
-  filter(Method == "lucida") %>%
+  # filter(Method == "lucida") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method, fill=Method)) +
