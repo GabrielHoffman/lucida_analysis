@@ -5,7 +5,7 @@ author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
 date: "Run on `r format(Sys.time())`"
 documentclass: article
 params: 
-  data: "none"
+  path: "none"
 output:
   BiocStyle::html_document:
     toc: false
@@ -23,9 +23,14 @@ ml pandoc imagemagick
 
 system("git pull")
 
-rmarkdown::render("plot_results_PsychAD.Rmd", params = list(paths = "/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/8_12_16_20_25_50_0/")
+pth = "/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/8_12_16_20_25_50_0/"
 
-  
+out_dir = paste0(path, "plot_results_PsychAD/")
+
+rmarkdown::render("plot_results_PsychAD.Rmd", 
+  params = list(path = pth, output_dir = out_dir))
+
+
 
 system("cp -f plot_results_PsychAD.html ~/www/")
 
