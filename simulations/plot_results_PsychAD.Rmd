@@ -177,7 +177,7 @@ df_time %>%
 
 
 # Resource usage
-```{r mem.usage, fig.height=3.5, fig.width=8}
+```{r mem.usage, fig.height=3, fig.width=8}
 library(stringr)
 files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/logs/", "*out", full.names=TRUE)
 
