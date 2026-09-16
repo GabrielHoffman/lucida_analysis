@@ -29,13 +29,13 @@ setwd(path)
 out_dir = paste0(path, "plot_results_PsychAD/")
 int_dir = paste0(path, "plot_results_PsychAD_inter/")
 
-unlink(out_dir, recursive = TRUE)
-unlink(int_dir, recursive = TRUE)
+# unlink(out_dir, recursive = TRUE)
+# unlink(int_dir, recursive = TRUE)
 
 Rmd = "/sc/arion/work/hoffmg01/lucida_analysis/simulations/plot_results_PsychAD.Rmd"
 rmarkdown::render(Rmd, 
   output_dir = out_dir,
-  intermediates_dir = int_dir,
+  # intermediates_dir = int_dir,
   params = list(path = path))
 
 
@@ -212,7 +212,7 @@ df_time %>%
 # Resource usage
 ```{r mem.usage, fig.height=3, fig.width=8}
 library(stringr)
-files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/logs/", "*out", full.names=TRUE)
+files = list.files("logs/", "*out", full.names=TRUE)
 
 df_logs = mclapply(files, function(file){
 
