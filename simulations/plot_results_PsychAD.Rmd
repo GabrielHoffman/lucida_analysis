@@ -4,6 +4,8 @@ subtitle: 'PsychAD'
 author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
 date: "Run on `r format(Sys.time())`"
 documentclass: article
+params: 
+  data: "none"
 output:
   BiocStyle::html_document:
     toc: false
@@ -21,7 +23,9 @@ ml pandoc imagemagick
 
 system("git pull")
 
-rmarkdown::render("plot_results_PsychAD.Rmd")
+rmarkdown::render("plot_results_PsychAD.Rmd", params = list(paths = "/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/8_12_16_20_25_50_0/")
+
+  
 
 system("cp -f plot_results_PsychAD.html ~/www/")
 
@@ -88,7 +92,7 @@ get_idx = Vectorize(function(x, i){
 
 CTs = c('EN_L6_CT', 'IN_SST', 'Astro', 'Oligo')
 
-files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/8_12_16_20_25_50_0/", "res_sim_.*.parquet", full.names=TRUE)
+files = list.files(params$path, "res_sim_.*.parquet", full.names=TRUE)
 files = grep("_time", files, invert=TRUE, value = TRUE)
 
 df = mclapply(files, function(file){
