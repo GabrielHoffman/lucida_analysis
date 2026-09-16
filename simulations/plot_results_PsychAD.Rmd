@@ -70,14 +70,14 @@ colorMethods = c(
   "glmGamPoi"  = "#FF69B4",
   "nebula" = "#FF7F0EFF",
   "nebula (HL)" = "#c15a00",
-  "MAST" = "#eaff00",
+  "MAST" = "gold",
   "lucida" = "#1F77B4FF",
   "lucida [1 step]" = "#BECFE6FF",
   "lucida [Bayesian]" = "#204e74",
   "lucida [pb]"       = "navy"
   )
 
-# pie(rep(1, length(colorMethods)), col=colorMethods)
+pie(rep(1, length(colorMethods)), col=colorMethods)
 ```
 
 
@@ -333,7 +333,6 @@ df %>%
     ylab("Squared deviation of estimated logFC (log10 scale)") +
     facet_grid(N ~ cluster_id, scales="free_y") + 
     scale_y_log10() 
-
 ```
 
 
