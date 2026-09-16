@@ -23,12 +23,20 @@ ml pandoc imagemagick
 
 system("git pull")
 
-pth = "/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/8_12_16_20_25_50_0/"
+path = "/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/8_12_16_20_25_50_0/"
+setwd(path)
 
 out_dir = paste0(path, "plot_results_PsychAD/")
+int_dir = paste0(path, "plot_results_PsychAD_inter/")
 
-rmarkdown::render("plot_results_PsychAD.Rmd", 
-  params = list(path = pth, output_dir = out_dir))
+unlink(out_dir, recursive = TRUE)
+unlink(int_dir, recursive = TRUE)
+
+Rmd = "/sc/arion/work/hoffmg01/lucida_analysis/simulations/plot_results_PsychAD.Rmd"
+rmarkdown::render(Rmd, 
+  output_dir = out_dir,
+  intermediates_dir = int_dir,
+  params = list(path = path))
 
 
 
@@ -302,24 +310,26 @@ target = df %>%
         pull(b.true) %>%
         head(1)
 
-ylim = 2*target
-df %>%
-  filter(libScaleFactor == "1") %>%
-  droplevels %>%
-  mutate(x = c("Zero", target)[(b.true!=0)+1]) %>%
-  mutate(x = factor(x, c("Zero", target))) %>%
-  ggplot(aes(x, logFC, fill=Method)) +
-    geom_boxplot(outlier.shape = NA) +
-    thm +
-    theme(legend.position = "none") +
-    facet_wrap(~cluster_id) +
-    scale_fill_manual(values = colorMethods) + 
-    xlab("True beta value") +
-    ylab("Estimated logFC") +
-    geom_segment(aes(x = .7, y = 0, xend = 1.5, yend = 0), color = "grey60", linewidth = 1, linetype="dashed") +
-    geom_segment(aes(x = 1.6, y = target, xend = 2.3, yend = target), color = "grey60", linewidth = 1, linetype="dashed") +
-    coord_cartesian(ylim=c(-ylim, ylim)) +
-    facet_grid(N ~ cluster_id) 
+if( length(target) > 0){
+  ylim = 2*target
+  df %>%
+    filter(libScaleFactor == "1") %>%
+    droplevels %>%
+    mutate(x = c("Zero", target)[(b.true!=0)+1]) %>%
+    mutate(x = factor(x, c("Zero", target))) %>%
+    ggplot(aes(x, logFC, fill=Method)) +
+      geom_boxplot(outlier.shape = NA) +
+      thm +
+      theme(legend.position = "none") +
+      facet_wrap(~cluster_id) +
+      scale_fill_manual(values = colorMethods) + 
+      xlab("True beta value") +
+      ylab("Estimated logFC") +
+      geom_segment(aes(x = .7, y = 0, xend = 1.5, yend = 0), color = "grey60", linewidth = 1, linetype="dashed") +
+      geom_segment(aes(x = 1.6, y = target, xend = 2.3, yend = target), color = "grey60", linewidth = 1, linetype="dashed") +
+      coord_cartesian(ylim=c(-ylim, ylim)) +
+      facet_grid(N ~ cluster_id) 
+}
 ```
 
 ```{r coef2}

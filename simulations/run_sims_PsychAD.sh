@@ -191,7 +191,7 @@ rm -f file*.txt
 # Run Distributed DE
 ####################
 
-source ~/.bash_profile
+# source ~/.bash_profile
 
 METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.in
 LOG=$OUTFOLDER/logs
@@ -225,7 +225,7 @@ do
 #BSUB -n $NTHREADS
 #BSUB -R span[hosts=1] 
 #BSUB -R rusage[mem=$MEM]
-#BSUB -W 96:00
+#BSUB -W 6:00
 #BSUB -e $LOG/${ID}_${METHOD}.err
 #BSUB -o $LOG/${ID}_${METHOD}.out" >> $JOB
   echo -e "\\nsource ~/.bash_profile\\n" >> $JOB
@@ -240,15 +240,11 @@ done
 # rm -f res_sim_*
 
 
-
 # submit jobs
 ls $OUTFOLDER/jobs/* | grep dreamlet | parallel -P1 "bsub < {}"
 ls $OUTFOLDER/jobs/* | grep DESeq2 | parallel -P1 "bsub < {}"
 ls $OUTFOLDER/jobs/* | grep edgeR | parallel -P1 "bsub < {}"
 ls $OUTFOLDER/jobs/* | grep glmGamPoi | parallel -P1 "bsub < {}"
-
-
-
 
 ls $OUTFOLDER/jobs/* | grep lucida | parallel -P1 "bsub < {}"
 ls $OUTFOLDER/jobs/* | grep nebula | parallel -P1 "bsub < {}"
@@ -257,8 +253,22 @@ ls $OUTFOLDER/jobs/* | grep MAST | parallel -P1 "bsub < {}"
 # resub
 grep -r AVX512_FP16 logs/*.err | cut -f1 -d':' | cut -f1 -d'.' | xargs -n 1 basename | parallel -P1 echo "jobs/script_{}.sh" | parallel -P1 "bsub < {}"
 
+
+# ls $OUTFOLDER/jobs/* | grep "dreamlet\|DESeq2\|lucida" | parallel -P1 cat | grep 'analysis' | parallel -P62
+
+
+
+
 # remove logs
 # grep -r AVX512_FP16 logs/*.err | cut -f1 -d':' | cut -f1 -d'.' | xargs -n 1 basename | parallel -P1 echo "logs/{}.err" 
+
+ml R/4.6.1
+
+
+library(Rfast)
+X = matrnorm(2000, 10000)
+system.time(dcmp <- svd(X))
+
 
 
 
