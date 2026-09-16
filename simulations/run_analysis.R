@@ -56,7 +56,6 @@ if( file.exists(opt$methods) ){
 
 formula <- as.formula(opt$formula)
 
-# if sample size < 10, drop nebula
 ran_var <- all.vars(findbars(formula)[[1]])
 n_samples <- nlevels(colData(sce.sim)[,ran_var])
 

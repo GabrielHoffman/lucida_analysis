@@ -2,8 +2,6 @@
 # Lucida fit
 #-----------
 
-# using roussp01-7
-
 cd /hpc/users/hoffmg01/work/lucida_analysis/simulations
 
 library(lucida)
@@ -56,12 +54,12 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations/
 NREPS=10
 # NSAMPLES="25 50 100 250 400 500"  
 # NSAMPLES="4 6 8 10 12 16 20" 
-NSAMPLES="12 16 20 25 50" 
+NSAMPLES="8 12 16 20 25 50" 
 LSF="1" # libScaleFactors
-OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/
 # LOGFC=0.07 # large N
 LOGFC=.3 # small N
 COVARIATES="'Age + Sex + PMI'"
+OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/$(echo $NSAMPLES | tr ' ' '_')_${LOGFC}
 
 # rm -f $OUTFOLDER/* $OUTFOLDER/logs/*
 mkdir -p $OUTFOLDER
@@ -253,6 +251,11 @@ ls $OUTFOLDER/jobs/* | grep lucida | parallel -P1 "bsub < {}"
 ls $OUTFOLDER/jobs/* | grep nebula | parallel -P1 "bsub < {}"
 ls $OUTFOLDER/jobs/* | grep MAST | parallel -P1 "bsub < {}"
 
+# resub
+grep -r AVX512_FP16 logs/*.err | cut -f1 -d':' | cut -f1 -d'.' | xargs -n 1 basename | parallel -P1 echo "jobs/script_{}.sh" | parallel -P1 "bsub < {}"
+
+# remove logs
+# grep -r AVX512_FP16 logs/*.err | cut -f1 -d':' | cut -f1 -d'.' | xargs -n 1 basename | parallel -P1 echo "logs/{}.err" 
 
 
 
