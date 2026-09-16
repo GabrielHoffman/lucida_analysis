@@ -58,11 +58,12 @@ NSAMPLES="8 12 16 20 25 50"
 LSF="1" # libScaleFactors
 # LOGFC=0.07 # large N
 LOGFC=.3 # small N
+LOGFC=0
 COVARIATES="'Age + Sex + PMI'"
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/$(echo $NSAMPLES | tr ' ' '_')_${LOGFC}
 
 # rm -f $OUTFOLDER/* $OUTFOLDER/logs/*
-mkdir -p $OUTFOLDER
+mkdir -p $OUTFOLDER $OUTFOLDER/logs
 cd $OUTFOLDER
 
 echo "" > $OUTFOLDER/script_sim.sh
@@ -190,6 +191,8 @@ rm -f file*.txt
 # Run Distributed DE
 ####################
 
+source ~/.bash_profile
+
 METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.in
 LOG=$OUTFOLDER/logs
 mkdir -p $LOG 
@@ -225,7 +228,7 @@ do
 #BSUB -W 96:00
 #BSUB -e $LOG/${ID}_${METHOD}.err
 #BSUB -o $LOG/${ID}_${METHOD}.out" >> $JOB
-  echo -e "" >> $JOB
+  echo -e "\\nsource ~/.bash_profile\\n" >> $JOB
 
   echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --nthreads $NTHREADS --methods $METHOD --output $OUT" >> $JOB
 done
