@@ -77,7 +77,7 @@ colorMethods = c(
   "lucida [pb]"       = "navy"
   )
 
-pie(rep(1, length(colorMethods)), col=colorMethods)
+# pie(rep(1, length(colorMethods)), col=colorMethods)
 ```
 
 
@@ -126,9 +126,10 @@ df <- df %>%
 ```
 
 
-
+<!---
 # Time
-```{r time, fig.height=5, fig.width=12, eval=FALSE}
+--->
+```{r time, fig.height=5, fig.width=12, eval=FALSE, echo=FALSE}
 files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant", "res_sim_.*.parquet", full.names=TRUE)
 files = grep("_time", files, value = TRUE)
 
@@ -725,10 +726,11 @@ plot_grid(
 
 
 
-
+<!---
 ## Subset
+--->
 
-```{r panel1, fig.height=4}
+```{r panel1, fig.height=4, eval=FALSE, echo=FALSE}
 library(aplot)
 
 df_sub = df %>% 
