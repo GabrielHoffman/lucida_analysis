@@ -387,7 +387,7 @@ df %>%
     ylab("Squared deviation of log theta") +
     scale_x_log10() +
     facet_grid( N ~ cluster_id, scales="free_y") +
-    scale_y_log()+    
+    scale_y_log10()+    
     coord_cartesian(expand=FALSE, ylim=c(0, NA))
 ```
 
