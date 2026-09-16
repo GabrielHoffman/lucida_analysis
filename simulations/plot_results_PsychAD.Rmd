@@ -331,7 +331,6 @@ fig.logFC.rMSE = df %>%
     facet_grid(libScaleFactor ~ cluster_id, scale="free_y") +
     coord_cartesian(ylim=c(0, .25), expand=FALSE) +
     xlab("Sample size")
-fig.logFC.rMSE
 ```
 
 ```{r coef3, fig.height=12, fig.width=12}
@@ -376,12 +375,11 @@ df %>%
 
 ```{r theta.trend, fig.height=12, fig.width=12}
 df %>%
-  # filter(libScaleFactor == "1") %>%
-  # filter(Method == "lucida") %>%
+  filter(Method == "lucida") %>%
   filter(!is.na(theta.x)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(mu, (log(theta.x) - log(theta.y))^2, color=Method, fill=Method)) +
-    geom_smooth(se=TRUE, method = "loess", alpha =.1) +
+    geom_smooth(se=TRUE, alpha =.1) +
     thm +    
     scale_color_manual(values = colorMethods) +
     scale_fill_manual(values = colorMethods) +
