@@ -159,65 +159,13 @@ if( sum(df$Method == "lucida") > 0 ){
 ```
 
 
-<!---
-# Time
---->
-```{r time, fig.height=5, fig.width=12, eval=FALSE, echo=FALSE}
-files = list.files("/sc/arion/scratch/hoffmg01/sims/PsychAD/constant", "res_sim_.*.parquet", full.names=TRUE)
-files = grep("_time", files, value = TRUE)
-
-pb.methods = c("lucida [pb]", "dreamlet", "DESeq2", "edgeR")
-
-df_time = mclapply(files, function(file){
-  a = read_parquet(file) 
-
-  pb = a %>%
-    filter(Method == "pseudobulk")
-
-  for(mth in pb.methods){
-    i = which(a$Method == mth)
-    a$user.self[i] = a$user.self[i] + pb$user.self 
-    a$sys.self[i] = a$sys.self[i] + pb$sys.self 
-    a$elapsed[i] = a$elapsed[i] + pb$elapsed 
-    a$user.child[i] = a$user.child[i] + pb$user.child 
-    a$sys.child[i] = a$sys.child[i] + pb$sys.child 
-  }
-
-  a %>%
-    filter(!Method %in% c("pseudobulk", "pb2"))
-
-}, mc.cores=12) %>%
-  bind_rows %>%
-  mutate(libScaleFactor = get_idx(simID, 3)) %>%
-  mutate(N = get_idx(simID, 6)) %>%
-  mutate(libScaleFactor = factor(as.numeric(libScaleFactor))) %>%
-  mutate(Method = factor(Method, names(colorMethods)))
-
-df_time %>%
-  filter(!is.na(Method)) %>%
-  mutate(N = as.numeric(N)) %>%
-  filter(libScaleFactor == 1) %>%
-  ggplot(aes(N, elapsed, color=Method)) +
-    geom_point() +
-    geom_smooth(method="lm", se=FALSE) +    
-    theme_classic() +
-    theme(aspect.ratio=1) +
-    scale_x_log10() +
-    scale_y_log10() +
-    scale_color_manual(values=colorMethods) +
-    facet_wrap(~libScaleFactor, nrow=1) 
-```
-
-
 # Resource usage
-```{r mem.usage, fig.height=3, fig.width=8}
+```{r resource.usage, fig.height=3, fig.width=8}
 library(stringr)
-files = list.files("logs/", "*out", full.names=TRUE)
+files = list.files(paste0(params$path, "logs/"), "*out", full.names=TRUE)
 
 df_logs = mclapply(files, function(file){
 
-  message(file)
-  
   tmp = basename(file) %>%
     gsub(".out", "", .) %>%
     gsub("nebula_HL", "nebulaHL", .) %>%
