@@ -55,14 +55,15 @@ NREPS=10
 # NSAMPLES="25 50 100 250 400 500"  
 # NSAMPLES="4 6 8 10 12 16 20" 
 NSAMPLES="8 12 16 20 25 50" 
+NMAX=1000
 LSF="1" # libScaleFactors
 # LOGFC=0.07 # large N
 LOGFC=.3 # small N
-LOGFC=0
+# LOGFC=0
 COVARIATES="'Age + Sex + PMI'"
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/$(echo $NSAMPLES | tr ' ' '_')_${LOGFC}
 
-# rm -f $OUTFOLDER/* $OUTFOLDER/logs/*
+# rm -f $OUTFOLDER/* $OUTFOLDER/logs/* $OUTFOLDER/jobs/*
 mkdir -p $OUTFOLDER $OUTFOLDER/logs
 cd $OUTFOLDER
 
@@ -73,7 +74,7 @@ for libScaleFactor in $(echo $LSF)
 do
 for i in $(seq 1 1 $NREPS)
 do
-  FIT=$DIR/fits/PsychAD/test_lucida_fit_${N}.RDS
+  FIT=$DIR/fits/PsychAD/test_lucida_fit_${NMAX}.RDS
   DATA=$DIR/fits//PsychAD/test_lucida_fit_data_${N}.RDS
   ID=${N}_${libScaleFactor}_${i}
   echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject SubID --covariates $COVARIATES --seed $i --logFC $LOGFC --pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> $OUTFOLDER/script_sim.sh
@@ -191,13 +192,15 @@ rm -f file*.txt
 # Run Distributed DE
 ####################
 
-# source ~/.bash_profile
+# conda deactivate; source ~/.bash_profile
 
 METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.in
 LOG=$OUTFOLDER/logs
 mkdir -p $LOG 
 mkdir -p $OUTFOLDER/jobs/ 
 NTHREADS=12
+
+plugin_dir=$(Rscript -e 'cat(rhdf5filters::hdf5_plugin_path())')
 
 for N in $(echo $NSAMPLES)
 do
@@ -215,7 +218,7 @@ do
   if [[ ("$METHOD" == "nebula") || ("$METHOD" == "nebula_HL") ]]; then 
     MEM=16000; 
   else 
-    MEM=8000; 
+    MEM=6000; 
   fi
 
   echo '#!/bin/bash' > $JOB
@@ -229,8 +232,10 @@ do
 #BSUB -e $LOG/${ID}_${METHOD}.err
 #BSUB -o $LOG/${ID}_${METHOD}.out" >> $JOB
   echo -e "\\nsource ~/.bash_profile\\n" >> $JOB
+  
+  echo -e "export HDF5_PLUGIN_PATH=$plugin_dir\\n" >> $JOB
 
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID)\" --coefTest DxDisease --cluster_id subclass --nthreads $NTHREADS --methods $METHOD --output $OUT" >> $JOB
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID) + Age + Sex + PMI\" --coefTest DxDisease --cluster_id subclass --nthreads $NTHREADS --methods $METHOD --output $OUT" >> $JOB
 done
 done
 done
