@@ -330,7 +330,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
           method = method, 
           design = design, 
           coef = which(coefTest == colnames(design)), 
-          min_cells = 2, 
+          min_cells = 1, 
           filter = "none")}, 
           error = function(e) success <<- FALSE)
       })
