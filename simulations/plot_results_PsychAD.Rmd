@@ -277,7 +277,7 @@ if( length(target) > 0){
       ylab("Estimated logFC") +
       geom_segment(aes(x = .7, y = 0, xend = 1.5, yend = 0), color = "grey60", linewidth = 1, linetype="dashed") +
       geom_segment(aes(x = 1.6, y = target, xend = 2.3, yend = target), color = "grey60", linewidth = 1, linetype="dashed") +
-      coord_cartesian(ylim=c(-ylim, ylim)) +
+      # coord_cartesian(ylim=c(-ylim, ylim)) +
       facet_grid(N ~ cluster_id) 
 }
 ```
