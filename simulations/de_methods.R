@@ -281,7 +281,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
     res.proc <- processAssays(pb, nobars(formula), 
       min.cells = 1,
       min.count = 1,
-      min.prop = 0.01
+      min.prop = 0.1
     )
     res.dl <- dreamlet(res.proc, nobars(formula))
     })
