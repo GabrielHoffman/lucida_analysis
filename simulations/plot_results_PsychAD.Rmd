@@ -261,7 +261,7 @@ target = df %>%
         head(1)
 
 if( length(target) > 0){
-  ylim = 2*target
+  ylim = quantile(df$logFC, c(.02, .98))
   df %>%
     filter(libScaleFactor == "1") %>%
     droplevels %>%
@@ -277,7 +277,7 @@ if( length(target) > 0){
       ylab("Estimated logFC") +
       geom_segment(aes(x = .7, y = 0, xend = 1.5, yend = 0), color = "grey60", linewidth = 1, linetype="dashed") +
       geom_segment(aes(x = 1.6, y = target, xend = 2.3, yend = target), color = "grey60", linewidth = 1, linetype="dashed") +
-      # coord_cartesian(ylim=c(-ylim, ylim)) +
+      coord_cartesian(ylim=ylim) +
       facet_grid(N ~ cluster_id) 
 }
 ```
@@ -498,55 +498,57 @@ fig.F1max = df_perf %>%
     scale_fill_manual(values = colorMethods) +
     facet_grid(libScaleFactor ~ cluster_id) +
     xlab("Sample size")
+```
 
 
+```{r AUPR.statified}
 breaks <- df %>%
-          filter(cluster_id == "IN_SST") %>%
-          # filter(libScaleFactor == "5") %>%
           filter(!is.na(mu)) %>%
           pull(mu) %>%
           log10 %>%
           quantile(probs = seq(0, 1, by = 1/6), na.rm = TRUE)
+df %>% 
+  filter(!is.na(mu)) %>%
+  mutate(bin = cut(log10(mu), breaks=breaks)) %>%
+  filter(!is.na(bin)) %>%
+  group_by(N, Method, cluster_id, bin, libScaleFactor) %>%
+  filter(!is.na(FDR)) %>%
+  summarize(aupr(b.true, -log10(FDR)), n = n()) %>%
+  ggplot(aes(bin, AUPR, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+    geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
+    ggtitle("Differential expression performance vs expr magnitude") +
+    scale_fill_manual(values = colorMethods) +
+    facet_grid( N ~ cluster_id )
+```
 
-#  df %>% 
-#   filter(cluster_id == "IN_SST") %>%
-#   filter(libScaleFactor == "5") %>%
-#   filter(N == "100") %>%
-#   filter(!is.na(mu)) %>%
-#   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
-#   filter(!is.na(bin)) %>%
-#   group_by(Method, cluster_id, bin, libScaleFactor) %>%
-#   # filter(!is.na(FDR)) %>%
-#   summarize(aupr(b.true, -log10(FDR)), n = n()) %>%
-#   ggplot(aes(bin, AUPR, fill=Method)) +
-#     geom_bar(stat="identity", position="dodge") +
-#     thm +
-#     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
-#     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
-#     ggtitle("Differential expression performance vs expr magnitude") +
-#     scale_fill_manual(values = colorMethods) +
-#     facet_grid( libScaleFactor ~ cluster_id )
 
-# # ggsave(fig, file="~/www/test.pdf", width=16)
-
-# df %>% 
-#   filter(libScaleFactor == "5") %>%
-#   filter(!is.na(mu)) %>%
-#   mutate(bin = cut(log10(mu), breaks=breaks)) %>%
-#   filter(!is.na(bin)) %>%
-#   group_by(Method, cluster_id, bin, libScaleFactor, N) %>%
-#   filter(!is.na(FDR)) %>%
-#   summarize(aupr(b.true, -log10(FDR)), n = n()) %>%
-#   ggplot(aes(bin, AUPR, fill=Method)) +
-#     geom_bar(stat="identity", position="dodge") +
-#     thm +
-#     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
-#     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
-#     ggtitle("Differential expression performance vs expr magnitude") +
-#     scale_fill_manual(values = colorMethods) +
-#     facet_grid( N ~ cluster_id )
-# ```
-
+```{r FPR.statified}
+breaks <- df %>%
+          filter(!is.na(mu)) %>%
+          pull(mu) %>%
+          log10 %>%
+          quantile(probs = seq(0, 1, by = 1/6), na.rm = TRUE)
+df %>% 
+  filter(!is.na(mu)) %>%
+  mutate(bin = cut(log10(mu), breaks=breaks)) %>%
+  filter(!is.na(bin)) %>%
+  group_by(N, Method, cluster_id, bin, libScaleFactor) %>%
+  filter(!is.na(FDR)) %>%
+  summarize( FPR = sum(P.Value < 0.05) / length(P.Value), 
+              np = length(P.Value),
+              se = sqrt(FPR*(1-FPR)/np)) %>%
+  ggplot(aes(bin, FPR, fill=Method)) +
+    geom_bar(stat="identity", position="dodge") +
+    thm +
+    coord_cartesian(expand=FALSE, ylim=c(0,1)) +
+    geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
+    ggtitle("Differential expression performance vs expr magnitude") +
+    scale_fill_manual(values = colorMethods) +
+    facet_grid( N ~ cluster_id )
+```
 
 
 ## False positive rate

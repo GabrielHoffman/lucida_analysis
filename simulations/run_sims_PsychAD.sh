@@ -218,7 +218,7 @@ do
   if [[ ("$METHOD" == "nebula") || ("$METHOD" == "nebula_HL") ]]; then 
     MEM=16000; 
   else 
-    MEM=4000; 
+    MEM=3000; 
   fi
 
   echo '#!/bin/bash' > $JOB
