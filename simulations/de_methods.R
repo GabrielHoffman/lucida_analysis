@@ -278,7 +278,11 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
   # dreamlet
   if( "dreamlet" %in% methods ){
     df.time[["dreamlet"]] <- system.time({
-    res.proc <- processAssays(pb, nobars(formula))
+    res.proc <- processAssays(pb, nobars(formula), 
+      min.cells = 1,
+      min.count = 1,
+      min.prop = 0.01
+    )
     res.dl <- dreamlet(res.proc, nobars(formula))
     })
 
