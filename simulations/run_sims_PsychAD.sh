@@ -120,7 +120,7 @@ done
 done
 done
 
-cat $OUTFOLDER/script_concat.sh | parallel -P 64
+cat $OUTFOLDER/script_concat.sh | parallel -P 50
 
 # check that files were written
 cat $OUTFOLDER/script_concat.sh | awk '{print $NF}' | xargs ls > /dev/null 2> file.txt
@@ -218,7 +218,7 @@ do
   if [[ ("$METHOD" == "nebula") || ("$METHOD" == "nebula_HL") ]]; then 
     MEM=16000; 
   else 
-    MEM=6000; 
+    MEM=4000; 
   fi
 
   echo '#!/bin/bash' > $JOB
