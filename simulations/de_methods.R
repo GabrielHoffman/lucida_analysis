@@ -277,7 +277,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, sample_id = as
     #   apply(1, function(x) paste(x, collapse="_"))
     # #sce.tmp ,
     pb <- aggregateToPseudoBulk(
-          sce, 
+          sce.sim, 
          cluster_id = cluster_id,
          sample_id = sample_id)   
     })
