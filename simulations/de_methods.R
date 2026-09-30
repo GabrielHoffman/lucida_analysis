@@ -13,6 +13,82 @@ library(RhpcBLASctl)
 })
 
 
+run_edgeR_DESeq2 <- function(pb, formula, coefTest, method, cluster_id, sample_id){
+
+  res.de <- lapply( assayNames(pb), function(CT){
+
+    # colData
+    d1 <- colData(pb) %>%
+            data.frame %>%
+            rownames_to_column("id") %>%
+            as_tibble
+
+    # Aggregated means for each cell type
+    d2 <- metadata(pb)$aggr_means %>%
+            data.frame %>%
+            as_tibble %>%
+            rename("cluster_id" = sym(cluster_id),
+              id = sym(sample_id)) %>%
+            filter(cluster_id == CT)
+
+    # join
+    data <- inner_join(d1, d2, by=c("id"))      
+
+    keep <- which(colSums2(assay(pb, CT)) > 500)
+
+    design <- model.matrix(nobars(formula), data[keep,])
+
+    contrast <- makeContrasts(contrasts=coefTest, levels=design)
+
+    if( method == "edgeR"){
+      res <- muscat:::.edgeR( 
+        x = pb[,keep], 
+        k = CT,
+        design = design,
+        coef = NULL,
+        contrast = contrast,
+        ct = "contrast",
+        cs = coefTest,
+        treat = FALSE
+      )
+    }else if( method == "DESeq2"){
+      res <- muscat:::.DESeq2( 
+        x = pb[,keep], 
+        k = CT,
+        design = design,
+        contrast = contrast,
+        ct = "contrast",
+        cs = coefTest
+      )
+    }
+    
+    res
+  })
+
+  # remove empty clusters
+  rmv <- vapply(res.de, is.null, logical(1))
+  res.de <- res.de[!rmv]
+
+  # return results table
+  tab <- lapply(res.de, function(x) x$table) %>% 
+    bind_rows %>%
+    tibble %>%
+    mutate(
+      Method = method) %>%
+    dplyr::rename(ID = "gene", 
+        P.Value = "p_val")
+
+  if( method == "DESeq2"){
+    tab <- tab %>%
+      dplyr::select(-baseMean, -lfcSE, -stat, -p_adj.loc)
+  }
+  if( method == "edgeR"){
+    tab <- tab %>%
+      dplyr::select(-logCPM, -F, -p_adj.loc)
+  }
+  tab
+}
+
 run_MAST = function(sce, formula, cluster_id, nthreads = 1){
 
   options(mc.cores = nthreads) 
@@ -135,7 +211,7 @@ run_nebula = function(sce, formula, cluster_id, method="LN", nthreads = 1){
 stopifnot(packageVersion("muscat") == "1.25.4")
 
 
-run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthreads = 1, include_metadata = TRUE){
+run_analysis <- function( sce.sim, formula, coefTest, cluster_id, sample_id = as.character(findbars(formula)[[1]])[3], methods, nthreads = 1, include_metadata = TRUE){
 
   validMethods <- c(  
     "lucida",
@@ -154,6 +230,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
   df <- tibble()
   df.time <- list()
+
 
   # lucida 
   if( "lucida" %in% methods ){
@@ -189,20 +266,20 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
 
   if( any(c("dreamlet", "lucida [pb]", "DESeq2", "edgeR") %in% methods) ){
     df.time[["pseudobulk"]] <- system.time({
-    sce.tmp = SingleCellExperiment(list(
-                counts = counts(sce.sim)), 
-                colData = colData(sce.sim))
+    # sce.tmp = SingleCellExperiment(list(
+    #             counts = counts(sce.sim)), 
+    #             colData = colData(sce.sim))
    
-    sce.tmp$id <- lapply(all.vars(formula), function(x){
-      colData(sce.tmp)[,x]
-      }) %>%
-      bind_cols %>%
-      apply(1, function(x) paste(x, collapse="_"))
-
+    # sce.tmp$id <- lapply(all.vars(formula), function(x){
+    #   colData(sce.tmp)[,x]
+    #   }) %>%
+    #   bind_cols %>%
+    #   apply(1, function(x) paste(x, collapse="_"))
+    # #sce.tmp ,
     pb <- aggregateToPseudoBulk(
-          sce.tmp ,
+          sce, 
          cluster_id = cluster_id,
-         sample_id = "id")   
+         sample_id = sample_id)   
     })
   }
 
@@ -297,71 +374,16 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, methods, nthre
   # muscat: edgeR, DESeq2
   if( any(c("edgeR", "DESeq2") %in% methods) ){
 
-    df.time[["pb2"]] <- system.time({   
-    # hypothesis test on _LAST_ fixed effect variable
-    grpVariable = all.vars(nobars(formula))
-    grpVariable = grpVariable[length(grpVariable)]
-
-    sce.tmp2 <- prepSCE(sce.tmp, 
-      kid = cluster_id, 
-      sid = "id",
-      gid = grpVariable)
-
-    pb <- aggregateData(sce.tmp2)
-    })
-
-    pb[[grpVariable]] = pb$group_id
-    pb$group_id = 1
-    pb$group_id[seq(floor(ncol(pb)/2))] = 0
-
-    # make sure numeric variables are numeric
-    for(x in all.vars(nobars(formula))){
-      if( is.numeric(sce.tmp[[x]]) ){
-        pb[[x]] = as.numeric(as.character(pb[[x]]))
-      }
-    }
-
-    design <- model.matrix(nobars(formula), colData(pb))
-
     mth.include = c("edgeR", "DESeq2")[c("edgeR", "DESeq2") %in% methods]
-
-    tab.muscat <- lapply( mth.include, function(method){
+    
+    res <- lapply(mth.include, function(method){
       df.time[[method]] <<- system.time({
-
-        success <- TRUE        
-        tryCatch({
-        res.muscat <- pbDS(pb, 
-          method = method, 
-          design = design, 
-          coef = which(coefTest == colnames(design)), 
-          min_cells = 1, 
-          filter = "none")}, 
-          error = function(e) success <<- FALSE)
-      })
-
-      if( ! success ) return( NULL )
-
-      tab = res.muscat$table[[coefTest]] %>%
-        bind_rows %>%
-        as_tibble %>%
-        mutate(Method = method) %>%
-        dplyr::rename(ID = "gene", 
-          P.Value = "p_val", 
-          FDR = 'p_adj.glb')
-
-      if( method == "DESeq2"){
-        tab = tab %>%
-          dplyr::select(-baseMean, -lfcSE, -stat, -p_adj.loc)
-      }
-      if( method == "edgeR"){
-        tab = tab %>%
-          dplyr::select(-logCPM, -F, -p_adj.loc)
-      }
+       tab <- run_edgeR_DESeq2(pb, formula, coefTest, method, cluster_id, sample_id)})
       tab
-    }) %>%
+      }) %>%
       bind_rows
 
-    df <- bind_rows(df, tab.muscat)
+    df <- bind_rows(df, res)
   }
 
   # glmGamPoi
