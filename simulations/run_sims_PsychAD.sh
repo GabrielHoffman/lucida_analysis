@@ -58,8 +58,8 @@ NSAMPLES="8 12 16 20 25 50"
 NMAX=1000
 LSF="1" # libScaleFactors
 # LOGFC=0.07 # large N
-LOGFC=.3 # small N
-# LOGFC=0
+# LOGFC=.3 # small N
+LOGFC=0
 COVARIATES="'Age + Sex + PMI'"
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/$(echo $NSAMPLES | tr ' ' '_')_${LOGFC}
 
@@ -217,8 +217,9 @@ do
 
   if [[ ("$METHOD" == "nebula") || ("$METHOD" == "nebula_HL") ]]; then 
     MEM=16000; 
+    WALL=96:00
   else 
-    MEM=3000; 
+    WALL=8:00
   fi
 
   echo '#!/bin/bash' > $JOB
@@ -228,7 +229,7 @@ do
 #BSUB -n $NTHREADS
 #BSUB -R span[hosts=1] 
 #BSUB -R rusage[mem=$MEM]
-#BSUB -W 6:00
+#BSUB -W ${WALL}
 #BSUB -e $LOG/${ID}_${METHOD}.err
 #BSUB -o $LOG/${ID}_${METHOD}.out" >> $JOB
   echo -e "\\nsource ~/.bash_profile\\n" >> $JOB
@@ -267,12 +268,11 @@ grep -r AVX512_FP16 logs/*.err | cut -f1 -d':' | cut -f1 -d'.' | xargs -n 1 base
 # remove logs
 # grep -r AVX512_FP16 logs/*.err | cut -f1 -d':' | cut -f1 -d'.' | xargs -n 1 basename | parallel -P1 echo "logs/{}.err" 
 
-ml R/4.6.1
+# ml R/4.6.1
 
-
-library(Rfast)
-X = matrnorm(2000, 10000)
-system.time(dcmp <- svd(X))
+# library(Rfast)
+# X = matrnorm(2000, 10000)
+# system.time(dcmp <- svd(X))
 
 
 
@@ -285,7 +285,8 @@ cd /sc/arion/work/hoffmg01/lucida_analysis/simulations
 
 # rm -rf plot_results_PsychAD_cache/ plot_results_PsychAD_files/
 
-rmarkdown::render("plot_results_PsychAD.Rmd")
+path = "/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/8_12_16_20_25_50_0/"
+rmarkdown::render("plot_results_PsychAD.Rmd", params = list(path = path))
 
 
 system("cp -f plot_results_PsychAD.html ~/www/")

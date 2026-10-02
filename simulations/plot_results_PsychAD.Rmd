@@ -419,7 +419,7 @@ df %>%
   filter(libScaleFactor == "1") %>%
   filter(!is.na(sigSq_g.x)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
-  ggplot(aes(mu, abs((sigSq_g.x) - (sigSq_g.y)), color=Method, fill=Method)) +
+  ggplot(aes(mu, abs(pmax(sigSq_g.x, 1e-4) - (sigSq_g.y)), color=Method, fill=Method)) +
     geom_smooth(se=TRUE, alpha = .1) +
     thm +    
     scale_color_manual(values = colorMethods) +
