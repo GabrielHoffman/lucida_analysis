@@ -231,7 +231,6 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, sample_id = as
   df <- tibble()
   df.time <- list()
 
-
   # lucida 
   if( "lucida" %in% methods ){
     df.time[["lucida"]] <- system.time({
@@ -266,18 +265,11 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, sample_id = as
 
   if( any(c("dreamlet", "lucida [pb]", "DESeq2", "edgeR") %in% methods) ){
     df.time[["pseudobulk"]] <- system.time({
-    # sce.tmp = SingleCellExperiment(list(
-    #             counts = counts(sce.sim)), 
-    #             colData = colData(sce.sim))
-   
-    # sce.tmp$id <- lapply(all.vars(formula), function(x){
-    #   colData(sce.tmp)[,x]
-    #   }) %>%
-    #   bind_cols %>%
-    #   apply(1, function(x) paste(x, collapse="_"))
-    # #sce.tmp ,
+    # set metadata to NULL
+    sce.sim2 = sce.sim
+    metadata(sce.sim2) = list()
     pb <- aggregateToPseudoBulk(
-          sce.sim, 
+          sce.sim2, 
          cluster_id = cluster_id,
          sample_id = sample_id)   
     })
@@ -375,7 +367,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, sample_id = as
   if( any(c("edgeR", "DESeq2") %in% methods) ){
 
     mth.include = c("edgeR", "DESeq2")[c("edgeR", "DESeq2") %in% methods]
-    
+
     res <- lapply(mth.include, function(method){
       df.time[[method]] <<- system.time({
        tab <- run_edgeR_DESeq2(pb, formula, coefTest, method, cluster_id, sample_id)})
