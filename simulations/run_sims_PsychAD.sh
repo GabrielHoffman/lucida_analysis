@@ -52,9 +52,8 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations/
 
 # testing
 NREPS=10
-# NSAMPLES="25 50 100 250 400 500"  
-# NSAMPLES="4 6 8 10 12 16 20" 
-NSAMPLES="8 12 16 20 25 50" 
+# NSAMPLES="25 50 100 250 400 500" 
+NSAMPLES="12 16 20 25 50" 
 NMAX=1000
 LSF="1" # libScaleFactors
 # LOGFC=0.07 # large N

@@ -526,7 +526,7 @@ df %>%
     thm +
     geom_errorbar(aes(ymin = FPR - 1.96*se, 
       ymax = FPR + 1.96*se), width=0, position = position_dodge(width = 0.9)) +
-    geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
+    geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
     scale_fill_manual(values = colorMethods) +
     facet_grid( N ~ cluster_id ) +
     ylab("False Positive rate") +
