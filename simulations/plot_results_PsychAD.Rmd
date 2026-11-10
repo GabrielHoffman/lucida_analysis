@@ -400,7 +400,7 @@ fig.sigSqg.rMSE = df %>%
   # filter(libScaleFactor == "1") %>%
   # filter(N == "100") %>%
   group_by(Method, cluster_id, libScaleFactor, N) %>%
-  summarize(rMSE = rMSE(sigSq_g.y, sigSq_g.x)) %>%
+  summarize(rMSE = rMSE(sigSq_g.y, pmax(1e-4, sigSq_g.x))) %>%
   filter(!is.na(rMSE)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   ggplot(aes(N , rMSE, fill=Method)) +
