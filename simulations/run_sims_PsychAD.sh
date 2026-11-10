@@ -58,11 +58,11 @@ DIR=/hpc/users/hoffmg01/work/lucida_analysis/simulations/
 NREPS=10
 # NSAMPLES="25 50 100 250 400 500" 
 NSAMPLES="12 16 20 25 50" 
-NMAX=1000
+NMAX=400 #1000
 LSF="1" # libScaleFactors
 # LOGFC=0.07 # large N
-# LOGFC=.3 # small N
-LOGFC=0
+LOGFC=.3 # small N
+# LOGFC=0
 COVARIATES="'Age + Sex + PMI'"
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/$(echo $NSAMPLES | tr ' ' '_')_${LOGFC}
 
@@ -195,7 +195,7 @@ rm -f file*.txt
 # Run Distributed DE
 ####################
 
-# conda deactivate; source ~/.bash_profile
+conda deactivate; source ~/.bash_profile
 
 METHODS=/hpc/users/hoffmg01/work/lucida_analysis/simulations/methods.in
 LOG=$OUTFOLDER/logs
@@ -219,7 +219,7 @@ do
   JOB=$OUTFOLDER/jobs/script_${ID}_${METHOD}.sh
 
   if [[ ("$METHOD" == "nebula") || ("$METHOD" == "nebula_HL") || ("$METHOD" == "MAST") ]]; then 
-    MEM=16000; 
+    MEM=30000; 
     WALL=96:00
   else 
     WALL=8:00
@@ -284,11 +284,14 @@ grep -r AVX512_FP16 logs/*.err | cut -f1 -d':' | cut -f1 -d'.' | xargs -n 1 base
 ###################
 
 ml pandoc
-cd /sc/arion/work/hoffmg01/lucida_analysis/simulations
+DIR=/sc/arion/work/hoffmg01/lucida_analysis/simulations
+cd /sc/arion/scratch/hoffmg01/sims/PsychAD/constant/12_16_20_25_50_.3/
+\cp -f $DIR/plot_results_PsychAD.Rmd .
+
 
 # rm -rf plot_results_PsychAD_cache/ plot_results_PsychAD_files/
 
-path = "/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/12_16_20_25_50_0/"
+path = "./"
 rmarkdown::render("plot_results_PsychAD.Rmd", params = list(path = path))
 
 

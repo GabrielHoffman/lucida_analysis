@@ -408,7 +408,6 @@ fig.sigSqg.rMSE = df %>%
     thm +
     coord_cartesian(expand=FALSE)+
     ylab("rMSE of sigSq_g") +
-
     scale_fill_manual(values = colorMethods) +
     facet_grid( libScaleFactor ~ cluster_id) +
     xlab("Sample size")
