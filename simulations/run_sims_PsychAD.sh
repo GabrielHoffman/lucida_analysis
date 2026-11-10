@@ -1,4 +1,8 @@
 
+# H5AD=/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/MSSM_2024-02-01_16_17_sort_CSC_lzf.h5ad
+# OUT=/sc/arion/projects/CommonMind/hoffman/scRNAseq_data/psychAD/MSSM_2024-02-01_16_17_CSC.zarr
+# recode_h5ad --input $H5AD --output $OUT --format CSC
+
 # Lucida fit
 #-----------
 
@@ -26,7 +30,7 @@ CTs = c("EN_L6_CT", "IN_SST", "Astro", "Oligo")
 
 n_donors_array = c(4, 6, 8, 10, 12, 16, 20, 25, 50, 100, 250, 400, 500, 700, 1000)
 
-res = mclapply(n_donors_array, function(n_donors){
+res = lapply(n_donors_array, function(n_donors){
 
   message(n_donors)
   sce2 = sce[,sce$subclass %in% CTs]
@@ -42,7 +46,7 @@ res = mclapply(n_donors_array, function(n_donors){
 
   file = paste0("fits/PsychAD/test_lucida_fit_data_", n_donors, ".RDS")
   saveRDS(colData(sce2), file=file)
-}, mc.cores=12)
+})
 
 
 # Simulate data
@@ -214,7 +218,7 @@ do
   OUT=$OUTFOLDER/res_sim_${ID}_${METHOD}.parquet
   JOB=$OUTFOLDER/jobs/script_${ID}_${METHOD}.sh
 
-  if [[ ("$METHOD" == "nebula") || ("$METHOD" == "nebula_HL") ]]; then 
+  if [[ ("$METHOD" == "nebula") || ("$METHOD" == "nebula_HL") || ("$METHOD" == "MAST") ]]; then 
     MEM=16000; 
     WALL=96:00
   else 
@@ -284,7 +288,7 @@ cd /sc/arion/work/hoffmg01/lucida_analysis/simulations
 
 # rm -rf plot_results_PsychAD_cache/ plot_results_PsychAD_files/
 
-path = "/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/8_12_16_20_25_50_0/"
+path = "/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/12_16_20_25_50_0/"
 rmarkdown::render("plot_results_PsychAD.Rmd", params = list(path = path))
 
 
