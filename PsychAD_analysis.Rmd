@@ -26,7 +26,7 @@ git pull
 rmarkdown::render("PsychAD_analysis.Rmd")
 
 
-system("cp -f PsychAD_analysis.html ~/www/")
+  system("cp -f PsychAD_analysis.html ~/www/")
 
 http://hoffmg01.dmz.hpc.mssm.edu/PsychAD_analysis.html
 
