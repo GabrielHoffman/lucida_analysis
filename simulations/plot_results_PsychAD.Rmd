@@ -45,6 +45,7 @@ system("cp -f /sc/arion/work/hoffmg01/lucida_analysis/simulations/plot_results_P
 
 https://hoffmg01.dmz.hpc.mssm.edu/plot_results_PsychAD.html
 
+ggsave(fig, file="~/www/test.pdf", height=15, width=12)
 
 --->
 
@@ -435,7 +436,14 @@ df %>%
 ## AUPR
 ```{r AUPR, fig.height=15, fig.width=12}
 # AUPR 
-aupr = function(status, score){
+.aupr = function(data, idx = NULL,...){
+
+  if( !is.null(idx) ){
+    data = data[idx,]
+  }
+
+  score <- data$score
+  status <- data$status
 
   pr <- pr.curve(
     scores.class0 = score[status != 0], 
@@ -448,10 +456,27 @@ aupr = function(status, score){
   precision <- pr$curve[, 2]
   f1_scores <- 2 * (precision * recall) / (precision + recall)
 
-  data.frame(AUPR = pr$auc.integral, 
+  c(AUPR = pr$auc.integral, 
     AUPR.rand = pr$rand$auc.integral,
     F1.max = max(f1_scores, na.rm = TRUE))
 }
+
+# cl = parallel::makeCluster(12)
+
+aupr <- function(status, score, R=25){
+
+  res <- .aupr(data.frame(status, score))
+
+  data.frame(t(res))
+
+  boot.res <- boot(data.frame(status, score), statistic = .aupr, R=R)#, parallel="snow", cl = cl)
+
+  se <- apply(boot.res$t, 2, sd)
+  names(se) = c('AUPR.se', 'AUPR.rand.se', 'F1.max.se' )
+
+  data.frame(t(c(res, se)))
+}
+
 
 df_perf = df %>% 
   group_by(Method, cluster_id, libScaleFactor, N) %>%
@@ -472,6 +497,8 @@ fig.AUPR = df_perf %>%
   ggplot(aes(N, AUPR, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
+    geom_errorbar(aes(ymin = AUPR - 1.96*AUPR.se, 
+      ymax = AUPR + 1.96*AUPR.se), width=0, position = position_dodge(width = 0.9)) +
     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     # ggtitle("Differential expression performance") +
@@ -492,6 +519,8 @@ fig.F1max = df_perf %>%
   ggplot(aes(N, F1.max, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
+    geom_errorbar(aes(ymin = F1.max - 1.96*F1.max.se, 
+      ymax = F1.max + 1.96*F1.max.se), width=0, position = position_dodge(width = 0.9)) +
     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     # ggtitle("Differential expression performance") +
@@ -508,12 +537,13 @@ breaks <- df %>%
           filter(!is.na(mu)) %>%
           pull(mu) %>%
           log10 %>%
-          quantile(probs = seq(0, 1, by = 1/6), na.rm = TRUE)
+          quantile(probs = seq(0, 1, by = 1/10), na.rm = TRUE)
+
 df %>% 
   filter(!is.na(mu)) %>%  
   mutate(bin = cut(log10(mu), breaks=breaks) %>%
     as.integer %>%
-    as.character) %>%
+    as.factor) %>%
   filter(!is.na(bin)) %>%
   group_by(N, Method, cluster_id, bin, libScaleFactor) %>%
   # filter(!is.na(FDR)) %>%
@@ -539,26 +569,48 @@ breaks <- df %>%
           filter(!is.na(mu)) %>%
           pull(mu) %>%
           log10 %>%
-          quantile(probs = seq(0, 1, by = 1/6), na.rm = TRUE)
+          quantile(probs = seq(0, 1, by = 1/10), na.rm = TRUE)
 
-df %>% 
+df_aupr <- df %>% 
   filter(!is.na(mu)) %>%
   mutate(bin = cut(log10(mu), breaks=breaks) %>%
     as.integer %>%
-    as.character) %>%
+    as.factor) %>%
   filter(!is.na(bin)) %>%
   group_by(N, Method, cluster_id, bin, libScaleFactor) %>%
   # filter(!is.na(FDR)) %>%
-  summarize(aupr(b.true, -log10(P.Value)), n = n()) %>%
+  summarize(aupr(b.true, -log10(P.Value)), n = n()) 
+
+df_aupr %>%
   ggplot(aes(bin, AUPR, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
+    geom_errorbar(aes(ymin = AUPR - 1.96*AUPR.se, 
+      ymax = AUPR + 1.96*AUPR.se), width=0, position = position_dodge(width = 0.9)) +
     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     scale_fill_manual(values = colorMethods) +
     facet_grid( N ~ cluster_id ) +
     xlab("Count magnitude bin")
 ```
+
+```{r aupr.fraction}
+df_aupr %>%
+  select(Method, bin, AUPR) %>%
+  group_by(bin, cluster_id, N) %>%
+  mutate(AUPR.frac = AUPR / max(AUPR)) %>%
+  ggplot(aes(as.numeric(bin), AUPR.frac, color=Method, fill=Method)) +
+    # geom_point() +
+    geom_line(linewidth=2) +
+    thm +
+    scale_color_manual(values = colorMethods) +
+    facet_grid( N ~ cluster_id ) +
+    xlab("Count magnitude bin") +
+    ylab("Fraction of maximum AUPR per bin") +
+    scale_x_continuous(breaks=seq(10)) 
+```
+
+
 
 
 ### F1.max
@@ -569,23 +621,34 @@ breaks <- df %>%
           log10 %>%
           quantile(probs = seq(0, 1, by = 1/6), na.rm = TRUE)
 
-df %>% 
-  filter(!is.na(mu)) %>%
-  mutate(bin = cut(log10(mu), breaks=breaks) %>%
-    as.integer %>%
-    as.character) %>%
-  filter(!is.na(bin)) %>%
-  group_by(N, Method, cluster_id, bin, libScaleFactor) %>%
-  # filter(!is.na(FDR)) %>%
-  summarize(aupr(b.true, -log10(P.Value)), n = n()) %>%
+df_aupr %>%
   ggplot(aes(bin, F1.max, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
+    geom_errorbar(aes(ymin = F1.max - 1.96*F1.max.se, 
+      ymax = F1.max + 1.96*F1.max.se), width=0, position = position_dodge(width = 0.9)) +
     coord_cartesian(expand=FALSE, ylim=c(0,1)) +
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     scale_fill_manual(values = colorMethods) +
     facet_grid( N ~ cluster_id ) +
     xlab("Count magnitude bin")
+```
+
+
+```{r F1.max.fraction}
+df_aupr %>%
+  select(Method, bin, F1.max) %>%
+  group_by(bin, cluster_id, N) %>%
+  mutate(F1.max.frac = F1.max / max(F1.max)) %>%
+  ggplot(aes(as.numeric(bin), F1.max.frac, color=Method, fill=Method)) +
+    # geom_point() +
+    geom_line(linewidth=2) +
+    thm +
+    scale_color_manual(values = colorMethods) +
+    facet_grid( N ~ cluster_id ) +
+    xlab("Count magnitude bin") +
+    ylab("Fraction of maximum F1.max per bin") +
+    scale_x_continuous(breaks=seq(10)) 
 ```
 
 
@@ -599,8 +662,8 @@ fig.FPR = df %>%
               se = sqrt(FPR*(1-FPR)/np)) %>%
   ggplot(aes(N, FPR, fill=Method)) +
     geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
-    # geom_errorbar(aes(ymin = FPR - 1.96*se, 
-    #   ymax = FPR + 1.96*se), width=0, position = position_dodge(width = 0.9)) +
+    geom_errorbar(aes(ymin = FPR - 1.96*se, 
+      ymax = FPR + 1.96*se), width=0, position = position_dodge(width = 0.9)) +
     thm +
     coord_cartesian(expand=FALSE) +
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
