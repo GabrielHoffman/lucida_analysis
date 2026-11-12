@@ -139,7 +139,7 @@ run_MAST = function(sce, formula, cluster_id, nthreads = 1){
       mutate(P.Value = 2*pnorm(abs(z), lower.tail=FALSE)) %>%
       rename(ID = primerid, logFC = coef ) %>%
       mutate(cluster_id = CT) %>%
-      select(cluster_id, ID, logFC, P.Value) 
+      select(cluster_id, ID, contrast, logFC, P.Value) 
   }) %>%
     bind_rows
 }
@@ -336,12 +336,13 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, sample_id = as
     message("MAST")
 
     df.time[["MAST"]] <- system.time({
-      res.mast <- run_MAST(sce.sim, formula, cluster_id, nthreads = nthreads)
+      res.mast <- run_MAST(sce.sim, formula, cluster_id, nthreads = nthreads) %>%
+          filter(contrast == coefTest)
     })
 
-    df = bind_rows(df, res.mast) %>%
-            mutate(FDR = p.adjust(P.Value)) %>%
-            mutate(Method = "MAST")
+    df <- bind_rows(df, res.mast) %>%
+          mutate(FDR = p.adjust(P.Value)) %>%
+          mutate(Method = "MAST") 
   }
 
   # dreamlet
