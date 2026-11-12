@@ -548,8 +548,8 @@ df %>%
     as.character) %>%
   filter(!is.na(bin)) %>%
   group_by(N, Method, cluster_id, bin, libScaleFactor) %>%
-  filter(!is.na(FDR)) %>%
-  summarize(aupr(b.true, -log10(FDR)), n = n()) %>%
+  # filter(!is.na(FDR)) %>%
+  summarize(aupr(b.true, -log10(P.Value)), n = n()) %>%
   ggplot(aes(bin, AUPR, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
@@ -576,8 +576,8 @@ df %>%
     as.character) %>%
   filter(!is.na(bin)) %>%
   group_by(N, Method, cluster_id, bin, libScaleFactor) %>%
-  filter(!is.na(FDR)) %>%
-  summarize(aupr(b.true, -log10(FDR)), n = n()) %>%
+  # filter(!is.na(FDR)) %>%
+  summarize(aupr(b.true, -log10(P.Value)), n = n()) %>%
   ggplot(aes(bin, F1.max, fill=Method)) +
     geom_bar(stat="identity", position="dodge") +
     thm +
