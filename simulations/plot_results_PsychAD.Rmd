@@ -306,17 +306,14 @@ fig.logFC.rMSE = df %>%
 
 ```{r coef3, fig.height=12, fig.width=12}
 df %>% 
-  # filter(Method != "MAST") %>%
-  # filter(Method == "lucida") %>%
-  # filter(libScaleFactor == "1") %>%
-  # filter(cluster_id == "Astro") %>%
+  filter(mu < 100) %>%
   mutate(Method = factor(Method, rev(levels(Method)))) %>%
   ggplot(aes(mu, (b.true - logFC)^2, color=Method, fill=Method)) +
     geom_smooth(se=TRUE, alpha = .1) +
     thm +  
     scale_color_manual(values = colorMethods) +
     scale_fill_manual(values = colorMethods) +
-    scale_x_log10() +
+    scale_x_log10(breaks = c(.1, 1, 10, 100)) +
     scale_y_log10() +
     xlab("Mean normalized counts") +
     ylab("Squared deviation of estimated logFC (log10 scale)") +
@@ -331,6 +328,7 @@ df %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
   filter(libScaleFactor == "1") %>%
   filter(N == "50") %>%
+  filter(mu < 100) %>%
   ggplot(aes(theta.y, pmin(1e4, theta.x), color=Method)) +
     geom_scattermore(pointsize=5) +
     thm +
@@ -338,7 +336,7 @@ df %>%
     facet_grid(Method ~ cluster_id) +
     xlab(bquote(Simulated~theta)) +
     ylab(bquote(Estimated~theta)) +
-    scale_x_log10() +
+    scale_x_log10(breaks = c(.1, 1, 10, 100)) +
     scale_y_log10() +
     geom_abline( slope=1, color="black") +
     scale_color_manual(values = colorMethods) 
@@ -355,7 +353,7 @@ df %>%
     scale_fill_manual(values = colorMethods) +
     xlab("Mean normalized counts") +
     ylab("Squared deviation of log theta (log10 scale)") +
-    scale_x_log10() +
+    scale_x_log10(breaks = c(.1, 1, 10, 100)) +
     scale_y_log10() +    
     facet_grid( N ~ cluster_id, scales="free_y") 
 ```
@@ -392,7 +390,7 @@ df %>%
     facet_grid(Method ~ cluster_id) +
     xlab(bquote(Simulated~sigma[g]^2)) +
     ylab(bquote(Estimated~sigma[g]^2)) +
-    scale_x_log10() +
+    scale_x_log10(breaks = c(.1, 1, 10, 100)) +
     scale_y_log10() +
     geom_abline( slope=1, color="black")  +
     scale_color_manual(values = colorMethods) 
@@ -419,6 +417,7 @@ df %>%
   filter(libScaleFactor == "1") %>%
   filter(!is.na(sigSq_g.x)) %>%
   filter(Method %in% c("nebula", "nebula (HL)", "lucida", "lucida [1 step]")) %>%
+  filter(mu < 100) %>%
   ggplot(aes(mu, (pmax(sigSq_g.x, 1e-4) - (sigSq_g.y))^2, color=Method, fill=Method)) +
     geom_smooth(se=TRUE, alpha = .1) +
     thm +    
@@ -427,7 +426,7 @@ df %>%
     facet_wrap(~cluster_id) +
     xlab("Mean normalized counts") +    
     ylab("Squared deviation of sigSq_g (log10 scale)") +
-    scale_x_log10() +
+    scale_x_log10(breaks = c(.1, 1, 10, 100)) +
     scale_y_log10() +
     facet_grid(N ~ cluster_id, scales="free_y") +    
     coord_cartesian(expand=FALSE)
@@ -562,6 +561,33 @@ df %>%
     coord_cartesian(ylim=c(0,NA), expand=FALSE) +
     xlab("Count magnitude bin")
 ```
+
+```{r FPR.lines}
+df.fpr <- df %>% 
+  filter(!is.na(mu)) %>%  
+  mutate(bin = cut(log10(mu), breaks=breaks) %>%
+    as.integer %>%
+    as.factor) %>%
+  filter(!is.na(bin)) %>%
+  group_by(N, Method, cluster_id, bin, libScaleFactor) %>%
+  # filter(!is.na(FDR)) %>%
+  summarize( FPR = sum(P.Value < 0.05) / length(P.Value), 
+              np = length(P.Value),
+              se = sqrt(FPR*(1-FPR)/np))
+
+df.fpr %>%
+  ggplot(aes(as.numeric(bin), FPR, color=Method)) +
+    geom_line(linewidth=2) +
+    thm +
+    geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
+    scale_color_manual(values = colorMethods) +
+    facet_grid( N ~ cluster_id ) +
+    ylab("False Positive rate") +
+    coord_cartesian(ylim=c(0,NA), expand=FALSE) +
+    xlab("Count magnitude bin") +
+    scale_x_continuous(breaks=seq(10)) 
+```
+
 
 ### AUPR
 ```{r AUPR.statified}
