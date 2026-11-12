@@ -469,7 +469,7 @@ aupr <- function(status, score, R=25){
 
   data.frame(t(res))
 
-  boot.res <- boot(data.frame(status, score), statistic = .aupr, R=R)#, parallel="snow", cl = cl)
+  boot.res <- boot::boot(data.frame(status, score), statistic = .aupr, R=R)#, parallel="snow", cl = cl)
 
   se <- apply(boot.res$t, 2, sd)
   names(se) = c('AUPR.se', 'AUPR.rand.se', 'F1.max.se' )
