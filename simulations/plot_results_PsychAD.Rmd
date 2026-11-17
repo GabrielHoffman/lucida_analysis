@@ -695,7 +695,7 @@ fig.FPR = df %>%
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey30", linewidth=1) +
     ylab("False positive rate") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid( libScaleFactor ~ cluster_id) +
+    facet_grid( ~ cluster_id) +
     xlab("Sample size")
 ```
 
