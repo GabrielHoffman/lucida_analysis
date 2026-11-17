@@ -299,7 +299,7 @@ fig.logFC.rMSE = df %>%
     ylab("rMSE of logFC") +
     # ggtitle("Estimating logFC") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(libScaleFactor ~ cluster_id, scale="free_y") +
+    facet_grid( ~ cluster_id, scale="free_y") +
     coord_cartesian(ylim=c(0, NA), expand=FALSE) +
     xlab("Sample size")
 ```
@@ -372,7 +372,7 @@ fig.theta.rMSE = df %>%
     ylab("rMSE of log(theta)") +
     #ggtitle(bquote(Estimating~theta)) +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(libScaleFactor ~ cluster_id, scales="free_y") +
+    facet_grid( ~ cluster_id, scales="free_y") +
     xlab("Sample size")
 ```
 
@@ -408,7 +408,7 @@ fig.sigSqg.rMSE = df %>%
     coord_cartesian(expand=FALSE)+
     ylab("rMSE of sigSq_g") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid( libScaleFactor ~ cluster_id) +
+    facet_grid(  ~ cluster_id) +
     xlab("Sample size")
 ```
 
@@ -502,7 +502,7 @@ fig.AUPR = df_perf %>%
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     # ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(libScaleFactor ~ cluster_id) +
+    facet_grid(~ cluster_id) +
     xlab("Sample size")
 
 # df_perf %>%
@@ -524,7 +524,7 @@ fig.F1max = df_perf %>%
     geom_hline(yintercept = 0.1, linetype="dashed", color="grey30", linewidth=1) +
     # ggtitle("Differential expression performance") +
     scale_fill_manual(values = colorMethods) +
-    facet_grid(libScaleFactor ~ cluster_id) +
+    facet_grid( ~ cluster_id) +
     xlab("Sample size")
 ```
 

@@ -20,6 +20,9 @@ sce = readH5AD(file)
 keep = rowData(sce)$gene_chrom %in% 1:22
 sce = sce[keep,]
 
+# drop MALAT1
+sce = sce[rownames(sce) != "MALAT1",]
+
 # filter to include only cell types with 1k observations
 tab = table(sce$subclass)
 sce = sce[,sce$subclass %in% names(tab[tab>1000])]
@@ -38,8 +41,8 @@ res = lapply(n_donors_array, function(n_donors){
   sce2 = sce2[,sce2$SubID %in% levels(sce2$SubID)[seq(n_donors)]]
   colData(sce2) = droplevels(colData(sce2))
 
-  form = ~ Age + Sex + PMI + (1|SubID)
-  fit = lucida(sce2, form, cluster_id = "subclass", nReaders=4, nthreads=8)
+  form = ~ Age + Sex + PMI + (1|SubID) + percent_mito
+  fit = lucida(sce2, form, cluster_id = "subclass", nthreads=36)
 
   file = paste0("fits/PsychAD/test_lucida_fit_", n_donors, ".RDS")
   saveRDS(fit, file=file)
@@ -47,6 +50,29 @@ res = lapply(n_donors_array, function(n_donors){
   file = paste0("fits/PsychAD/test_lucida_fit_data_", n_donors, ".RDS")
   saveRDS(colData(sce2), file=file)
 })
+
+# Boost effect of cell-level variable
+#------------------------------------
+
+library(lucida)
+file = "/hpc/users/hoffmg01/work/lucida_analysis/simulations//fits/PsychAD/test_lucida_fit_1000.RDS"
+fit = readRDS(file)
+
+fit2 = fit
+
+for(CT in names(fit2)){
+  b = fit2[[CT]]$fit$coef[,"percent_mito"]
+  fit2[[CT]]$fit$coef[,"percent_mito"] = 2*b
+}
+
+out = "/hpc/users/hoffmg01/work/lucida_analysis/simulations/fits/PsychAD/test_lucida_fit_1000_mito2.RDS"
+saveRDS(fit2, file=out)
+
+vp = varpart(fit2, method="approx")
+
+fig = plotVarPart(vp)
+
+ggsave(fig, file="~/www/test.pdf", height=15, width=12)
 
 
 # Simulate data
@@ -63,7 +89,7 @@ LSF="1" # libScaleFactors
 # LOGFC=0.07 # large N
 LOGFC=.3 # small N
 # LOGFC=0
-COVARIATES="'Age + Sex + PMI'"
+COVARIATES="'Age + Sex + PMI + percent_mito'"
 OUTFOLDER=/sc/arion/scratch/hoffmg01/sims/PsychAD/constant/$(echo $NSAMPLES | tr ' ' '_')_${LOGFC}
 
 # rm -f $OUTFOLDER/* $OUTFOLDER/logs/* $OUTFOLDER/jobs/*
@@ -77,7 +103,7 @@ for libScaleFactor in $(echo $LSF)
 do
 for i in $(seq 1 1 $NREPS)
 do
-  FIT=$DIR/fits/PsychAD/test_lucida_fit_${NMAX}.RDS
+  FIT=$DIR/fits/PsychAD/test_lucida_fit_${NMAX}_mito2.RDS
   DATA=$DIR/fits//PsychAD/test_lucida_fit_data_${N}.RDS
   ID=${N}_${libScaleFactor}_${i}
   echo "$DIR/create_dataset.R --fit $FIT --data $DATA --subject SubID --covariates $COVARIATES --seed $i --logFC $LOGFC --pDE 0.05 --libScaleFactor ${libScaleFactor} --output $OUTFOLDER/sim_${ID}.h5ad" >> $OUTFOLDER/script_sim.sh
@@ -222,6 +248,7 @@ do
     MEM=30000; 
     WALL=96:00
   else 
+    MEM=12000; 
     WALL=8:00
   fi
 
@@ -239,11 +266,13 @@ do
   
   echo -e "export HDF5_PLUGIN_PATH=$plugin_dir\\n" >> $JOB
 
-  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID) + Age + Sex + PMI\" --coefTest DxDisease --cluster_id subclass --nthreads $NTHREADS --methods $METHOD --output $OUT" >> $JOB
+  echo "$DIR/run_analysis.R --h5ad $FILE --formula \"~ Dx + (1|SubID) + Age + Sex + PMI + percent_mito\" --coefTest DxDisease --cluster_id subclass --nthreads $NTHREADS --methods $METHOD --output $OUT" >> $JOB
 done
 done
 done
 done
+
+head jobs/script_12_1_1_lucida.sh
 
 # rm -f logs/*
 # rm -f res_sim_*
@@ -261,6 +290,9 @@ ls $OUTFOLDER/jobs/* | grep MAST | parallel -P1 "bsub < {}"
 
 # resub
 grep -r AVX512_FP16 logs/*.err | cut -f1 -d':' | cut -f1 -d'.' | xargs -n 1 basename | parallel -P1 echo "jobs/script_{}.sh" | parallel -P1 "bsub < {}"
+
+
+comm -23 <(ls jobs/ | sed 's/^script_\(.*\)\.sh$/\1/' | sort) <(ls *time.parquet | sed 's/^res_sim_\(.*\)_time\.parquet$/\1/' | sort)
 
 
 # ls $OUTFOLDER/jobs/* | grep "dreamlet\|DESeq2\|lucida" | parallel -P1 cat | grep 'analysis' | parallel -P62
