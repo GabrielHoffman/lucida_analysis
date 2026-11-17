@@ -129,7 +129,7 @@ fig1 | fig2
 
 ```{r lucida}
 # fit full model for differential expression
-form = ~ c36x + Age + Sex + PMI + Brain_bank + (1|SubID) + percent_mito + mito_ribo + mito_genes + ribo_genes + log(n_genes)
+form = ~ c11x + Age + Sex + PMI + Brain_bank + (1|SubID) + percent_mito + mito_ribo + mito_genes + ribo_genes + log(n_genes)
 
 fit = lucida(sce, form, cluster_id = "class", nReaders=8)
 
