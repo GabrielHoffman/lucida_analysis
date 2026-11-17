@@ -721,7 +721,7 @@ df %>%
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
     scale_color_manual(values = colorMethods) +
-    facet_grid( libScaleFactor + N ~ cluster_id ) +
+    facet_grid( N ~ cluster_id ) +
     coord_cartesian(xlim=c(0, NA), ylim=c(0, ymax), expand=FALSE)
 ```
 
