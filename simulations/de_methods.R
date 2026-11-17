@@ -397,7 +397,19 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, sample_id = as
             as.data.frame %>% 
             left_join( colData(sce.sim)[,include] %>%
               unique %>%
-              as.data.frame, by=c("id", cluster_id))
+              as.data.frame, by=c("id", cluster_id)) %>%
+            as_tibble
+
+    # summarize covariates at pseudobulk level
+    a = c(x2, cluster_id)
+    info <- info %>%
+      group_by(pick(all_of(a))) %>%
+      summarize(
+        across(where(is.numeric), \(x) mean(x, na.rm = TRUE)), 
+        across(where(is.factor), \(x) x[1]),
+        across(where(is.character), \(x) x[1]),
+        # .groups = "drop"
+        )
 
     i <- match(paste(info$id, info[[cluster_id]]),
               paste(sce.pb$id, sce.pb[[cluster_id]]))
@@ -408,6 +420,7 @@ run_analysis <- function( sce.sim, formula, coefTest, cluster_id, sample_id = as
 
     CTs <- unique(colData(sce.pb)[[cluster_id]])
     res.gp <- lapply( CTs, function(CT){
+      message(CT)
       sceSub <- sce.pb[,colData(sce.pb)[[cluster_id]] == CT]
       fit.gp <- glm_gp(sceSub, nobars(formula))
 
