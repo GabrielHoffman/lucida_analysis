@@ -125,40 +125,46 @@ cat $OUTFOLDER/script_sim.sh | parallel -P 62
 # Concat H5AD
 ##############
 
-ml purge
-ml anaconda3/latest parallel
-conda activate jul2026
+# ml purge
+# ml anaconda3/latest parallel
+# conda activate jul2026
 
-SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/concat_h5ad.py
+# SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/concat_h5ad.py
 
-echo "" > $OUTFOLDER/script_concat.sh
-for N in $(echo $NSAMPLES)
-do
-for libScaleFactor in $(echo $LSF)
-do
-for i in $(seq 1 1 $NREPS)
-do
-  ID=${N}_${libScaleFactor}_${i}
-  H5ADS=$(ls sim_${ID}_*.h5ad)
-  OUT=sim_${ID}.h5ad
-  FILE=file_${ID}.txt
-  echo $H5ADS | tr ' ' '\n' > $FILE
+# echo "" > $OUTFOLDER/script_concat.sh
+# for N in $(echo $NSAMPLES)
+# do
+# for libScaleFactor in $(echo $LSF)
+# do
+# for i in $(seq 1 1 $NREPS)
+# do
+#   ID=${N}_${libScaleFactor}_${i}
+#   H5ADS=$(ls sim_${ID}_*.h5ad)
+#   OUT=sim_${ID}.h5ad
+#   FILE=file_${ID}.txt
+#   echo $H5ADS | tr ' ' '\n' > $FILE
 
-  echo "$SRC -i $FILE -o $OUT" >> $OUTFOLDER/script_concat.sh
-done
-done
-done
+#   echo "$SRC -i $FILE -o $OUT" >> $OUTFOLDER/script_concat.sh
+# done
+# done
+# done
 
-cat $OUTFOLDER/script_concat.sh | parallel -P 50
+# cat $OUTFOLDER/script_concat.sh | parallel -P 50
 
-# check that files were written
-cat $OUTFOLDER/script_concat.sh | awk '{print $NF}' | xargs ls > /dev/null 2> file.txt
+# # check that files were written
+# cat $OUTFOLDER/script_concat.sh | awk '{print $NF}' | xargs ls > /dev/null 2> file.txt
 
 
 # Recode for efficient access
 #----------------------------
+
+ml purge
+ml anaconda3/latest parallel
+conda activate jul2026
+
 SRC=/hpc/users/hoffmg01/work/GenomicDataStream_analysis/recode_h5ad.py 
 
+CELLTYPES=("Astro" "EN_L6_CT" "IN_SST" "Oligo")
 echo "" > $OUTFOLDER/script_recode.sh
 for N in $(echo $NSAMPLES)
 do
@@ -166,10 +172,12 @@ for libScaleFactor in $(echo $LSF)
 do
 for i in $(seq 1 1 $NREPS)
 do
-  ID=${N}_${libScaleFactor}_${i}
+for CT in "${CELLTYPES[@]}"; do
+  ID=${N}_${libScaleFactor}_${i}_${CT}
   FILE=$OUTFOLDER/sim_${ID}.h5ad
   OUT=$OUTFOLDER/sim_${ID}_recode.h5ad
   echo "$SRC --input $FILE --sortBy subclass,SubID --format CSC --compression lzf --out $OUT " >> $OUTFOLDER/script_recode.sh
+done
 done
 done
 done
@@ -240,7 +248,7 @@ do
 for METHOD in $(grep -v "#" $METHODS | sed 's/"//g')
 do
   ID=${N}_${libScaleFactor}_${i}
-  FILE=$OUTFOLDER/sim_${ID}_recode.h5ad
+  FILE=$OUTFOLDER/sim_${ID}_*_recode.h5ad
   OUT=$OUTFOLDER/res_sim_${ID}_${METHOD}.parquet
   JOB=$OUTFOLDER/jobs/script_${ID}_${METHOD}.sh
 
@@ -272,7 +280,7 @@ done
 done
 done
 
-head jobs/script_12_1_1_lucida.sh
+less jobs/script_12_1_1_lucida.sh
 
 # rm -f logs/*
 # rm -f res_sim_*

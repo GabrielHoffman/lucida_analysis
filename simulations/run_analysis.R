@@ -28,6 +28,10 @@ source("/hpc/users/hoffmg01/work/lucida_analysis/simulations/de_methods.R")
 
 # read data
 message("Read H5AD...")
+
+# files <- unlist(strsplit(opt$h5ad, ","))
+# sce.sim <- lapply(files, readH5AD)
+
 sce.sim <- readH5AD( opt$h5ad )
 
 # read metadata
